@@ -58,63 +58,55 @@ class SyncLocalFilleToNas {
                     if let statusCode = json["statusCode"].int, statusCode == 100 {
                         let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                         if(json["listData"].exists()){
-                            print()
                             if(serverList.count < 1){
 //                                print(serverList.count)
                                 for (_, folder) in self.localFolderArray.enumerated() {
                                     let parameter = folder.getParameter
-                                    print("parameter : \(parameter)")
+//                                    print("parameter : \(parameter)")
                                     self.folderArrayToCreate.append(parameter)
                                 }
                             } else {
-                                print("jsonlistData: \(json["listData"])")
-                                
+//                                print("jsonlistData: \(json["listData"])")
                                 var serverFolderPathArray:[String] = []
-                                
+                                var localFolderPathArray:[String] = []
                                 for serverFolder in serverList{
-                                    print("serverFile[folderNm] : \(serverFolder["foldrNm"])")
-                                    for localFolder in self.localFolderArray {
-                                        let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String))"
-                                        let localFolderPath = "\(localFolder.foldrWholePathNm)"
-                                        print("serverFolderPath : \(serverFolderPath), localFolderPath: \(localFolderPath)")
-                                        if(serverFolderPath == localFolderPath){
-                                        } else {
-                                            self.folderArrayToCreate.append(localFolder.getParameter)
-                                            print("folderArrayToCreate : \(self.folderArrayToCreate)")
-                                        }
+                                    let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String))"
+                                    serverFolderPathArray.append(serverFolderPath)
+                                }
+                                for localFolder in self.localFolderArray {
+                                    let localFolderPath = "\(localFolder.foldrWholePathNm)"
+                                    if(!serverFolderPathArray.contains(localFolderPath)){
+                                        self.folderArrayToCreate.append(localFolder.getParameter)
                                     }
                                 }
-//                                for localFileArray
-//                                    if(!serverList.contains(where: {$0["foldrWholePathNm"] as! String == localFolder.foldrWholePathNm})){
-//
-//                                    } else if (!self.localFolderArray.contains(where: {$0.foldrWholePathNm == serverFolder["foldrWholePathNm"] as! String})) {
-//                                        let deleteFolder = App.Folders(data: serverFolder)
-//                                        let deleteFolderParameter = App.FoldersToEdit(folder:deleteFolder, cmd:"D").getParameter
-//                                        self.folderArrayToDelete.append(deleteFolderParameter)
-//                                        print("folderArrayToDelete : \(self.folderArrayToDelete)")
-//                                    }
-//
-//                                }
-                                print("sysncFoldrInfo : \(serverList)")
-                            }
-                            if(self.folderArrayToCreate.count > 0){
-                                print("createfolder : \(self.folderArrayToCreate)")
-                                self.createFolderListToServer(parameters: self.folderArrayToCreate)
-                            }
-                            if(self.folderArrayToUpdate.count > 0){
-                                self.createFolderListToServer(parameters: self.folderArrayToUpdate)
-                                print("updateefolder : \(self.folderArrayToDelete)")
+                                for localFolder in self.localFolderArray {
+                                   let localFolderPath = "\(localFolder.foldrWholePathNm)"
+                                    localFolderPathArray.append(localFolderPath)
+                                }
+//                                print("localFolderPathArray : \(localFolderPathArray)")
+                                for serverFolder in serverList{
+                                    let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String))"
+                                    if(!localFolderPathArray.contains(serverFolderPath)){
+                                        let deleteFolder = App.Folders(data: serverFolder)
+                                        let deleteFolderParameter = App.FoldersToEdit(folder:deleteFolder, cmd:"D").getParameter
+                                        self.folderArrayToDelete.append(deleteFolderParameter)
+                                    }
+                                }
                             }
                             if(self.folderArrayToDelete.count > 0){
-                                self.createFolderListToServer(parameters: self.folderArrayToDelete)
-                                print("deletefolder : \(self.folderArrayToDelete)")
+                                self.deleteFolderListToServer(parameters: self.folderArrayToDelete)
+//                                print("deletefolder : \(self.folderArrayToDelete)")
+                            } else {
+                                if(self.folderArrayToCreate.count > 0){
+//                                    print("createfolder : \(self.folderArrayToCreate)")
+                                    self.createFolderListToServer(parameters: self.folderArrayToCreate)
+                                }
+
                             }
+                            
                             self.folderSyncFinished = true
-                            self.sysncFileInfo()
+                            
                         }
-                        
-                        
-                        
                     }
                     break
                 case .failure(let error):
@@ -137,7 +129,7 @@ class SyncLocalFilleToNas {
             let json = JSON(responseObject!)
             if(json["listData"].exists()){
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-                print("nasfolderList :\(serverList)")
+//                print("nasfolderList :\(serverList)")
                 for rootFolder in serverList{
                     let foldrId = rootFolder["foldrId"] as? Int ?? 0
                     let stringFoldrId = String(foldrId)
@@ -156,7 +148,7 @@ class SyncLocalFilleToNas {
             let json = JSON(responseObject!)
             if(json["listData"].exists()){
                 let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
-                print("showInsideList :\(serverList)")
+//                print("showInsideList :\(serverList)")
                 for list in serverList{
                     let folder = App.FolderStruct(data: list as AnyObject)
                 }
@@ -179,10 +171,10 @@ class SyncLocalFilleToNas {
                                 let json = JSON(value)
                                 let responseData = value as! NSDictionary
                                 let message = responseData.object(forKey: "message")
-                                print("showFolderInfo json : \(json)")
+//                                print("showFolderInfo json : \(json)")
                                 if(json["listData"].exists()){
                                     let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
-                                    print("syncfileLIst : \(serverList)")
+//                                    print("syncfileLIst : \(serverList)")
                                     
                                     var serverFileIdArray:[String] = []
                                     
@@ -195,7 +187,7 @@ class SyncLocalFilleToNas {
                                     if(self.localFileArray.count > 0){
                                         for localFile in self.localFileArray {
                                             let fileSavedPath = "\(localFile.savedPath)"
-                                            print("fileSavedPath :\(fileSavedPath)" )
+//                                            print("fileSavedPath :\(fileSavedPath)" )
                                             let fileId = DbHelper().getLocalFileId(path: fileSavedPath)
                                             localFileIdArray.append(fileId)
                                         }
@@ -218,8 +210,8 @@ class SyncLocalFilleToNas {
                                         let fileId = DbHelper().getLocalFileId(path: fileSavedPath)
                                         if(!serverFileIdArray.contains(fileId)){
                                             self.fileArrayToCreate.append(localFile.getParameter)
-                                            print("localFile.etsionNm : \(localFile.etsionNm)")
-                                            print("fileArrayToCreate1 : \(self.fileArrayToCreate)")
+//                                            print("localFile.etsionNm : \(localFile.etsionNm)")
+//                                            print("fileArrayToCreate1 : \(self.fileArrayToCreate)")
                                         } else {
                                             
                                         }
@@ -228,21 +220,21 @@ class SyncLocalFilleToNas {
                                     if(self.localFileArray.count > 0 ){
                                         for localFile in self.localFileArray {
                                             self.fileArrayToCreate.append(localFile.getParameter)
-                                            print("fileArrayToCreate2 : \(self.fileArrayToCreate.count)")
+//                                            print("fileArrayToCreate2 : \(self.fileArrayToCreate.count)")
                                         }
                                     }
                                 }
                                
                                
                                 if(self.fileArrayToDelete.count > 0){
-                                    print("delete call")
-                                    print("fileArrayToDelete count : \(self.fileArrayToDelete.count), fileArrayToCreate.count : \(self.fileArrayToCreate.count)" )
-                                    print("fileArrayToDelete : \(self.fileArrayToDelete)" )
+//                                    print("delete call")
+//                                    print("fileArrayToDelete count : \(self.fileArrayToDelete.count), fileArrayToCreate.count : \(self.fileArrayToCreate.count)" )
+//                                    print("fileArrayToDelete : \(self.fileArrayToDelete)" )
                                     self.deleteFileListToServer(parameters: self.fileArrayToDelete)
                                 } else {
                                     if(self.fileArrayToCreate.count>0){
-                                        print("fileArrayToDelete count : \(self.fileArrayToDelete.count), fileArrayToCreate.count : \(self.fileArrayToCreate.count)" )
-                                        print("create filelist : \(self.fileArrayToCreate)")
+//                                        print("fileArrayToDelete count : \(self.fileArrayToDelete.count), fileArrayToCreate.count : \(self.fileArrayToCreate.count)" )
+//                                        print("create filelist : \(self.fileArrayToCreate)")
                                         self.createFileListToServer(parameters: self.fileArrayToCreate)
                                     }
                                 }
@@ -265,11 +257,12 @@ class SyncLocalFilleToNas {
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
         localFileArray = FileUtil().getFileList()
         for localFile in localFileArray{
-            print("localFileetsionNm : \(localFile.etsionNm)")
+//            print("localFileetsionNm : \(localFile.etsionNm)")
         }
+        let today = Date()
         
         let subDirs = documentsURL.subDirectories
-        let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "", foldrWholePathNm: "/Mobile", cretDate : "", amdDate : "")
+        let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "Mobile", foldrWholePathNm: "/Mobile", cretDate : Util.date(text: today), amdDate : Util.date(text: today))
         localFolderArray.append(folder)
         
         getSubDirectories(subDirs: subDirs, foldrWholePath: "/Mobile")
@@ -300,7 +293,7 @@ class SyncLocalFilleToNas {
                 }
             }
         }
-        print("localFolderArray : \(localFolderArray)")
+//        print("localFolderArray : \(localFolderArray)")
         self.sysncFoldrInfo()
         
     }
@@ -321,7 +314,37 @@ class SyncLocalFilleToNas {
                 _ = JSON(value)
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
-                print("createFolderListToServer : \(message)")
+//                print("createFolderListToServer : \(message)")
+                self.sysncFileInfo()
+                break
+            case .failure(let error):
+                NSLog(error.localizedDescription)
+                break
+            }
+        }
+    }
+    
+    
+    func deleteFolderListToServer(parameters:[[String: Any]]){
+        var request = URLRequest(url: try! (App.URL.server+"mobileFoldrMetaInfoList.do").asURL())
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
+        request.setValue(self.loginCookie, forHTTPHeaderField: "Cookie")
+        let values = parameters
+        request.httpBody = try! JSONSerialization.data(withJSONObject: values)
+        Alamofire.request(request).responseJSON { response in
+            //                print("httpBody : \(response.request?.httpBody)")
+            switch response.result {
+            case .success(let value):
+                _ = JSON(value)
+                let responseData = value as! NSDictionary
+                let message = responseData.object(forKey: "message")
+//                   print("deleteFolderListToServer : \(message)")
+                if(self.folderArrayToCreate.count > 0){
+//                    print("createfolder : \(self.folderArrayToCreate)")
+                    self.createFolderListToServer(parameters: self.folderArrayToCreate)
+                }
                 break
             case .failure(let error):
                 NSLog(error.localizedDescription)
@@ -372,10 +395,10 @@ class SyncLocalFilleToNas {
             switch response.result {
             case .success(let value):
                 //                                let json = JSON(value)
-                print("createFileServer : \(response.result)")
+//                print("createFileServer : \(response.result)")
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
-                print(" createFileListToServer message : \(String(describing: message))")
+//                print(" createFileListToServer message : \(String(describing: message))")
                 
                 break
             case .failure(let error):
