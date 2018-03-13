@@ -110,7 +110,7 @@ class SyncLocalFilleToNas {
                                 print("deletefolder : \(self.folderArrayToDelete)")
                             }
                             self.folderSyncFinished = true
-//                            self.sysncFileInfo()
+                            self.sysncFileInfo()
                         }
                         
                         
