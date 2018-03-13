@@ -350,24 +350,25 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             let json = JSON(responseObject as Any)
             if let statusCode = json["statusCode"].int, statusCode == 100 {
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-                //                print("one view list : \(serverList)")
+                                print("one view list : \(serverList)")
                 for device in serverList {
                     let deviceStruct = App.DeviceStruct(device: device)
                     self.DeviceArray.append(deviceStruct)
                     let defaults = UserDefaults.standard
                     print("deviceStruct.devNm : \(deviceStruct.devNm)")
-                    if(deviceStruct.devNm == "GIGA NAS"){
+                    if(deviceStruct.osCd == "G"){
                         print("giga nas id saved : \(deviceStruct.devNm)")
                         defaults.set(deviceStruct.devUuid, forKey: "nasDevId")
                         defaults.set(deviceStruct.userId, forKey: "nasUserId")
                     }
-                    if(deviceStruct.devNm == "GiGA Storage"){
+                    if(deviceStruct.osCd == "S"){
                         print("giga storageDevId id saved : \(deviceStruct.devNm)")
                         defaults.set(deviceStruct.devUuid, forKey: "storageDevId")
                         defaults.set(deviceStruct.userId, forKey: "storageUserId")
                     }
                 }
-                let googleDrive = App.DeviceStruct(devNm : "Google Drive", devUuid : "devUuidValue", mkngVndrNm : "mkngVndrNmValue", onoff : "Y", osCd : "D", osDesc : "D", osNm : "D", userId : "userIdValue", userName : "Y")
+                
+                let googleDrive = App.DeviceStruct(devNm : "Google Drive", devUuid : "devUuidValue", logical: "nll", mkngVndrNm : "mkngVndrNmValue", newFlag: "N", onoff : "N", osCd : "D", osDesc : "D", osNm : "D", userId : "userIdValue", userName : "Y")
                 self.DeviceArray.append(googleDrive)
                 //
                 DbHelper().jsonToSqlite(getArray: self.DeviceArray)

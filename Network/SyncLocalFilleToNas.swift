@@ -15,6 +15,7 @@ import Alamofire
 class SyncLocalFilleToNas {
     
     var localFolderArray:[App.Folders] = []
+    var tempLocalDirectoryArray:[URL] = []
     var folderPathArray = [String]()
     var folderArrayToCreate:[[String:Any]] = []
     var folderArrayToUpdate:[[String:Any]] = []
@@ -95,10 +96,10 @@ class SyncLocalFilleToNas {
                             }
                             if(self.folderArrayToDelete.count > 0){
                                 self.deleteFolderListToServer(parameters: self.folderArrayToDelete)
-//                                print("deletefolder : \(self.folderArrayToDelete)")
+                                print("deletefolder : \(self.folderArrayToDelete)")
                             } else {
                                 if(self.folderArrayToCreate.count > 0){
-//                                    print("createfolder : \(self.folderArrayToCreate)")
+                                    print("createfolder : \(self.folderArrayToCreate)")
                                     self.createFolderListToServer(parameters: self.folderArrayToCreate)
                                 }
 
@@ -170,48 +171,62 @@ class SyncLocalFilleToNas {
                             case .success(let value):
                                 let json = JSON(value)
                                 let responseData = value as! NSDictionary
-                                let message = responseData.object(forKey: "message")
+//                                let message = responseData.object(forKey: "message")
 //                                print("showFolderInfo json : \(json)")
                                 if(json["listData"].exists()){
                                     let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
 //                                    print("syncfileLIst : \(serverList)")
                                     
-                                    var serverFileIdArray:[String] = []
+                                    var serverFilePathArray:[String] = []
                                     
                                     for serverFile in serverList{
-                                        let serverFileId = serverFile["fileId"] as? Int ?? 0
-                                        let stringServerFileId = String(serverFileId)
-                                        serverFileIdArray.append(stringServerFileId)
-                                    }
-                                    var localFileIdArray:[String] = []
-                                    if(self.localFileArray.count > 0){
-                                        for localFile in self.localFileArray {
-                                            let fileSavedPath = "\(localFile.savedPath)"
-//                                            print("fileSavedPath :\(fileSavedPath)" )
-                                            let fileId = DbHelper().getLocalFileId(path: fileSavedPath)
-                                            localFileIdArray.append(fileId)
+                                        print("server : \(serverFile)")
+                                        let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
+                                        let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
+                                        if let pathNmArray = URLComponents(string: serverFilePath)?.path.components(separatedBy: "/") {
+                                            var foldrWholePathNm = "/Mobile"
+                                            for (index, path) in pathNmArray.enumerated() {
+                                                if(1 < index && index < pathNmArray.count){
+                                                    foldrWholePathNm += "/\(pathNmArray[index])"
+                                                }
+                                                print("server foldrWholePathNm : \(foldrWholePathNm)")
+                                            }
+                                            serverFilePathArray.append(foldrWholePathNm)
                                         }
                                     }
-//                                    print("serverFileIdArray : \(serverFileIdArray)")
-//                                    print("localFileIdArray : \(localFileIdArray)")
+                                    print("serverFilePathArray : \(serverFilePathArray)")
+                                        
+                                    var localFilePathArray:[String] = []
+                                    
+                                    if(self.localFileArray.count > 0){
+                                        for localFile in self.localFileArray {
+                                            let localFilePath = "\(localFile.foldrWholePathNm)"
+                                            localFilePathArray.append(localFilePath)
+                                        }
+                                    }
+                                    
+                                    print("localFilePathArray : \(localFilePathArray)")
                                     for serverFile in serverList{
-                                        let serverFileId = serverFile["fileId"] as? Int ?? 0
-                                        let stringServerFileId = String(serverFileId)
-                                        if !localFileIdArray.contains(stringServerFileId) {
+                                        let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
+                                        let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
+                                        var foldrWholePathNm = "/Mobile"
+                                        if let pathNmArray = URLComponents(string: foldrWholePathNm)?.path.components(separatedBy: "/") {
+                                            for (index, path) in pathNmArray.enumerated() {
+                                                if(2 < index && index < pathNmArray.count){
+                                                    foldrWholePathNm += "/\(pathNmArray[index])"
+                                                }
+                                            }
+                                        }
+                                        if !localFilePathArray.contains(foldrWholePathNm) {
                                             let deleteFile = App.Files(data: serverFile)
                                             let deleteFileParameter = App.FilesToEdit(file:deleteFile, cmd:"D").getDeleteParameter
                                             self.fileArrayToDelete.append(deleteFileParameter)
-                                        } else {
-                                            
                                         }
                                     }
                                     for localFile in self.localFileArray {
-                                        let fileSavedPath = "\(localFile.savedPath)"
-                                        let fileId = DbHelper().getLocalFileId(path: fileSavedPath)
-                                        if(!serverFileIdArray.contains(fileId)){
+                                        let localFilePath = "\(localFile.foldrWholePathNm)"
+                                        if(!serverFilePathArray.contains(localFilePath)){
                                             self.fileArrayToCreate.append(localFile.getParameter)
-//                                            print("localFile.etsionNm : \(localFile.etsionNm)")
-//                                            print("fileArrayToCreate1 : \(self.fileArrayToCreate)")
                                         } else {
                                             
                                         }
@@ -255,48 +270,80 @@ class SyncLocalFilleToNas {
         folderPathArray.removeAll()
         let fileManager = FileManager.default
         let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-        localFileArray = FileUtil().getFileList()
-        for localFile in localFileArray{
-//            print("localFileetsionNm : \(localFile.etsionNm)")
-        }
+//        localFileArray = FileUtil().getFileList()
+
         let today = Date()
         
         let subDirs = documentsURL.subDirectories
         let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "Mobile", foldrWholePathNm: "/Mobile", cretDate : Util.date(text: today), amdDate : Util.date(text: today))
         localFolderArray.append(folder)
+//         print("subDirs : \(subDirs)")
+//        getSubDirectories(subDirs: subDirs, foldrWholePath: "/Mobile")
+
+        getFolderList(foldrWholePath: "/Mobile")
+//        print("localFolderArray : \(localFolderArray)" )
+//        print("localFileArray : \(localFileArray)" )
         
-        getSubDirectories(subDirs: subDirs, foldrWholePath: "/Mobile")
-        
-        
+         self.sysncFoldrInfo()
     }
     
-    func getSubDirectories(subDirs:[URL], foldrWholePath:String){
-        if(subDirs.count > 0){
-            for subDir in subDirs{
-                do{
-                    let attribute = try FileManager.default.attributesOfItem(atPath: subDir.path)
-                    var folderName:String = (NSURL(fileURLWithPath: subDir.lastPathComponent).deletingPathExtension?.lastPathComponent)!
+    func getFolderList(foldrWholePath:String) {
+            let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+            let fileEnumerator = FileManager.default.enumerator(at: documentsDirectory!, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions())
+            while let file = fileEnumerator?.nextObject() as? URL {
+                let fileSavedPath = file.path
+                do {
+                    let attribute = try FileManager.default.attributesOfItem(atPath: fileSavedPath)
+                    let fileName:String = (NSURL(fileURLWithPath: file.lastPathComponent).deletingPathExtension?.lastPathComponent)!
+                    let fileExtension = file.pathExtension
                     let folderCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                     let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
-                    let foldrWholePathNm = "\(foldrWholePath)/\(folderName)"
-                    let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : folderName, foldrWholePathNm: foldrWholePathNm, cretDate : Util.date(text: folderCreateDate), amdDate : Util.date(text: modifiedDate))
+                    let decodedFileName:String = fileName.removingPercentEncoding!
+                  
+                    let fileCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                     
-                    localFolderArray.append(folder)
-                    
-                    if(subDir.subDirectories.count > 0){
-                        getSubDirectories(subDirs: subDir.subDirectories, foldrWholePath: foldrWholePathNm)
-                        return
+                    if(fileExtension.isEmpty){
+                        var foldrWholePathNm = "/Mobile"
+                        if let folderNmArray = URLComponents(string: fileSavedPath)?.path.components(separatedBy: "/") {
+                            let documentIndex = folderNmArray.index(of: "Documents")
+                            for (index, path) in folderNmArray.enumerated() {
+                                if(documentIndex! < index && index < folderNmArray.count){
+                                    foldrWholePathNm += "/\(folderNmArray[index])"
+                                }
+                            }
+                        }
+                        
+                        let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : fileName, foldrWholePathNm: foldrWholePathNm, cretDate : Util.date(text: folderCreateDate), amdDate : Util.date(text: modifiedDate))
+                        localFolderArray.append(folder)
+                    } else {
+                        var foldrWholePathNm = "/Mobile"
+                        if let folderNmArray = URLComponents(string: fileSavedPath)?.path.components(separatedBy: "/") {
+                            let documentIndex = folderNmArray.index(of: "Documents")
+                            let folderNm = folderNmArray[(folderNmArray.count) - 2]
+                            let pathLastIndex = (folderNmArray.count) - 1
+                            for (index, path) in folderNmArray.enumerated() {
+                                if(documentIndex! < index && index < pathLastIndex){
+                                    foldrWholePathNm += "/\(folderNmArray[index])"
+                                }
+                            }
+                            
+                            if let size = attribute[FileAttributeKey.size] as? NSNumber {
+                                if(!fileExtension.isEmpty){
+                                    let files = App.LocalFiles(cmd:"C",userId:App.defaults.userId,devUuid:Util.getUuid(),fileNm:decodedFileName,etsionNm:fileExtension,fileSize:size.stringValue,cretDate:Util.date(text: fileCreateDate),amdDate:Util.date(text: modifiedDate), foldrWholePathNm: foldrWholePathNm, savedPath: fileSavedPath)
+                                    
+                                    localFileArray.append(files)
+                                }
+                            }
+                        }
                     }
-                    
                 } catch {
-                    print("Error: \(error)")
+                    
                 }
-            }
-        }
-//        print("localFolderArray : \(localFolderArray)")
-        self.sysncFoldrInfo()
         
+            }
     }
+    
+  
     
     
     func createFolderListToServer(parameters:[[String: Any]]){
@@ -365,7 +412,7 @@ class SyncLocalFilleToNas {
             switch response.result {
             case .success(let value):
                 //                                let json = JSON(value)
-                print("deleteFileListToServer : \(response.result)")
+//                print("deleteFileListToServer : \(response.result)")
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
 //                print(" deleteFileListToServer message : \(message)")

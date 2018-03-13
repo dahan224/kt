@@ -19,3 +19,4 @@ class HomeDeviceFolerCollectionViewCell: UICollectionViewCell {
     @IBOutlet weak var lblSub: UILabel!
     
 }
+

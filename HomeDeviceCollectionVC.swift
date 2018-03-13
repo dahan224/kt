@@ -76,6 +76,7 @@ let quickLookController = QLPreviewController()
     
     var DeviceArray:[App.DeviceStruct] = []
     var folderArray:[App.FolderStruct] = []
+    var fileArrayToDownload:[App.FolderStruct] = []
     var localFileArray:[App.LocalFiles] = []
     var folderIdArray = [Int]()
     var folderNameArray = [String]()
@@ -205,16 +206,17 @@ let quickLookController = QLPreviewController()
         var cellWidth = (width - 35) / 2
         var height = cellWidth
         var minimumSpacing:CGFloat = 5
+        var edgieInsets = UIEdgeInsets(top: 5, left: 15, bottom: 0, right: 15)
         switch listViewStyleState {
         case .grid:
-            
             break
         case .list:
-            cellWidth = width
+            cellWidth = width - 20
             height = 80.0
             minimumSpacing = 10
             if(cellStyle == 2 || flickState == .lately){
                 minimumSpacing = 1
+                cellWidth = width 
             }
             break
         }
@@ -222,7 +224,7 @@ let quickLookController = QLPreviewController()
         
 //        print("width : \(width)")
 //        print("deviceCollectionViewWidth : \(cellWidth)")
-        layout.sectionInset = UIEdgeInsets(top: 5, left: 15, bottom: 0, right: 15)
+        layout.sectionInset = edgieInsets
         layout.itemSize = CGSize(width: cellWidth, height: height )
         layout.minimumInteritemSpacing = 5
         layout.minimumLineSpacing = minimumSpacing
@@ -266,9 +268,18 @@ let quickLookController = QLPreviewController()
                     cell1.deviceImage.image = UIImage(named: imageString)
                     cell1.lblMain.text = DeviceArray[indexPath.row].devNm
                     cell1.lblSub.isHidden = true
-                    
                     cell3.ivSub.image = UIImage(named: imageString)
                     cell3.lblMain.text = DeviceArray[indexPath.row].devNm
+                    if(DeviceArray[indexPath.row].newFlag == "Y"){
+                        cell3.ivFlagNew.isHidden = false
+                    }
+                    if(DeviceArray[indexPath.row].osCd == "G" && DeviceArray[indexPath.row].logical != "nil"){
+                        cell3.lblLogical.isHidden = false
+                        cell3.lblLogical.text = "\(DeviceArray[indexPath.row].logical) 사용"
+                    }
+                    if(DeviceArray[indexPath.row].devUuid == Util.getUuid()){
+                        cell3.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "ff0000")
+                    }
                     
                     switch listViewStyleState{
                     case .grid:
@@ -722,7 +733,7 @@ let quickLookController = QLPreviewController()
             let json = JSON(responseObject!)
             if(json["listData"].exists()){
                 let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
-                print("serverList :\(serverList)")
+                print("download serverList :\(serverList)")
                 if (serverList.count > 0){
                     for list in serverList{
                         let folder = App.FolderStruct(data: list as AnyObject)
@@ -749,6 +760,8 @@ let quickLookController = QLPreviewController()
     
     func printFolderPath(){
         print("folderPathToDownLoad: \(folderPathToDownLoad)")
+        print("folderIdsToDownLoad: \(folderIdsToDownLoad)")
+        var localPathArray:[URL] = []
         for name in folderPathToDownLoad {
             let fullNameArr = name.components(separatedBy: "/")
             var folderName = ""
@@ -760,11 +773,13 @@ let quickLookController = QLPreviewController()
                 }
             print("folderName : \(folderName)")
             let createdPath:URL = self.createLocalFolder(folderName: folderName)!
+            localPathArray.append(createdPath)
             }
 
+            getFilesFromFolder()
+        
         
     }
-  
     func createLocalFolder(folderName: String) -> URL? {
         let fileManager = FileManager.default
         if let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first {
@@ -785,6 +800,79 @@ let quickLookController = QLPreviewController()
         }
     }
     
+    func getFilesFromFolder(){
+        
+        if(folderIdsToDownLoad.count > 0){
+            let index = folderIdsToDownLoad.count - 1
+            if(index > -1){
+                let stringFolderId = String(folderIdsToDownLoad[index])
+                getFileListToDownload(userId: userId, devUuid: selectedDevUuid, foldrId: stringFolderId, index:index)
+                return
+            }
+        }
+        self.downloadFile()
+    
+    }
+    
+    func getFileListToDownload(userId: String, devUuid: String, foldrId: String, index:Int){
+        let param:[String : Any] = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"page":1,"sortBy":sortBy]
+        print("param : \(param)")
+        GetListFromServer().getFileList(params: param){ responseObject, error in
+            let json = JSON(responseObject!)
+            //            let message = responseObject?.object(forKey: "message")
+            if(json["listData"].exists()){
+                let listData = json["listData"]
+                //                print("getFileListToDownloadlistData : \(listData)")
+                let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
+                for list in serverList{
+                    let folder = App.FolderStruct(data: list as AnyObject)
+                    self.fileArrayToDownload.append(folder)
+                }
+            }
+            self.folderIdsToDownLoad.remove(at: index)
+            self.getFilesFromFolder()
+        }
+        
+        
+    }
+    
+    func downloadFile(){
+        print("fileArrayToDownload : \(fileArrayToDownload)")
+        for file in fileArrayToDownload{
+            print("download file : \(file)")
+        }
+        if(fileArrayToDownload.count > 0){
+            let index = fileArrayToDownload.count - 1
+            if(index > -1){
+                let downFileName = fileArrayToDownload[index].fileNm
+                let downPath = fileArrayToDownload[index].foldrWholePathNm
+                let downId = String(fileArrayToDownload[index].fileId)
+                downloadFromNasFolder(name: downFileName, path: downPath, fileId: downId, index:index)
+                return
+            }
+        }
+        self.finishDownload()
+    }
+
+    
+    func downloadFromNasFolder(name:String, path:String, fileId:String, index:Int){
+        ContextMenuWork().downloadFromNasFolder(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+            if let success = responseObject {
+                print(success)
+                if(success == "success"){
+                }
+            }
+            self.fileArrayToDownload.remove(at: index)
+            self.downloadFile()
+        }
+    }
+    
+    func finishDownload(){
+        SyncLocalFilleToNas().sync()
+        print("download finish")
+    }
+    
+    
     func NasFolderContextMenuCalled(cell:NasFolderListCell, indexPath:IndexPath, sender:UIButton){
         let foldrNm = folderArray[indexPath.row].foldrNm
         let etsionNm = folderArray[indexPath.row].etsionNm
@@ -794,17 +882,9 @@ let quickLookController = QLPreviewController()
         let foldrId = folderArray[indexPath.row].foldrId
         switch sender {
         case cell.btnDwnld:
-            folderIdsToDownLoad.removeAll()
-            folderPathToDownLoad.removeAll()
-            getFolderFinish = false
             
-            getFolderIdsToDownload(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm)
-            
-            
-           
-            
-            
-            
+//            getFolderIdsToDownload(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:devUuid)
+            ContextMenuWork().downloadFolderFromNas(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:selectedDevUuid, deviceName:deviceName)
             
             break
         case cell.btnNas:
@@ -1040,13 +1120,15 @@ let quickLookController = QLPreviewController()
         print("fileId : \(fileId), mimeType : \(mimeType)")
         let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
         print("stringUrl : \(stringUrl)")
+        var saveFileNm = ""
+        saveFileNm = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         
         let downloadUrl = URL(string: stringUrl)
         let destination: DownloadRequest.DownloadFileDestination = { _, _ in
             var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
             
             // the name of the file here I kept is yourFileName with appended extension
-            documentsURL.appendPathComponent("\(name)")
+            documentsURL.appendPathComponent("\(saveFileNm)")
             return (documentsURL, [.removePreviousFile])
         }
                 Alamofire.download(downloadUrl!, to: destination)
@@ -1064,8 +1146,6 @@ let quickLookController = QLPreviewController()
     }
     
   
-    
-    
     func downloadFromNas(name:String, path:String, fileId:String){
         ContextMenuWork().downloadFromNas(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
@@ -1078,10 +1158,7 @@ let quickLookController = QLPreviewController()
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
                     }
-                    
-                    
                 }
-                
             }
             return
         }
@@ -1258,52 +1335,26 @@ let quickLookController = QLPreviewController()
     }
     
     func getFileList(userId: String, devUuid: String, foldrId: String){
-        var param:[String : Any] = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"page":1,"sortBy":sortBy]
-      
-        let urlString = App.URL.server+"listFile.json"
-        let headers = [
-            "Content-Type": "application/json",
-            "X-Auth-Token": self.loginToken,
-            "Cookie": self.loginCookie
-        ]
-        Alamofire.request(urlString,
-                          method: .post,
-                          parameters: param,
-                          encoding : JSONEncoding.default,
-                          headers: headers).responseJSON{ (response) in
-                            switch response.result {
-                            case .success(let value):
-                                let json = JSON(value)
-                                let responseData = value as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                //                                print("showFolderInfo json : \(json)")
-                                if(json["listData"].exists()){
-                                    var listData = json["listData"]
-                                    //                                    print("showFolderInfoData : \(listData)")
-                                    var serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
-                                    for list in serverList{
-                                        var folder = App.FolderStruct(data: list as AnyObject)
-                                        self.folderArray.append(folder)
-                                        
-                                    }
-                                    
-                                }
-                                break
-                            case .failure(let error):
-                                NSLog(error.localizedDescription)
-                                break
-                            default:
-                                print(response)
-                                break
-                            }
-                            
-                            print("final folderArray : \(self.folderArray)")
-                            self.cellStyle = 2
-                            self.collectionviewCellSpcing()
-                            self.deviceCollectionView.reloadData()
-                            self.deviceCollectionView.collectionViewLayout.invalidateLayout()
-                            
+        let param:[String : Any] = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"page":1,"sortBy":sortBy]
+        GetListFromServer().getFileList(params: param){ responseObject, error in
+            let json = JSON(responseObject!)
+//            let message = responseObject?.object(forKey: "message")
+            if(json["listData"].exists()){
+                var listData = json["listData"]
+                var serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
+                for list in serverList{
+                    let folder = App.FolderStruct(data: list as AnyObject)
+                    self.folderArray.append(folder)
+                }
+            }
+            print("final folderArray : \(self.folderArray)")
+            self.cellStyle = 2
+            self.collectionviewCellSpcing()
+            self.deviceCollectionView.reloadData()
+            self.deviceCollectionView.collectionViewLayout.invalidateLayout()
+            return
         }
+     
     }
 
     

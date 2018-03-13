@@ -45,7 +45,7 @@ class GetListFromServer {
     func getFoldrList(devUuid:String, userId:String, deviceName:String,completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId,"devUuid":devUuid]
-        var filnalUrl = "listFoldr.json"
+        let filnalUrl = "listFoldr.json"
         Alamofire.request(App.URL.server+filnalUrl
             , method: .post
             , parameters:params
@@ -89,7 +89,31 @@ class GetListFromServer {
                 }
         }
     }
- 
+    
+    
+    func getFileList(params:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        let filnalUrl = "listFile.json"
+        Alamofire.request(App.URL.server+filnalUrl
+            , method: .post
+            , parameters:params
+            , encoding : JSONEncoding.default
+            , headers: App.Headrs.jsonHeader
+            ).responseJSON { response in
+                
+                switch response.result {
+                case .success(let value):
+                    completionHandler(value as? NSDictionary, nil)
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    completionHandler(nil, error as NSError)
+                    break
+                    
+                }
+        }
+    }
+   
 }
 
 

@@ -18,7 +18,12 @@ class DeviceListCell: UICollectionViewCell {
         
     }()
     
-  
+    var ivFlagNew:UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+        
+    }()
     
     let lblMain:UILabel = {
         let label = UILabel()
@@ -37,7 +42,14 @@ class DeviceListCell: UICollectionViewCell {
         return label
     }()
   
-    
+    let lblLogical:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 13)
+        label.textColor = HexStringToUIColor().getUIColor(hex: "d1d2d4")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -52,6 +64,8 @@ class DeviceListCell: UICollectionViewCell {
         backgroundColor = UIColor.white
         addSubview(ivSub)
         addSubview(lblMain)
+        addSubview(ivFlagNew)
+        addSubview(lblLogical)
         
         
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
@@ -63,6 +77,18 @@ class DeviceListCell: UICollectionViewCell {
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 30).isActive = true
         lblMain.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         
+        ivFlagNew.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        ivFlagNew.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        ivFlagNew.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        ivFlagNew.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        ivFlagNew.image = UIImage(named: "new_img")
+        ivFlagNew.isHidden = true
+        
+        
+        lblLogical.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        lblLogical.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 270).isActive = true
+        lblLogical.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        lblLogical.isHidden = true
         
         
         

@@ -58,49 +58,10 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    func getDeviceList(){
-        
+    func getDeviceList(){        
         DeviceArray.removeAll()
-        let headers = [
-            "Content-Type": "application/json",
-            "X-Auth-Token": self.loginToken,
-            "Cookie": self.loginCookie
-        ]
-        //모바일 폴더 동기화 리스트
-        Alamofire.request(App.URL.server+"listOneview.json"
-            , method: .post
-            , parameters:["userId":userId]
-            , encoding : JSONEncoding.default
-            , headers: headers
-            ).responseJSON { response in
-                
-                switch response.result {
-                case .success(let value):
-                    print("getDeviceList sync : \(response)")
-                    let json = JSON(value)
-                    let responseData = value as! NSDictionary
-                    let listData = responseData.object(forKey: "listData")
-                    if let statusCode = json["statusCode"].int, statusCode == 100 {
-                        var serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
-                        for device in serverList {
-                            let devNm = device["devNm"] as! String ?? "nil"
-                            let devUuid = device["devUuid"] as! String ?? "nil"
-                            let mkngVndrNm = device["mkngVndrNm"] as? String ?? "nil"
-                            let onoff = device["onoff"] as! String ?? "nil"
-                            let osCd = device["osCd"] as! String ?? "nil"
-                            let osDesc = device["osDesc"] as? String ?? "nil"
-                            let osNm = device["osNm"] as! String ?? "nil"
-                            let userId = device["userId"] as! String ?? "nil"
-                            let userName = device["userName"] as! String ?? "nil"
-                            let deviceStruct = App.DeviceStruct(devNm : devNm , devUuid : devUuid, mkngVndrNm : mkngVndrNm, onoff : onoff, osCd : osCd, osDesc : osDesc, osNm : osNm, userId : userId, userName : userName)
-                            self.DeviceArray.append(deviceStruct)
-                        }
-                    }
-                self.tableView.reloadData()
-                case .failure(let error):
-                    NSLog(error.localizedDescription)
-                }
-        }
+        self.DeviceArray = DbHelper().listSqlite(sortBy: DbHelper.sortByEnum.none)
+        self.tableView.reloadData()
     }
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return DeviceArray.count

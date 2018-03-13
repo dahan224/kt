@@ -18,7 +18,9 @@ class DbHelper{
     let id = Expression<Int>("id")
     let devNm = Expression<String>("devNm")
     let devUuid = Expression<String>("devUuid")
+    let logical = Expression<String>("logical")
     let mkngVndrNm = Expression<String>("mkngVndrNm")
+    let newFlag = Expression<String>("newFlag")
     let onoff = Expression<String>("onoff")
     let osCd = Expression<String>("osCd")
     let osDesc = Expression<String>("osDesc")
@@ -69,7 +71,7 @@ class DbHelper{
         do {
             try self.database.transaction {
                 for (index,device) in getArray.enumerated() {
-                    try self.database.run(self.oneViewListTable.insert(devNm <- getArray[index].devNm, devUuid <- getArray[index].devUuid, mkngVndrNm <- getArray[index].mkngVndrNm, onoff <- getArray[index].onoff, osCd <- getArray[index].osCd, osDesc <- getArray[index].osDesc, osNm <- getArray[index].osNm, osNm <- getArray[index].osNm, userId <- getArray[index].userId, userName <- getArray[index].userName))
+                    try self.database.run(self.oneViewListTable.insert(devNm <- getArray[index].devNm, devUuid <- getArray[index].devUuid,  logical <- getArray[index].logical, mkngVndrNm <- getArray[index].mkngVndrNm, newFlag <- getArray[index].newFlag, onoff <- getArray[index].onoff, osCd <- getArray[index].osCd, osDesc <- getArray[index].osDesc, osNm <- getArray[index].osNm, osNm <- getArray[index].osNm, userId <- getArray[index].userId, userName <- getArray[index].userName))
                 }
             }
         } catch {
@@ -108,7 +110,9 @@ class DbHelper{
 //                print("table data: id : \(device[id]), deviceData : \(device)")
                 let devNmValue = "\(device[devNm])"
                 let devUuidValue = "\(device[devUuid])"
+                let logical = "\(device[self.logical])"
                 let mkngVndrNmValue = "\(device[mkngVndrNm])"
+                let newFlag = "\(device[self.newFlag])"
                 let onoffValue = "\(device[onoff])"
                 let osCdValue = "\(device[osCd])"
                 let osDescValue = "\(device[osDesc])"
@@ -116,7 +120,7 @@ class DbHelper{
                 let userIdValue = "\(device[userId])"
                 let userNameValue = "\(device[userName])"
                                 
-                let deviceStruct = App.DeviceStruct(devNm : devNmValue, devUuid : devUuidValue, mkngVndrNm : mkngVndrNmValue, onoff : onoffValue, osCd : osCdValue, osDesc : osDescValue, osNm : osNmValue, userId : userIdValue, userName : userNameValue)
+                let deviceStruct = App.DeviceStruct(devNm : devNmValue, devUuid : devUuidValue, logical:logical, mkngVndrNm : mkngVndrNmValue, newFlag : newFlag, onoff : onoffValue, osCd : osCdValue, osDesc : osDescValue, osNm : osNmValue, userId : userIdValue, userName : userNameValue)
                 
                 DeviceArray.append(deviceStruct)
             }
@@ -133,7 +137,9 @@ class DbHelper{
             table.column(id, primaryKey: true)
             table.column(devNm)
             table.column(devUuid)
+            table.column(logical)
             table.column(mkngVndrNm)
+            table.column(newFlag)
             table.column(onoff)
             table.column(osCd)
             table.column(osDesc)

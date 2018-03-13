@@ -93,7 +93,9 @@ struct App {
     struct DeviceStruct:Codable {
         var devNm:String
         var devUuid:String
+        var logical: String
         var mkngVndrNm:String
+        var newFlag:String
         var onoff:String
         var osCd:String
         var osDesc:String
@@ -101,10 +103,12 @@ struct App {
         var userId:String
         var userName:String
         
-        init(devNm : String, devUuid : String, mkngVndrNm : String, onoff : String, osCd : String, osDesc : String, osNm : String, userId : String, userName : String) {
+        init(devNm : String, devUuid : String, logical:String, mkngVndrNm : String, newFlag:String, onoff : String, osCd : String, osDesc : String, osNm : String, userId : String, userName : String) {
             self.devNm   = devNm
             self.devUuid   = devUuid
+            self.logical = logical
             self.mkngVndrNm   = mkngVndrNm
+            self.newFlag = newFlag
             self.onoff   = onoff
             self.osCd   = osCd
             self.osDesc   = osDesc
@@ -115,7 +119,9 @@ struct App {
         init(device: AnyObject) {
             self.devNm = device["devNm"] as? String ?? "nil"
             self.devUuid = device["devUuid"] as? String ?? "nil"
+            self.logical = device["logical"] as? String ?? "nil"
             self.mkngVndrNm = device["mkngVndrNm"] as? String ?? "nil"
+            self.newFlag = device["newFlag"] as? String ?? "nil"
             self.onoff = device["onoff"] as? String ?? "nil"
             self.osCd = device["osCd"] as? String ?? "nil"
             self.osDesc = device["osDesc"] as? String ?? "nil"
