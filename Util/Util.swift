@@ -74,6 +74,7 @@ class Util{
     
     let contextImageCheck = [
         ["context": "속성보기",  "image": "ico_contextmenu_info"],
+        ["context": "앱 실행",  "image": "ico_contextmenu_app"],
         ["context": "다운로드",  "image": "ico_contextmenu_dwld"],
         ["context": "GiGA NAS로 보내기",  "image": "ico_contextmenu_send"],
         ["context": "Google Drive로 보내기",  "image": "ico_contextmenu_send"],

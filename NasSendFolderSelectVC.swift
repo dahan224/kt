@@ -46,6 +46,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var fromUserId = ""
     var currentDevUuId = ""
     var fromOsCd = ""
+    var toOsCd = ""
     var googleDriveFileIdPath = ""
     var amdDate = ""
     enum storageKind:String {
@@ -558,10 +559,16 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 break
                 
             case .local:
-                let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"I","toOsCd":"G"]
-                print("param : \(param)")
+                var toOsCd = "G"
+                if(toUserId != App.defaults.userId){
+                    toOsCd = "S"
+                    
+                }
+//
+//                let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"I","toOsCd":"G"]
+//                print("param : \(param)")
                 let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
-                sendToNasFromLocal(url: fileUrl, name: originalFileName)
+                sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
                 
                 break
                 
@@ -847,18 +854,27 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
     }
     
-    func sendToNasFromLocal(url:URL, name:String){
+    func sendToNasFromLocal(url:URL, name:String, toOsCd:String){
         
-        let userId = App.defaults.userId
+        let userId = toUserId
         let password = "1234"
         
-        let credentialData = "gs-\(userId):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
-        let headers = [
+        var headers = [
             "Authorization": "Basic \(base64Credentials)",
             "x-isi-ifs-target-type":"object"
             
         ]
+        if(toOsCd != "G"){
+            headers = [
+                "Authorization": "Basic \(base64Credentials)",
+                "x-isi-ifs-target-type":"object",
+                "x-isi-ifs-access-control":"770"
+                
+            ]
+        }
+        print("headers : \(headers)")
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
         print("stringUrl : \(stringUrl)" )
         
@@ -886,7 +902,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     let statusCode = (response.response?.statusCode)!
                 } else { //no errors
                     let statusCode = (response.response?.statusCode)! //example : 200
-                    self.notifyNasUploadFinish(name: name)
+                    self.notifyNasUploadFinish(name: name, toOsCd:toOsCd)
                     
                 }
         }
@@ -894,7 +910,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
  
     
-    func notifyNasUploadFinish(name:String){
+    func notifyNasUploadFinish(name:String, toOsCd:String){
         let urlString = App.URL.server+"nasUpldCmplt.do"
         let inFileId:Int = Int(originalFileId)!
         let size = Decimal(inFileId)
@@ -903,7 +919,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         print(Int(result)) // testing the cast to Int
         let decimalFileId:Decimal = Decimal.init(inFileId)
 
-        let paramas:[String : Any] = ["userId":App.defaults.userId,"fileId":originalFileId,"toFoldr":newFoldrWholePathNm,"toFileNm":name]
+        let paramas:[String : Any] = ["userId":toUserId,"fileId":originalFileId,"toFoldr":newFoldrWholePathNm,"toFileNm":name,"toOsCd":toOsCd]
         print("notifyNasUploadFinish param : \(paramas)")
         Alamofire.request(urlString,
                           method: .post,

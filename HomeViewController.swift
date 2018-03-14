@@ -74,7 +74,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     enum bottomListEnum: String {
         case sort = "sort"
-        case fileInfo = "fileInfo"
+        case nasFileInfo = "nasFileInfo"
+        case localFileInfo = "localFileInfo"
+        case remoteFileInfo = "remoteFileInfo"
         case oneView = "oneView"
     }
     
@@ -85,9 +87,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var bottomListSortKey = ["new", "old","asc","desc","kind"]
     
     
-    var bottomListNasFileInfo = ["속성보기", "앱 실해", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
+    var bottomListLocalFileInfo = ["속성보기", "앱 실행", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomListFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
-    
+    var bottomListRemoteFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기"]
     var bottomListOneViewSort = ["기준정렬","이름순-ㄱ우선","이름순-ㅎ우선"]
     var bottomListOneViewSortKey = [DbHelper.sortByEnum.none, DbHelper.sortByEnum.asc, DbHelper.sortByEnum.desc]
     
@@ -286,7 +288,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var SearchedFileArray:[App.SearchedFileStruct] = []
     var LatelyUpdatedFileArray:[App.LatelyUpdatedFileStruct] = []
     var driveFileArray:[App.DriveFileStruct] = []
+    var folderArray:[App.FolderStruct] = []
+    var intFolderArrayIndexPathRow = 0
     var collectionView: UICollectionView!
+    var currentDevUuid = ""
+    var currentFolderId = ""
     var fromOsCd = ""
     var searchGubun = ""
     var oneViewSortState:DbHelper.sortByEnum = DbHelper.sortByEnum.none
@@ -320,7 +326,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         userId = UserDefaults.standard.string(forKey: "userId")!
         
         NotificationCenter.default.addObserver(self,
-                                               selector: #selector(toggleBottomMenu(fileInfo: )),
+                                               selector: #selector(toggleBottomMenu(sortInfo: )),
                                                name: NSNotification.Name("toggleBottomMenu"),
                                                object: nil)
         
@@ -685,10 +691,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     func localContextMenuCalled(cell:FileListCell, indexPath:IndexPath, sender:UIButton){
         let fileNm = SearchedFileArray[indexPath.row].fileNm
         foldrWholePathNm = SearchedFileArray[indexPath.row].foldrWholePathNm
-        var btn = "show"
         switch sender {
         case cell.btnShow:
-            btn = "show"
             let fileId = SearchedFileArray[indexPath.row].fileId
             print("fileId : \(fileId)")
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName, "savedPath":"sdf"]
@@ -696,7 +700,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             
             break
         case cell.btnAction:
-            btn = "btnAction"
             let mailURL = URL(string: "photos-redirect://")!
             if UIApplication.shared.canOpenURL(mailURL) {
                 UIApplication.shared.openURL(mailURL)
@@ -794,37 +797,63 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         setHomeView()
         
     }
+    func getFolderArrayFromContainer(getFolderArray:[App.FolderStruct], getFolderArrayIndexPathRow:Int){
+        folderArray = getFolderArray
+        intFolderArrayIndexPathRow = getFolderArrayIndexPathRow
+        print("folderArray : \(folderArray), folderArrayIndexPath : \(intFolderArrayIndexPathRow), \(folderArray[intFolderArrayIndexPathRow].fileNm)")
+    }
     
-    func dataFromContainer(containerData : Int, getStepState:searchStepEnum, getStringId:String, getStringFolderPath:String){
+    func dataFromContainer(containerData : Int, getStepState:searchStepEnum, getBottomListState: bottomListEnum, getStringId:String, getStringFolderPath:String, getCurrentDevUuid:String, getCurrentFolderId:String){
         searchStepState = getStepState
         searchId = getStringId
         foldrWholePathNm = getStringFolderPath
-        print("searchStepState : \(searchStepState), id: \(searchId)")
+        bottomListState = getBottomListState
+        currentDevUuid = getCurrentDevUuid
+        currentFolderId = getCurrentFolderId
+        
+//        tableView.reloadData()
+        print("searchStepState : \(searchStepState), id: \(searchId), bottomListyState: \(getBottomListState)")
     }
     
     @objc func bottomStateFromContainer(stateInfo: NSNotification){
-        if let bottomState = stateInfo.userInfo?["bottomState"] as? String, let getFileId = stateInfo.userInfo?["fileId"] as? String, let getFoldrWholePathNm = stateInfo.userInfo?["foldrWholePathNm"] as? String, let getDeviceName = stateInfo.userInfo?["deviceName"] as? String, let getDevUuid = stateInfo.userInfo?["selectedDevUuid"] as? String, let getFileNm = stateInfo.userInfo?["fileNm"] as? String, let getUserId = stateInfo.userInfo?["userId"] as? String, let getFoldrId = stateInfo.userInfo?["foldrId"] as? String, let getFomOsCd = stateInfo.userInfo?["fromOsCd"] as? String{
+        if let bottomState = stateInfo.userInfo?["bottomState"] as? String, let getFileId = stateInfo.userInfo?["fileId"] as? String, let getFoldrWholePathNm = stateInfo.userInfo?["foldrWholePathNm"] as? String, let getDeviceName = stateInfo.userInfo?["deviceName"] as? String, let getDevUuid = stateInfo.userInfo?["selectedDevUuid"] as? String, let getFileNm = stateInfo.userInfo?["fileNm"] as? String, let getUserId = stateInfo.userInfo?["userId"] as? String, let getFoldrId = stateInfo.userInfo?["foldrId"] as? String, let getFomOsCd = stateInfo.userInfo?["fromOsCd"] as? String, let getCurrentFolderId = stateInfo.userInfo?["currentFolderId"] as? String{
             bottomListState = bottomListEnum(rawValue: bottomState)!
             fileId = getFileId
             foldrWholePathNm = getFoldrWholePathNm
             deviceName = getDeviceName
             selectedDevUuid = getDevUuid
+            currentDevUuid = getDevUuid
             selectedDevUserId = getUserId
             fileNm = getFileNm
             foldrId = getFoldrId
             fromOsCd = getFomOsCd
-            print("bottomListState: foldrWholePathNm : \(foldrWholePathNm)")
+            currentFolderId = getCurrentFolderId
+            print("bottomListState: \(bottomListState), foldrWholePathNm : \(foldrWholePathNm)")
             let fileIdDict = ["fileId":"\(fileId)"]
+            
+            ifNavBarClicked = false
             if(listViewStyleState == .grid){
+                if let getCellStyle = stateInfo.userInfo?["cellStyle"] as? String {
+                    print("getCellStyle : \(getCellStyle)")
+                    
+                    ifNavBarClicked = true
+                    tableView.reloadData()
+                } else {
+                    if let getFolderArray = stateInfo.userInfo?["folderArray"] as? [App.FolderStruct], let getIndexPath = stateInfo.userInfo?["selectedIndex"] as? IndexPath {
+                        
+                        print("getFolderArray : \(getFolderArray)")
+                        print("getIndexPath : \(getIndexPath)")
+                        folderArray = getFolderArray
+                        intFolderArrayIndexPathRow = getIndexPath.row
+                        
+                    }
+                tableView.reloadData()
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+                }
             }
         } else {
             print("not called")
         }
-        ifNavBarClicked = false
-//        bottomListState = .fileInfo
-        
-        
     }
     
     @IBAction func btnCategoryClicked(_ sender: UIButton) {
@@ -877,7 +906,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     @objc func btnSortClicked(){
         ifNavBarClicked = false
+        
         let fileIdDict = ["fileId":"0"]
+        bottomListState = .oneView
+        tableView.reloadData()
         NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
         
     }
@@ -904,20 +936,21 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     @objc func navBarTitleClicked(){
         print("??")
-        ifNavBarClicked = true
+        ifNavBarClicked = true        
         let fileIdDict = ["fileId":"0"]
+        tableView.reloadData()
         NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
     }
     
  
-    @objc func toggleBottomMenu(fileInfo: NSNotification) {
-        tableView.reloadData()
-        if let getInfo = fileInfo.userInfo?["fileId"] as? String {
+    @objc func toggleBottomMenu(sortInfo: NSNotification) {
+        
+        if let getInfo = sortInfo.userInfo?["fileId"] as? String {
             fileId = getInfo
-            bottomListState = .fileInfo
-            
             print("getFileId: \(fileId)")
         }
+        print("local list count :\(bottomListLocalFileInfo.count)")
+      
         if bottomMenuOpen {
             UIView.animate(withDuration: 0.2, animations: {
                 self.tableBottomConstant.constant = 240
@@ -963,7 +996,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         UserDefaults.standard.set(bottomMenuOpen, forKey: "bottomMenuOpen")
     }
     @objc func closeBottomMenu() {
-        ifNavBarClicked = false
         bottomMenuOpen = UserDefaults.standard.bool(forKey: "bottomMenuOpen")
         if(bottomMenuOpen){
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: nil)
@@ -1020,8 +1052,15 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             return DeviceArray.count + 1
         } else {
             switch bottomListState {
-            case .fileInfo:
+            case .nasFileInfo:
                 return bottomListFileInfo.count
+            case .localFileInfo:
+                return bottomListLocalFileInfo.count
+                break
+                
+            case .remoteFileInfo:
+                return bottomListRemoteFileInfo.count
+                break
                 
             case .sort:
                 return bottomListSort.count
@@ -1062,12 +1101,21 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         } else {
             print("tableview bottomstate : \(bottomListState)")
             switch bottomListState {
-            case .fileInfo:
+            case .nasFileInfo:
                 cell.ivIcon.isHidden = false
                 let imageString = Util.getContextImageString(context: bottomListFileInfo[indexPath.row])
                 cell.ivIcon.image = UIImage(named: imageString)
-                
                 cell.lblTitle.text = bottomListFileInfo[indexPath.row]
+                break
+                
+            case .localFileInfo:
+                cell.ivIcon.isHidden = false
+                let imageString = Util.getContextImageString(context: bottomListLocalFileInfo[indexPath.row])
+                cell.ivIcon.image = UIImage(named: imageString)
+                cell.lblTitle.text = bottomListLocalFileInfo[indexPath.row]
+                break
+            case .remoteFileInfo:
+                
                 break
             case .sort:
                 cell.ivIcon.isHidden = true
@@ -1124,78 +1172,87 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 
                 
                 break
-            case .fileInfo:
+            case .nasFileInfo:
                 switch (indexPath.row){
-                case 0 :
-                    let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
-                    NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
-                    NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                    break
-                case 1:
-                    switch mainContentState{
-                    case .oneViewList:
-                        //            print("fileNm : \(fileNm), filePaht : \(foldrWholePathNm)")
-                        self.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
+                    case 0 :
+                        let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+                        NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
+                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                         break
-                    case .googleDriveList:
-                        let fileId = driveFileArray[indexPath.row].fileId
-                        let mimeType = driveFileArray[indexPath.row].mimeType
-                        let name = driveFileArray[indexPath.row].name
-//                        downloadFromDrive(fileId: fileId, mimeType:mimeType, name:name)
-                        break
-                    }
-                    break
-                    
-                case 2:
-                    switch mainContentState{
-                    case .oneViewList:
-                       
-                        switch fromOsCd {
-                        case "S":
-                            let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"nas","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
-                            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                    case 1:
+                        switch mainContentState{
+                        case .oneViewList:
+                            //            print("fileNm : \(fileNm), filePaht : \(foldrWholePathNm)")
+                            self.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
                             break
-                        case "G":
-                            let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"nas","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
-                            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                            break
-                        default:
-                            let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
-                            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                        case .googleDriveList:
+                            let fileId = driveFileArray[indexPath.row].fileId
+                            let mimeType = driveFileArray[indexPath.row].mimeType
+                            let name = driveFileArray[indexPath.row].name
+    //                        downloadFromDrive(fileId: fileId, mimeType:mimeType, name:name)
                             break
                         }
                         break
-                    case .googleDriveList:
+                        
+                    case 2:
+                        switch mainContentState{
+                        case .oneViewList:
+                           
+                            switch fromOsCd {
+                            case "S":
+                                let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"nas","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
+                                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+                                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                                break
+                            case "G":
+                                let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"nas","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
+                                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+                                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                                break
+                            default:
+                                let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
+                                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+                                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                                break
+                            }
+                            break
+                        case .googleDriveList:
+                            
+                            break
+                        }
+                        break
+                    case 3:
+                        self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
+                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                        break
+                    case 4:
+                        let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            //Do you Success button Stuff here
+                            let params = ["userId":self.selectedDevUserId,"devUuid":self.selectedDevUserId,"fileId":self.fileId,"fileNm":self.fileNm,"foldrWholePathNm":self.foldrWholePathNm]
+                            self.deleteNasFile(param: params, foldrId:self.foldrId)
+                        }
+                        let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+                        alertController.addAction(yesAction)
+                        alertController.addAction(noAction)
+                        self.present(alertController, animated: true)
+                        break
+                    
+                    default :
                         
                         break
                     }
-                    break
-                case 3:
-                    self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
-                    NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                    break
-                case 4:
-                    let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
-                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                        UIAlertAction in
-                        //Do you Success button Stuff here
-                        let params = ["userId":self.selectedDevUserId,"devUuid":self.selectedDevUserId,"fileId":self.fileId,"fileNm":self.fileNm,"foldrWholePathNm":self.foldrWholePathNm]
-                        self.deleteNasFile(param: params, foldrId:self.foldrId)
-                    }
-                    let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
-                    alertController.addAction(yesAction)
-                    alertController.addAction(noAction)
-                    self.present(alertController, animated: true)
-                    break
-                
-                default :
-                    
-                    break
-                }
                 break
+                
+            case .localFileInfo:
+                print("localFileInfo folderArray : \(folderArray), indexpathrow : \(intFolderArrayIndexPathRow)")
+                LocalContextMenuController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
+                break
+            case .remoteFileInfo:
+                
+                break
+                
            
             case .oneView:
                 oneViewSortState = bottomListOneViewSortKey[indexPath.row]
