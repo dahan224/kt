@@ -69,16 +69,125 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         NSLog("***************notification \(userInfo)")
         print("노티피케이션을 받았습니다. : \(userInfo)")
         if application.applicationState == .active {
-            print("foreground")
+            
+            if let aps = userInfo["aps"] as? NSDictionary {
+                if let dataString = aps["data"] as? String {
+                    print("\(dataString)")
+                    let data = dataString.data(using: .utf8, allowLossyConversion: false)
+                    let json = JSON(data)
+//                    let fromFileId = json["fromFileId"].string
+                    let fromFileNm:String = json["fromFileNm"].stringValue
+                    let comndDevUuid:String = json["comndDevUuid"].stringValue
+                    let queId:String = json["queId"].stringValue
+                    let intFileId = json["fromFileId"].intValue
+                    let fromFileId = String(describing: intFileId)
+                    let toFoldr = json["toFoldr"].stringValue
+                    print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
+                    showFileInfo(fileId: fromFileId, fileNm:fromFileNm, queId:queId, toFoldr:toFoldr, comndDevUuid:comndDevUuid)
+//                    fromFileNm
+//                    let fileUrl:URL = FileUtil().getFileUrl(fileNm: fromFileNm, amdDate: amdDate)
+                }
+//                let json = JSON(aps)
+//                if(json["data"].exists()){
+//                    print("serverList : \(json["data"]["toOsCd"])")
+//                    
+//                }
+            }
+            
         } else {
             print("background")
         }
-
+//        completionHandler(.newData)
 
         // Print full message.
-        print(userInfo)
+//        print(userInfo)
         
-//        completionHandler(UIBackgroundFetchResult.newData)
+        completionHandler(UIBackgroundFetchResult.newData)
+    }
+    
+    func showFileInfo(fileId:String, fileNm:String, queId:String, toFoldr:String, comndDevUuid:String){
+        ContextMenuWork().getFileDetailInfo(fileId: fileId){ responseObject, error in
+            let json = JSON(responseObject!)
+            print("showFileInfo json : \(json)")
+            if(json["fileData"].exists()){
+                let fileData = json["fileData"]
+                let amdDate = fileData["amdDate"].stringValue
+                print("fileAmdDate : \(amdDate)")
+                let fileUrl:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)
+                self.sendToNasFromLocalForDownload(url: fileUrl, name: fileNm, queId: queId, toFoldr:toFoldr, comndDevUuid:comndDevUuid)
+            }
+            return
+        }
+    }
+    
+    func sendToNasFromLocalForDownload(url:URL, name:String, queId:String, toFoldr:String,comndDevUuid:String){
+        
+        let userId = App.defaults.userId
+        let password = "1234"
+        
+        let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
+        let base64Credentials = credentialData.base64EncodedString(options: [])
+        var headers = [
+            "Authorization": "Basic \(base64Credentials)",
+            "x-isi-ifs-target-type":"container"
+            
+        ]
+     
+        print("headers : \(headers)")
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(comndDevUuid)\(toFoldr)/\(name)?overwrite=true"
+        print("stringUrl : \(stringUrl)" )
+        
+        let filePath = url.path
+        let fileExtension = url.pathExtension
+        print("fileExtension : \(fileExtension)")
+        print("file path : \(filePath)")
+        
+        Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
+            .uploadProgress { progress in // main queue by default
+                print("Upload Progress: \(progress.fractionCompleted)")
+                
+            }
+            .downloadProgress { progress in // main queue by default
+                print("Download Progress: \(progress.fractionCompleted)")
+            }
+            .responseString { response in
+                print("Success: \(response.result.isSuccess)")
+                print("Response String: \(response)")
+                if let alamoError = response.result.error {
+                    let alamoCode = alamoError._code
+                    let statusCode = (response.response?.statusCode)!
+                } else { //no errors
+                    let statusCode = (response.response?.statusCode)! //example : 200
+                    self.notifyNasUploadFinishToRemoteDownload(name: name, queId:queId)
+                    
+                }
+        }
+    }
+    
+    func notifyNasUploadFinishToRemoteDownload(name:String, queId:String){
+        let urlString = App.URL.server+"upldCmplt.do"
+        
+        let paramas:[String : Any] = ["queId":queId,"nasStatusCode":"100"]
+        print("notifyNasUploadFinish param : \(paramas)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: paramas,
+                          encoding : JSONEncoding.default,
+                          headers: App.Headrs.jsonHeader).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+                                
+                                print(response.result.value)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("message : \(message)")
+                                
+                                break
+                            case .failure(let error):
+                                
+                                print(error.localizedDescription)
+                            }
+        }
     }
     // [END receive_message]
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {

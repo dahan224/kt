@@ -122,7 +122,7 @@ let quickLookController = QLPreviewController()
         deviceCollectionView.register(NasFileListCell.self, forCellWithReuseIdentifier: "NasFileListCell")
         deviceCollectionView.register(NasFolderListCell.self, forCellWithReuseIdentifier: "NasFolderListCell")
         deviceCollectionView.register(LocalFileListCell.self, forCellWithReuseIdentifier: "LocalFileListCell")
-        
+        deviceCollectionView.register(RemoteFileListCell.self, forCellWithReuseIdentifier: "RemoteFileListCell")
         let lpgr : UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(gestureRecognizer:)))
         lpgr.minimumPressDuration = 0.5
         lpgr.delaysTouchesBegan = true
@@ -308,25 +308,47 @@ let quickLookController = QLPreviewController()
                     
                     if(selectedDevUuid != Util.getUuid()){
                         if(folderArray[indexPath.row].fileNm != "nil"){
-                            let cell4 = NasFileListCellController(indexPathRow: indexPath.row)
-                            cells.append(cell4)
+                            if(fromOsCd != "S" || fromOsCd != "G"){
+                                let cell4 = RemoteFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
+                                swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                                cell4.btnOption.addGestureRecognizer(swipeLeft)
+                
+                                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
+                                rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                                cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                                cells.append(cell4)
+                            } else {
+                                let cell4 = NasFileListCellController(indexPathRow: indexPath.row)
+                                cells.append(cell4)
+                            }
+                            
                             cell2.lblMain.text = folderArray[indexPath.row].fileNm
                             let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
                             cell2.ivMain.image = UIImage(named: imageString)
                             cell2.ivSub.image = UIImage(named: imageString)
                             
                         } else {
-                            let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
-                            cells.append(cell4)
                             
+                            if(fromOsCd != "S" || fromOsCd != "G"){
+                              let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
+                                cells.append(cell4)
+                                if(folderArray[indexPath.row].foldrNm == "..."){
+                                    cell4.lblSub.isHidden = true
+                                    cell4.btnOption.isHidden = true
+                                }
+                            } else {
+                                let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
+                                cells.append(cell4)
+                                 if(folderArray[indexPath.row].foldrNm == "..."){
+                                    cell4.lblSub.isHidden = true
+                                    cell4.btnOption.isHidden = true
+                                }
+                            }
                             cell2.lblMain.text = folderArray[indexPath.row].foldrNm
                             cell2.ivMain.image = UIImage(named: "ico_folder")
                             cell2.ivSub.image = UIImage(named: "ico_folder")
-                            
-                            if(folderArray[indexPath.row].foldrNm == "..."){
-                                cell4.lblSub.isHidden = true
-                                cell4.btnOption.isHidden = true
-                            }
+                           
                         }
                         
                         switch listViewStyleState{
@@ -669,6 +691,7 @@ let quickLookController = QLPreviewController()
     @objc func btnMultiCheckClicked(sender:UIButton){
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
+        print(sender.superview)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! FileListCell
         if(cell.btnMultiChecked){
             cell.btnMultiChecked = false
@@ -680,6 +703,53 @@ let quickLookController = QLPreviewController()
         
         
     }
+    
+    @objc func btnRemoteFileOptionClicked(sender:UIButton){
+        showRemoteFileOption(tag:sender.tag)
+    }
+    
+    
+    
+    //current state
+    @objc func cellRemoteFileSwipeToLeft(sender:UIGestureRecognizer){
+        if let button = sender.view as? UIButton {
+            // use button
+            print("tag : \(button.tag)")
+            showRemoteFileOption(tag:button.tag)
+        }
+    }
+    
+    
+    func showRemoteFileOption(tag:Int){
+        let buttonRow = tag
+        let indexPath = IndexPath(row: buttonRow, section: 0)
+        let cell = deviceCollectionView.cellForItem(at: indexPath) as! RemoteFileListCell
+        if(cell.optionSHowCheck == 0){
+            let width = App.Size.optionWidth
+            let spacing = (width - 240) / 4
+            cell.spacing = spacing
+            cell.optionShow(spacing: spacing, style: 0)
+            cell.optionSHowCheck = 1
+        } else {
+            cell.optionHide()
+            cell.optionSHowCheck = 0
+        }
+        
+        UIView.animate(withDuration: 0.3){
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc func optionRemoteFileShowClicked(sender:UIButton){
+        let buttonRow = sender.tag
+        let indexPath = IndexPath(row: buttonRow, section: 0)
+        let cell = deviceCollectionView.cellForItem(at: indexPath) as! RemoteFileListCell
+        //        self.localContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
+        RemoteFileListCellController().remoteFileContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId:  currentFolderId)
+    }
+    
+    
+    
     
     func getFolderIdsToDownload(foldrId:Int, foldrWholePathNm:String) {
         print("get folders")
