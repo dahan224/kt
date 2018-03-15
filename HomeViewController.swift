@@ -90,6 +90,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var bottomListLocalFileInfo = ["속성보기", "앱 실행", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomListFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomListRemoteFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기"]
+    
     var bottomListOneViewSort = ["기준정렬","이름순-ㄱ우선","이름순-ㅎ우선"]
     var bottomListOneViewSortKey = [DbHelper.sortByEnum.none, DbHelper.sortByEnum.asc, DbHelper.sortByEnum.desc]
     
@@ -402,6 +403,12 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         child.flickState = self.flickState
         child.LatelyUpdatedFileArray = self.LatelyUpdatedFileArray
         child.driveFileArray = self.driveFileArray
+        
+        // 0eun - start
+        if self.mainContentState == .googleDriveList {
+            child.cellStyle = self.cellStyle
+        }
+        // 0eun - end
         
         self.willMove(toParentViewController: nil)
         child.willMove(toParentViewController: parent)
@@ -1115,7 +1122,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 cell.lblTitle.text = bottomListLocalFileInfo[indexPath.row]
                 break
             case .remoteFileInfo:
-                
+                cell.ivIcon.isHidden = false
+                let imageString = Util.getContextImageString(context: bottomListLocalFileInfo[indexPath.row])
+                cell.ivIcon.image = UIImage(named: imageString)
+                cell.lblTitle.text = bottomListRemoteFileInfo[indexPath.row]
                 break
             case .sort:
                 cell.ivIcon.isHidden = true
@@ -1290,9 +1300,14 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
    
    
-
-    @objc func setGoogleDriveFileListView(){
+   var cellStyle = 1 // 0eun
+    @objc func setGoogleDriveFileListView(cellStyle: NSNotification){
         self.mainContentState = .googleDriveList
+        // 0eun - start
+        if let getInfo = cellStyle.userInfo?["cellStyle"] as? Int {
+            self.cellStyle = getInfo
+        }
+        // 0eun - end
         self.setupDeviceListView(container: self.containerViewA, sortBy: self.oneViewSortState, multiCheckd: multiButtonChecked)
     }
     

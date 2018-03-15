@@ -113,7 +113,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-        
+        let string = "/Mobile"
+        let str =  string.cString(using: String.Encoding.utf8)
+        print("encodedString : \(str)")
+
         
         checkBox.boxType = BEMBoxType.square
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))

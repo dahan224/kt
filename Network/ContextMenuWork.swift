@@ -256,6 +256,92 @@ class ContextMenuWork {
                 }
         }
     }
+    
+    func downloadFromRemote(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
+        stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+        
+        let user = App.defaults.userId
+        let password = "1234"
+        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let base64Credentials = credentialData.base64EncodedString()
+        let headers = [
+            "Authorization": "Basic \(base64Credentials)"
+        ]
+        var saveFileNm = ""
+        //        if(fileNm.contains(" ")){
+        //            saveFileNm = fileNm.split(separator: " ").map(String.init).joined(separator: "-")
+        //        }
+        saveFileNm = fileNm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        print("stringUrl : \(stringUrl)")
+        let downloadUrl:URL = URL(string: stringUrl)!
+        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            documentsURL.appendPathComponent("\(saveFileNm)")
+            return (documentsURL, [.removePreviousFile])
+        }
+        
+        Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
+            .downloadProgress(closure: { (progress) in
+                print("download progress : \(progress.fractionCompleted)")
+                //                 completionHandler(progress.fractionCompleted, nil)
+            })
+            .response { response in
+                print("response : \(response)")
+                if response.destinationURL != nil {
+                    print(response.destinationURL!)
+                    if let path = response.destinationURL?.path{
+                        let path2 = "/private\(path)"
+                        
+                        //                        DbHelper().localFileToSqlite(id: fileId, path: path2)
+                        print("path2 : \(path2)" )
+                        print("saved fileId : \(UserDefaults.standard.string(forKey: path2)), fileId : \(fileId)")
+                        completionHandler("success", nil)
+                    }
+                    
+                }
+        }
+    }
+    
+    func downloadFromRemoteToSend(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
+        stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+        
+        let user = App.defaults.userId
+        let password = "1234"
+        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let base64Credentials = credentialData.base64EncodedString()
+        let headers = [
+            "Authorization": "Basic \(base64Credentials)"
+        ]
+        var saveFileNm = ""
+        //        if(fileNm.contains(" ")){
+        //            saveFileNm = fileNm.split(separator: " ").map(String.init).joined(separator: "-")
+        //        }
+        saveFileNm = fileNm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        print("stringUrl : \(stringUrl)")
+        let downloadUrl:URL = URL(string: stringUrl)!
+        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            documentsURL.appendPathComponent("\(saveFileNm)")
+            return (documentsURL, [.removePreviousFile])
+        }
+        
+        Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
+            .downloadProgress(closure: { (progress) in
+                print("download progress : \(progress.fractionCompleted)")
+                //                 completionHandler(progress.fractionCompleted, nil)
+            })
+            .response { response in
+                print("response : \(response)")
+                if response.destinationURL != nil {
+                    let stringDestinationUrl = response.destinationURL?.absoluteString
+                    print(stringDestinationUrl)
+                    completionHandler(stringDestinationUrl, nil)
+                }
+        }
+    }
+    
     func deleteNasFile(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         Alamofire.request(App.URL.server+"nasFileDel.do"
             , method: .post

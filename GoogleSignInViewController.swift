@@ -279,7 +279,7 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
     
     func getFiles(accessToken:String, root:String){
         self.driveFileArray.removeAll()
-        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false&access_token=\(accessToken)"
+        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false&access_token=\(accessToken)&orderBy=folder,createdTime desc" // 0eun
         url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         let headers: HTTPHeaders = [
             "q": "'root' in parents",
@@ -407,9 +407,11 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
                                 if(self.segueCheck == 1){
                                     
                                 }
+                                // 0eun - start
                                 if (self.googleSignInSegueState == .loginForList){
-                                    NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self)
-                                    
+                                    let cellStyle = ["cellStyle":3]
+                                    NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self, userInfo: cellStyle)
+                                    // 0eun - end
                                 } else {
                                     
                                 }

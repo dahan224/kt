@@ -76,14 +76,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     let data = dataString.data(using: .utf8, allowLossyConversion: false)
                     let json = JSON(data)
 //                    let fromFileId = json["fromFileId"].string
-                    let fromFileNm:String = json["fromFileNm"].stringValue
-                    let fromDevUuid:String = json["fromDevUuid"].stringValue
-                    let queId:String = json["queId"].stringValue
-                    let intFileId = json["fromFileId"].intValue
-                    let fromFileId = String(describing: intFileId)
-                    let fromFoldr = json["fromFoldr"].stringValue
-                    print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
-                    showFileInfo(fileId: fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
+                    let toDevUuid:String = json["toDevUuid"].stringValue
+                    if(toDevUuid == Util.getUuid()){
+                        let fromUserId = json["fromUserId"].stringValue
+                        let fromFoldr = json["fromFoldr"].stringValue
+                        let fromFileNm = json["fromFileNm"].stringValue
+                        let fromFileId = json["fromFileId"].stringValue
+                        
+                        downloadFromRemote(userId: fromUserId, name: fromFileNm, path: fromFoldr, fileId: fromFileId)
+                    } else {
+                        let fromFileNm:String = json["fromFileNm"].stringValue                        
+                        let fromDevUuid:String = json["fromDevUuid"].stringValue
+                        let queId:String = json["queId"].stringValue
+                        let intFileId = json["fromFileId"].intValue
+                        let fromFileId = String(describing: intFileId)
+                        let fromFoldr = json["fromFoldr"].stringValue
+                        print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
+                        showFileInfo(fileId: fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
+                    }
+                    
                 }
             }
             
@@ -105,7 +116,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     let fromFoldr = json["fromFoldr"].stringValue
                     print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
                     backgroundTask = self.beginBackgroundTask()
-                    showFileInfo(fileId: fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
+                    
+                    showFileInfo(fileId: fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:Util.getUuid())
                     //                    fromFileNm
                     //                    let fileUrl:URL = FileUtil().getFileUrl(fileNm: fromFileNm, amdDate: amdDate)
                     
@@ -118,6 +130,27 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         // Print full message.
 //        print(userInfo)
     }
+    
+    func downloadFromRemote(userId:String, name:String, path:String, fileId:String){
+        ContextMenuWork().downloadFromRemote(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+            if let success = responseObject {
+                print(success)
+                if(success == "success"){
+                    SyncLocalFilleToNas().sync()
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        alertController.addAction(yesAction)
+                        print("download Success")
+                        
+                        self.window?.rootViewController?.present(alertController, animated: true, completion: nil)
+                    }
+                }
+            }
+            return
+        }
+    }
+    
     func beginBackgroundTask() -> UIBackgroundTaskIdentifier {
         return UIApplication.shared.beginBackgroundTask(expirationHandler: {})
     }
@@ -153,15 +186,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         ]
         print("headers : \(headers)")
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(fromDevUuid)\(fromFoldr)?recursive=true"
+        stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
         let parameters: [String: AnyObject] // fill in your params
 
         Alamofire.request(stringUrl,
                           method: .put,
-                          parameters: nil,
                           encoding : JSONEncoding.default,
                           headers: headers).responseJSON { response in
-//                            print(response.result.value)
+                            print(response.result.value)
                             switch response.result {
                             case .success(let JSON):
                                 let responseData = JSON as! NSDictionary
@@ -176,6 +209,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                             }
         }
     }
+    
     
     func sendToNasFromLocalForDownload(url:URL, name:String, queId:String, fromFoldr:String,fromDevUuid:String){
         
@@ -192,6 +226,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
      
         print("headers : \(headers)")
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(fromDevUuid)\(fromFoldr)/\(name)?overwrite=true"
+        stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
         
         let filePath = url.path
@@ -260,6 +295,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         let deviceTokenString = deviceToken.reduce("", {$0 + String(format: "%02X", $1)})
         UserDefaults.standard.set(deviceTokenString, forKey: "notification_token")
         print( "노티피케이션 등록을 성공함, 디바이스 토큰 : \(deviceTokenString)" )
+//        self.createInitialTmpFolder(fromFoldr: "/Mobile", fromDevUuid: Util.getUuid())
         // With swizzling disabled you must set the APNs token here.
         // Messaging.messaging().apnsToken = deviceToken
     }

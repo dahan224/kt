@@ -18,6 +18,7 @@ protocol PassItemInfo {
 }
 class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, QLPreviewControllerDataSource, QLPreviewControllerDelegate, UIGestureRecognizerDelegate {
    
+    private let service = GTLRDriveService() // 0eun
 let quickLookController = QLPreviewController()
     var loginCookie = ""
     var loginToken = ""
@@ -42,7 +43,9 @@ let quickLookController = QLPreviewController()
     var mainContentState = HomeViewController.mainContentsStyleEnum.oneViewList
     var LatelyUpdatedFileArray:[App.LatelyUpdatedFileStruct] = []
     var driveFileArray:[App.DriveFileStruct] = []
-  
+    var driveFolderIdArray:[String] = ["root"] // 0eun
+    var driveFolderNameArray:[String] = ["root"] // 0eun
+    
     
     struct DeviceStruct:Codable {
         var devNm:String
@@ -307,15 +310,18 @@ let quickLookController = QLPreviewController()
                     cell3.lblSub.text = folderArray[indexPath.row].amdDate
                     
                     if(selectedDevUuid != Util.getUuid()){
+                        print("fromOsCd : \(fromOsCd)")
                         if(folderArray[indexPath.row].fileNm != "nil"){
-                            if(fromOsCd != "S" || fromOsCd != "G"){
+                            if(fromOsCd != "S" && fromOsCd != "G"){
                                 let cell4 = RemoteFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                              
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
                 
                                 let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
                                 rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                         
                                 cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
                                 cells.append(cell4)
                             } else {
@@ -330,7 +336,7 @@ let quickLookController = QLPreviewController()
                             
                         } else {
                             
-                            if(fromOsCd != "S" || fromOsCd != "G"){
+                            if(fromOsCd != "S" && fromOsCd != "G"){
                               let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
                                 cells.append(cell4)
                                 if(folderArray[indexPath.row].foldrNm == "..."){
@@ -533,7 +539,42 @@ let quickLookController = QLPreviewController()
                 print(stateDict)
                 NotificationCenter.default.post(name: Notification.Name("bottomStateFromContainer"), object: self, userInfo: stateDict)
             }
+            // 0eun - start
+            
+        } else if cellStyle == 3 { // 구글드라이브 폴더,파일 셀
+            let mimeType = driveFileArray[indexPath.row].mimeType
+            let fileId = driveFileArray[indexPath.row].fileId
+            let name = driveFileArray[indexPath.row].name
+            
+            if mimeType.contains(".folder") { // 폴더
+                
+                let stringFoldrId = String(fileId)
+                if driveFileArray[indexPath.row].name == ".." {
+                    driveFolderIdArray.remove(at: driveFolderIdArray.count-1)
+                    driveFolderNameArray.remove(at: driveFolderNameArray.count-1)
+                } else {
+                    self.driveFolderIdArray.append(fileId)
+                    self.driveFolderNameArray.append(name)
+                }
+                var driveFolderNameArrayCount = 0
+                if driveFolderNameArray.count < 1 {
+                    
+                } else {
+                    driveFolderNameArrayCount = driveFolderNameArray.count - 1
+                }
+                let folderName = ["folderName":"\(driveFolderNameArray[driveFolderNameArrayCount])","deviceName":deviceName]
+                NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
+                self.showInsideListGDrive(userId: userId, devUuid: currentDevUuid, foldrId: stringFoldrId, deviceName: deviceName)
+                searchStepState = .folder
+                var state = HomeViewController.bottomListEnum.localFileInfo
+                //수정 요망
+                Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: currentDevUuid, getCurrentFolderId: currentFolderId)
+            } else { // 파일
+                
+            }
         }
+        // 0eun - end
+        
         
         collectionviewCellSpcing()
         deviceCollectionView.reloadData()
@@ -678,9 +719,150 @@ let quickLookController = QLPreviewController()
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! FileListCell
+         self.gDriveContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
 //        self.NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
     }
+    // 0eun - start
+    func gDriveContextMenuCalled(cell:FileListCell, indexPath:IndexPath, sender:UIButton){
+        
+        fileId = String(driveFileArray[indexPath.row].fileId)
+        
+        var btn = "show"
+        switch sender {
+        case cell.btnShow:
+            btn = "show"
+        case cell.btnAction:
+            btn = "btnAction"
+            let mailURL = URL(string: "photos-redirect://")!
+            if UIApplication.shared.canOpenURL(mailURL) {
+                UIApplication.shared.openURL(mailURL)
+            }
+        case cell.btnDwnld:
+            let fileId = driveFileArray[indexPath.row].fileId
+            let mimeType = driveFileArray[indexPath.row].mimeType
+            let name = driveFileArray[indexPath.row].name
+            downloadGDriveFile(fileId: fileId, mimeType:mimeType, name:name)
+        case cell.btnNas:
+            let fileId = driveFileArray[indexPath.row].fileId
+            let mimeType = driveFileArray[indexPath.row].mimeType
+            let name = driveFileArray[indexPath.row].name
+            
+            let fileDict = ["fileId":fileId, "fileNm":name,"amdDate":"", "oldFoldrWholePathNm":foldrWholePathNm,"state":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+            print("fileDict : \(fileDict)")
+            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+            //showLocalFileOption(tag: sender.tag)
+            
+            uploadNasGDriveFile(fileId: fileId, mimeType:mimeType, name:name)
+        case cell.btnGDrive:
+            btn = ""
+        case cell.btnDelete:
+            let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) { UIAlertAction in
+                self.deleteGDriveFile(fileId: self.fileId)
+                // 싱크 필요~
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                    let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
+                    let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                        UIAlertAction in
+                        
+                        self.showInsideList(userId: self.userId, devUuid: self.currentDevUuid, foldrId: self.currentFolderId, deviceName: self.deviceName)
+                        
+                    }
+                    alertController.addAction(yesAction)
+                    self.present(alertController, animated: true)
+                })
+            }
+            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+            alertController.addAction(yesAction)
+            alertController.addAction(noAction)
+            
+            self.present(alertController, animated: true)
+            
+        default:
+            break
+        }
+    }
     
+    func uploadNasGDriveFile(fileId:String, mimeType:String, name:String) {
+        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+        let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
+        print("stringUrl : \(stringUrl)")
+        
+        let downloadUrl = URL(string: stringUrl)
+    }
+    
+    // 구글드라이브 파일 다운로드, 기가나스 보내기
+    func downloadGDriveFile(fileId:String, mimeType:String, name:String) {
+        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+        print("fileId : \(fileId), mimeType : \(mimeType)")
+        let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
+        print("stringUrl : \(stringUrl)")
+        
+        let downloadUrl = URL(string: stringUrl)
+        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            
+            // the name of the file here I kept is yourFileName with appended extension
+            documentsURL.appendPathComponent("\(name)")
+            return (documentsURL, [.removePreviousFile])
+        }
+        
+        Alamofire.download(downloadUrl!, to: destination)
+            .downloadProgress(closure: { (progress) in
+                print("download progress : \(progress.fractionCompleted)")
+            })
+            .response { response in
+                print("response : \(response)")
+                if response.destinationURL != nil {
+                    print(response.destinationURL!)
+                }
+        }
+    }
+    
+    // 구글드라이브 파일 구글드라이브로 보내기(카피)
+    func gDriveSendGDrive() {
+        
+    }
+    
+    // 구글드라이브 파일 삭제
+    func deleteGDriveFile(fileId:String) {
+        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+        let url = "https://www.googleapis.com/drive/v3/files/\(fileId)"
+        let headers: HTTPHeaders = [
+            "Authorization": "Bearer " + accessToken
+        ]
+        Alamofire.request(url,
+                          method: .delete,
+                          //parameters: {},
+            encoding : JSONEncoding.default,
+            headers:headers
+            ).responseJSON{ (response) in
+                print(response)
+                switch response.result {
+                case .success(let value):
+                    let json = JSON(value)
+                    if (json["code"].string != nil) {
+                        print(json["code"])
+                    } else {
+                        print("파일을 삭제하였습니다.")
+                        
+                        self.deviceCollectionView.reloadData()
+                    }
+                case .failure(let error):
+                    print(error)
+                }
+        }
+    }
+    // 0eun - end
+    
+    func finishedFileDownload(fetcher: GTMSessionFetcher, finishedWithData data: NSData, error: NSError?){
+        if let error = error {
+            //show an alert with the error message or something similar
+            return
+        }
+        
+        //do something with data (save it...)
+    }
     @objc func optionNasFileShowClicked(sender:UIButton){
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
@@ -745,7 +927,8 @@ let quickLookController = QLPreviewController()
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! RemoteFileListCell
         //        self.localContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        RemoteFileListCellController().remoteFileContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId:  currentFolderId)
+        
+        RemoteFileListCellController().remoteFileContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId:selectedDevUserId, currentFolderId:  currentFolderId)
     }
     
     
@@ -1343,6 +1526,55 @@ let quickLookController = QLPreviewController()
         
     }
     
+    // 0eun - start
+    func showInsideListGDrive(userId: String, devUuid: String, foldrId: String, deviceName:String){
+        self.driveFileArray.removeAll()
+        var param = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"sortBy":sortBy]
+        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+        print("showInsideParam : \(param)")
+        
+        if(driveFolderIdArray.count > 1){
+            
+            let upFolder = App.DriveFileStruct(device: ["id":driveFolderIdArray[driveFolderIdArray.count-2],"kind":"drive#file","mimeType":".folder","name":".."] as AnyObject)
+            self.driveFileArray.append(upFolder)
+            if(driveFolderIdArray.count == 1){
+                param = ["userId": userId, "devUuid":devUuid]
+            }
+        }
+        print("param : \(param)")
+        
+        var url = "https://www.googleapis.com/drive/v3/files?q='\(foldrId)' in parents and trashed=false&access_token=\(accessToken)&orderBy=folder,createdTime desc"
+        url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+        print(url)
+        Alamofire.request(url,
+                          method: .get,
+                          encoding: JSONEncoding.default,
+                          headers: nil).responseJSON { response in
+                            switch response.result {
+                            case .success(let value):
+                                let json = JSON(value)
+                                print("json : \(json)")
+                                let responseData = value as! NSDictionary
+                                let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject]
+                                for file in serverList {
+                                    print("file : \(file)")
+                                    let fileStruct = App.DriveFileStruct(device: file)
+                                    self.driveFileArray.append(fileStruct)
+                                }
+                                DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
+                                
+                                self.cellStyle = 3
+                                self.currentFolderId = foldrId
+                                
+                                self.collectionviewCellSpcing()
+                                self.deviceCollectionView.reloadData()
+                                self.deviceCollectionView.collectionViewLayout.invalidateLayout()
+                            case .failure(let error):
+                                NSLog(error.localizedDescription)
+                            }
+        }
+    }
+    // 0eun - end
     
     func showInsideList(userId: String, devUuid: String, foldrId: String, deviceName:String){
         self.folderArray.removeAll()
@@ -1380,6 +1612,7 @@ let quickLookController = QLPreviewController()
 //            let message = responseObject?.object(forKey: "message")
             if(json["listData"].exists()){
                 var listData = json["listData"]
+                print("listData : \(listData)")
                 var serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                 for list in serverList{
                     let folder = App.FolderStruct(data: list as AnyObject)

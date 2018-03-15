@@ -7,6 +7,8 @@
 //
 
 import UIKit
+import Alamofire
+import SwiftyJSON
 
 class RemoteFileListCellController {
     
@@ -63,7 +65,7 @@ class RemoteFileListCellController {
         return cell
     }
     
-    func remoteFileContextMenuCalled(cell:RemoteFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String){
+    func remoteFileContextMenuCalled(cell:RemoteFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
         let fileNm = folderArray[indexPath.row].fileNm
         let etsionNm = folderArray[indexPath.row].etsionNm
         let amdDate = folderArray[indexPath.row].amdDate
@@ -79,22 +81,26 @@ class RemoteFileListCellController {
             break
         case cell.btnDwnld:
             
+            print("folder : \(folderArray[indexPath.row])")
+            print("fileId: \(fileId) , fromUserId : \(selectedDevUserId), fromDevUuid : \(currentDevUuid), fromFoldr : \(foldrWholePathNm)")
+            remoteDownloadRequest(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: currentDevUuid, fromFileNm: fileNm, fromFileId: fileId)
+            
 //            HomeDeviceCollectionVC().downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
-            ContextMenuWork().downloadFromNas(userId:userId, fileNm:fileNm, path:foldrWholePathNm, fileId:fileId){ responseObject, error in
-                if let success = responseObject {
-                    print(success)
-                    if(success == "success"){
-                        SyncLocalFilleToNas().sync()
-                        DispatchQueue.main.async {
-                            let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
-                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
-                            alertController.addAction(yesAction)
-                            deviceView.present(alertController, animated: true)
-                        }
-                    }
-                }
-                return
-            }
+//            ContextMenuWork().downloadFromNas(userId:userId, fileNm:fileNm, path:foldrWholePathNm, fileId:fileId){ responseObject, error in
+//                if let success = responseObject {
+//                    print(success)
+//                    if(success == "success"){
+//                        SyncLocalFilleToNas().sync()
+//                        DispatchQueue.main.async {
+//                            let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
+//                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+//                            alertController.addAction(yesAction)
+//                            deviceView.present(alertController, animated: true)
+//                        }
+//                    }
+//                }
+//                return
+//            }
             print("btnActino called")
             break
             
@@ -115,6 +121,44 @@ class RemoteFileListCellController {
         }
     }
     
+    
+    
+    
+    func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
+        
+        let urlString = App.URL.server+"reqFileDown.do"
+        var comnd = "RALI"
+        switch fromOsCd {
+        case "W":
+            comnd = "RWLI"
+        case "A":
+            comnd = "RALI"
+        default:
+            comnd = "RILI"
+            break
+        }
+        let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
+        print("notifyNasUploadFinish param : \(paramas)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: paramas,
+                          encoding : JSONEncoding.default,
+                          headers: App.Headrs.jsonHeader).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+
+                                print(response.result.value)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("message : \(message)")
+
+                                break
+                            case .failure(let error):
+
+                                print(error.localizedDescription)
+                            }
+        }
+    }
     
   
 }
