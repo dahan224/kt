@@ -55,6 +55,9 @@ class ContainerViewController: UIViewController {
     var savedPath = ""
     var amdDate = ""
     
+    var fromDevUuid = ""
+    var fromFoldr = ""
+    
     @IBOutlet weak var containerView: UIView!
     
     
@@ -256,6 +259,8 @@ class ContainerViewController: UIViewController {
                 vc.fromUserId = fromUserId
                 vc.amdDate = amdDate
                 vc.fromOsCd = fromOsCd
+                vc.fromDevUuid = fromDevUuid
+                vc.fromFoldr = fromFoldr
             }
             
         }
@@ -332,9 +337,21 @@ class ContainerViewController: UIViewController {
                     }
                     storageKind = .local
                     break
+                case "remote":
+                    if let getFromUserId =  fileDict.userInfo?["fromUserId"] as? String, let getFromDevUuid =  fileDict.userInfo?["fromDevUuid"] as? String, let getFromFoldr =  fileDict.userInfo?["fromFoldr"] as? String {
+                        fromUserId = getFromUserId
+                        fromDevUuid = getFromDevUuid
+                        fromFoldr = getFromFoldr
+                        
+                    }
+                    storageKind = .remote
+                
+                break
+                
                 case "googleDrive":
                     storageKind = .googleDrive
                 break
+                
                 default:
                 break
             }

@@ -84,35 +84,15 @@ class RemoteFileListCellController {
             print("folder : \(folderArray[indexPath.row])")
             print("fileId: \(fileId) , fromUserId : \(selectedDevUserId), fromDevUuid : \(currentDevUuid), fromFoldr : \(foldrWholePathNm)")
             remoteDownloadRequest(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: currentDevUuid, fromFileNm: fileNm, fromFileId: fileId)
-            
-//            HomeDeviceCollectionVC().downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
-//            ContextMenuWork().downloadFromNas(userId:userId, fileNm:fileNm, path:foldrWholePathNm, fileId:fileId){ responseObject, error in
-//                if let success = responseObject {
-//                    print(success)
-//                    if(success == "success"){
-//                        SyncLocalFilleToNas().sync()
-//                        DispatchQueue.main.async {
-//                            let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
-//                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
-//                            alertController.addAction(yesAction)
-//                            deviceView.present(alertController, animated: true)
-//                        }
-//                    }
-//                }
-//                return
-//            }
-            print("btnActino called")
+
             break
             
         case cell.btnNas:
             
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":userId, "fromOsCd":fromOsCd]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"state":"remote","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd, "fromDevUuid" : currentDevUuid, "fromFoldr" : foldrWholePathNm]
             print("fileDict : \(fileDict)")
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-            if parentView == "device" {
-                deviceView.showLocalFileOption(tag: sender.tag)
-            }
-            
+//
             break
             
        

@@ -342,6 +342,7 @@ let quickLookController = QLPreviewController()
                                 if(folderArray[indexPath.row].foldrNm == "..."){
                                     cell4.lblSub.isHidden = true
                                     cell4.btnOption.isHidden = true
+                                    cell2.lblSub.isHidden = true
                                 }
                             } else {
                                 let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
@@ -349,6 +350,7 @@ let quickLookController = QLPreviewController()
                                  if(folderArray[indexPath.row].foldrNm == "..."){
                                     cell4.lblSub.isHidden = true
                                     cell4.btnOption.isHidden = true
+                                    
                                 }
                             }
                             cell2.lblMain.text = folderArray[indexPath.row].foldrNm
