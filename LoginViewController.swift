@@ -350,7 +350,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             let json = JSON(responseObject as Any)
             if let statusCode = json["statusCode"].int, statusCode == 100 {
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-                                print("one view list : \(serverList)")
+//                                print("one view list : \(serverList)")
                 for device in serverList {
                     let deviceStruct = App.DeviceStruct(device: device)
                     self.DeviceArray.append(deviceStruct)

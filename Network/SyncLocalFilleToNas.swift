@@ -71,11 +71,12 @@ class SyncLocalFilleToNas {
                                 var serverFolderPathArray:[String] = []
                                 var localFolderPathArray:[String] = []
                                 for serverFolder in serverList{
-                                    let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String))"
+                                    let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String)"
                                     serverFolderPathArray.append(serverFolderPath)
                                 }
                                 for localFolder in self.localFolderArray {
                                     let localFolderPath = "\(localFolder.foldrWholePathNm)"
+                                    print("localFolderPath : \(localFolderPath)")
                                     if(!serverFolderPathArray.contains(localFolderPath)){
                                         self.folderArrayToCreate.append(localFolder.getParameter)
                                     }
@@ -84,9 +85,11 @@ class SyncLocalFilleToNas {
                                    let localFolderPath = "\(localFolder.foldrWholePathNm)"
                                     localFolderPathArray.append(localFolderPath)
                                 }
-//                                print("localFolderPathArray : \(localFolderPathArray)")
+                                print("localFolderPathArray : \(localFolderPathArray)")
+                                
                                 for serverFolder in serverList{
-                                    let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String))"
+                                    let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String)"
+                                    print("serverFolderPath : \(serverFolderPath)")
                                     if(!localFolderPathArray.contains(serverFolderPath)){
                                         let deleteFolder = App.Folders(data: serverFolder)
                                         let deleteFolderParameter = App.FoldersToEdit(folder:deleteFolder, cmd:"D").getParameter
@@ -101,12 +104,14 @@ class SyncLocalFilleToNas {
                                 if(self.folderArrayToCreate.count > 0){
                                     print("createfolder : \(self.folderArrayToCreate)")
                                     self.createFolderListToServer(parameters: self.folderArrayToCreate)
+                                } else {
+                                    self.sysncFileInfo()
                                 }
 
                             }
                             
                             self.folderSyncFinished = true
-                            
+                           
                         }
                     }
                     break
@@ -120,7 +125,7 @@ class SyncLocalFilleToNas {
     }
     
     func sysncFileInfo() {
-        print("syncFileInfo called")
+        print("syncFileInfo called ????")
         FileParameterArrayForUpload.removeAll()
         fileArrayToUpdate.removeAll()
         fileArrayToDelete.removeAll()
@@ -139,7 +144,7 @@ class SyncLocalFilleToNas {
                     self.showInsideList(userId: App.defaults.userId, devUuid: self.uuId, foldrId: stringFoldrId, deviceName:"sdf")
                 }
             }
-            return
+            
         }
     }
     
@@ -155,7 +160,7 @@ class SyncLocalFilleToNas {
                 }
                 self.getFileListFromServer(userId: userId, devUuid: devUuid, foldrId: foldrId)
             }
-            return
+            
         }
         
     }
@@ -179,6 +184,7 @@ class SyncLocalFilleToNas {
                                     
                                     var serverFilePathArray:[String] = []
                                     
+                                    
                                     for serverFile in serverList{
                                         print("server : \(serverFile)")
                                         let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
@@ -189,8 +195,9 @@ class SyncLocalFilleToNas {
                                                 if(1 < index && index < pathNmArray.count){
                                                     foldrWholePathNm += "/\(pathNmArray[index])"
                                                 }
-                                                print("server foldrWholePathNm : \(foldrWholePathNm)")
                                             }
+                                            foldrWholePathNm += "/\(serverFileNm)"
+                                            print("server foldrWholePathNm : \(foldrWholePathNm)")
                                             serverFilePathArray.append(foldrWholePathNm)
                                         }
                                     }
@@ -200,7 +207,7 @@ class SyncLocalFilleToNas {
                                     
                                     if(self.localFileArray.count > 0){
                                         for localFile in self.localFileArray {
-                                            let localFilePath = "\(localFile.foldrWholePathNm)"
+                                            let localFilePath = "\(localFile.foldrWholePathNm)/\(localFile.fileNm).\(localFile.etsionNm)"
                                             localFilePathArray.append(localFilePath)
                                         }
                                     }
@@ -214,8 +221,10 @@ class SyncLocalFilleToNas {
                                             for (index, path) in pathNmArray.enumerated() {
                                                 if(2 < index && index < pathNmArray.count){
                                                     foldrWholePathNm += "/\(pathNmArray[index])"
-                                                }
+                                                }                                                
                                             }
+                                            foldrWholePathNm += "/\(serverFileNm)"
+                                            
                                         }
                                         if !localFilePathArray.contains(foldrWholePathNm) {
                                             let deleteFile = App.Files(data: serverFile)
@@ -224,32 +233,27 @@ class SyncLocalFilleToNas {
                                         }
                                     }
                                     for localFile in self.localFileArray {
-                                        let localFilePath = "\(localFile.foldrWholePathNm)"
+                                        let localFilePath = "\(localFile.foldrWholePathNm)/\(localFile.fileNm).\(localFile.etsionNm)"
                                         if(!serverFilePathArray.contains(localFilePath)){
                                             self.fileArrayToCreate.append(localFile.getParameter)
-                                        } else {
-                                            
                                         }
                                     }
                                 } else {
                                     if(self.localFileArray.count > 0 ){
                                         for localFile in self.localFileArray {
                                             self.fileArrayToCreate.append(localFile.getParameter)
-//                                            print("fileArrayToCreate2 : \(self.fileArrayToCreate.count)")
+                                            print("fileArrayToCreate2 : \(self.fileArrayToCreate.count)")
                                         }
                                     }
                                 }
                                
                                
                                 if(self.fileArrayToDelete.count > 0){
-//                                    print("delete call")
-//                                    print("fileArrayToDelete count : \(self.fileArrayToDelete.count), fileArrayToCreate.count : \(self.fileArrayToCreate.count)" )
-//                                    print("fileArrayToDelete : \(self.fileArrayToDelete)" )
+                                    print("fileArrayToDelete : \(self.fileArrayToDelete)" )
                                     self.deleteFileListToServer(parameters: self.fileArrayToDelete)
                                 } else {
                                     if(self.fileArrayToCreate.count>0){
-//                                        print("fileArrayToDelete count : \(self.fileArrayToDelete.count), fileArrayToCreate.count : \(self.fileArrayToCreate.count)" )
-//                                        print("create filelist : \(self.fileArrayToCreate)")
+                                        print("create filelist : \(self.fileArrayToCreate)")
                                         self.createFileListToServer(parameters: self.fileArrayToCreate)
                                     }
                                 }
@@ -363,6 +367,7 @@ class SyncLocalFilleToNas {
                 let message = responseData.object(forKey: "message")
 //                print("createFolderListToServer : \(message)")
                 self.sysncFileInfo()
+                
                 break
             case .failure(let error):
                 NSLog(error.localizedDescription)
@@ -391,7 +396,10 @@ class SyncLocalFilleToNas {
                 if(self.folderArrayToCreate.count > 0){
 //                    print("createfolder : \(self.folderArrayToCreate)")
                     self.createFolderListToServer(parameters: self.folderArrayToCreate)
+                } else {
+                        self.sysncFileInfo()
                 }
+                
                 break
             case .failure(let error):
                 NSLog(error.localizedDescription)
@@ -415,11 +423,12 @@ class SyncLocalFilleToNas {
 //                print("deleteFileListToServer : \(response.result)")
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
-//                print(" deleteFileListToServer message : \(message)")
+                print(" deleteFileListToServer message : \(message)")
                 if(self.fileArrayToCreate.count>0){
 //                    print("create filelist : \(self.fileArrayToCreate)")
                     self.createFileListToServer(parameters: self.fileArrayToCreate)
                 }
+                
                 break
             case .failure(let error):
                 NSLog(error.localizedDescription)
@@ -445,7 +454,7 @@ class SyncLocalFilleToNas {
 //                print("createFileServer : \(response.result)")
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
-//                print(" createFileListToServer message : \(String(describing: message))")
+                print(" createFileListToServer message : \(String(describing: message))")
                 
                 break
             case .failure(let error):

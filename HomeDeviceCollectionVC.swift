@@ -140,7 +140,7 @@ let quickLookController = QLPreviewController()
         currentDevUuid = Util.getUuid()
         
         
-        print("deviceList: \(DeviceArray)")
+//        print("deviceList: \(DeviceArray)")
         deviceCollectionView.reloadData()
         
         NotificationCenter.default.addObserver(self,
@@ -168,8 +168,8 @@ let quickLookController = QLPreviewController()
                                                object: nil)
         
         
-        print("mainContentsStyleState : \((flickState))")
-        print("LatelyUpdatedFileArray: \(LatelyUpdatedFileArray)")
+//        print("mainContentsStyleState : \((flickState))")
+//        print("LatelyUpdatedFileArray: \(LatelyUpdatedFileArray)")
     }
     
     @objc func changeListStyle(fileDict:NSNotification){
