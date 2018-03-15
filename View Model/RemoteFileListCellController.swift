@@ -12,6 +12,8 @@ import SwiftyJSON
 
 class RemoteFileListCellController {
     
+    var dv:HomeDeviceCollectionVC?
+    
     func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC) -> RemoteFileListCell {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "RemoteFileListCell", for: indexPath) as! RemoteFileListCell
@@ -66,6 +68,7 @@ class RemoteFileListCellController {
     }
     
     func remoteFileContextMenuCalled(cell:RemoteFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
+        dv = deviceView
         let fileNm = folderArray[indexPath.row].fileNm
         let etsionNm = folderArray[indexPath.row].etsionNm
         let amdDate = folderArray[indexPath.row].amdDate
@@ -130,8 +133,19 @@ class RemoteFileListCellController {
                                 print(response.result.value)
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
-                                print("message : \(message)")
-
+                                print("remoteDownloadRequest : \(message)")
+                                if let error = responseData.object(forKey: "error") as? Int, error == 1 {
+                                    print("error : \(error)")
+                                    DispatchQueue.main.async {
+                                        let alertController = UIAlertController(title: nil, message: "\(message!)", preferredStyle: .alert)
+                                        let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                                            UIAlertAction in                                            
+                                            
+                                        }
+                                        alertController.addAction(yesAction)
+                                        self.dv?.present(alertController, animated: true, completion: nil)
+                                    }
+                                }
                                 break
                             case .failure(let error):
 
