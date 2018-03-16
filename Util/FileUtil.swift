@@ -188,12 +188,15 @@ class FileUtil {
                     let localFilFullName = "\(fileName).\(fileExtension)"
                     let decodedFileName:String = localFilFullName.removingPercentEncoding!
                     let fileSavedPath = f.path
+                    print("fileSavedPath  : \(fileSavedPath)")
                     let fileCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                     let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
                     let stringModifiedDate = Util.date(text: modifiedDate)
                     print("for remove fileNm : \(fileNm), localFilFullName : \(localFilFullName), amdDate: \(amdDate) , stringModifiedDate : \(stringModifiedDate), decodedFileName: \(decodedFileName)")
-                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
+//                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
+                    if(fileNm == decodedFileName){
                         returnPath = fileSavedPath
+                        print("return path : \(returnPath)")
                     }
                     
                     

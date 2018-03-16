@@ -216,6 +216,7 @@ class SyncLocalFilleToNas {
                                     for serverFile in serverList{
                                         let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
                                         let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
+                                        let serverFileAmdDate = serverFile["amdDate"] as? String ?? "nil"
                                         var foldrWholePathNm = "/Mobile"
                                         if let pathNmArray = URLComponents(string: foldrWholePathNm)?.path.components(separatedBy: "/") {
                                             for (index, path) in pathNmArray.enumerated() {
@@ -230,12 +231,16 @@ class SyncLocalFilleToNas {
                                             let deleteFile = App.Files(data: serverFile)
                                             let deleteFileParameter = App.FilesToEdit(file:deleteFile, cmd:"D").getDeleteParameter
                                             self.fileArrayToDelete.append(deleteFileParameter)
+                                        } else {
+                                            print("server")
                                         }
                                     }
                                     for localFile in self.localFileArray {
                                         let localFilePath = "\(localFile.foldrWholePathNm)/\(localFile.fileNm).\(localFile.etsionNm)"
                                         if(!serverFilePathArray.contains(localFilePath)){
                                             self.fileArrayToCreate.append(localFile.getParameter)
+                                        } else {
+                                            
                                         }
                                     }
                                 } else {
