@@ -21,7 +21,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     var window: UIWindow?
 
     var serverURL: String?
-    
+    var notificationOnGoing = false
     
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
@@ -82,8 +82,23 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                         let fromFoldr = json["fromFoldr"].stringValue
                         let fromFileNm = json["fromFileNm"].stringValue
                         let fromFileId = json["fromFileId"].stringValue
+                        let fromDevUuid:String = json["fromDevUuid"].stringValue
+                        let fromOsCd = json["fromOsCd"].stringValue
+                        let queId:String = json["queId"].stringValue
+                        print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
+                        if let remoteDownLoadToNas = UserDefaults.standard.bool(forKey: "remoteDownLoadToNas") as? Bool{
+                            if(remoteDownLoadToNas) {
+                                
+                                self.showFileInfoToNas(fromUserId:fromUserId, fileId:fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid,fromOsCd:fromOsCd)
+                                
+                                
+                                
+                            } else {
+                                downloadFromRemote(userId: fromUserId, name: fromFileNm, path: fromFoldr, fileId: fromFileId)
+                            }
+                        }
                         
-                        downloadFromRemote(userId: fromUserId, name: fromFileNm, path: fromFoldr, fileId: fromFileId)
+                        
                     } else {
                         let fromFileNm:String = json["fromFileNm"].stringValue                        
                         let fromDevUuid:String = json["fromDevUuid"].stringValue
@@ -150,6 +165,41 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             return
         }
     }
+    
+    
+    func showFileInfoToNas(fromUserId:String, fileId:String, fileNm:String, queId:String, fromFoldr:String, fromDevUuid:String, fromOsCd:String){
+        ContextMenuWork().getFileDetailInfo(fileId: fileId){ responseObject, error in
+            let json = JSON(responseObject!)
+            print("showFileInfo json : \(json)")
+            if(json["fileData"].exists()){
+                let fileData = json["fileData"]
+                let amdDate = fileData["amdDate"].stringValue
+                print("filNm: \(fileNm),fileAmdDate : \(amdDate)")
+
+                self.downloadFromRemoteToNas(fromUserId: fromUserId, name: fileNm, path: fromFoldr, fileId: fileId, amdDate:amdDate, fromOsCd:fromOsCd, fromDevUuid:fromDevUuid, fromFoldr:fromFoldr)
+            }
+            return
+        }
+    }
+    
+    func downloadFromRemoteToNas(fromUserId:String, name:String, path:String, fileId:String, amdDate:String, fromOsCd:String, fromDevUuid:String, fromFoldr:String){
+       print("downloadFromRemoteToNas")
+        ContextMenuWork().downloadFromRemote(userId:fromUserId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+            if let success = responseObject {
+                print(success)
+                if(success == "success"){
+                    SyncLocalFilleToNas().sync()
+                    DispatchQueue.main.async {
+                        let fileDict = ["fileId":fileId, "fileNm":name,"amdDate":amdDate, "oldFoldrWholePathNm":path,"state":"remote","fromUserId":fromUserId, "fromOsCd":fromOsCd, "fromDevUuid" : fromDevUuid, "fromFoldr" : fromFoldr]
+                        print("fileDict : \(fileDict)")
+                        NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+                    }
+                }
+            }
+            return
+        }
+    }
+    
     
     func beginBackgroundTask() -> UIBackgroundTaskIdentifier {
         return UIApplication.shared.beginBackgroundTask(expirationHandler: {})

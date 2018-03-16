@@ -86,7 +86,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         nasUserIdArray.append(nasUserId)
         nasUserIdArray.append(storageUserId)
         nasArray = ["GIGA NAS", "GIGA Storage"]
-        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(callSendToNasFromLocal(fileDict:)),
+                                               name: NSNotification.Name("callSendToNasFromLocal"),
+                                               object: nil)
         switch storageState {
         case .nas:
 //            nasDevId = UserDefaults.standard.string(forKey: "nasDevId")!
@@ -525,8 +528,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 
                 break
             case .remote:
-                remoteDownloadRequestToSend(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: fromOsCd, fromFoldr: fromFoldr, fromFileNm: fileNm, fromFileId: fileId)
-
+                
+                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+                sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                
                 break
                 
             case .googleDrive:
@@ -565,10 +570,27 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 print(response.result.value)
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
-                                print("message : \(message)")
-                                
+                                print("remoteDownloadRequest : \(message)")
+                                if let error = responseData.object(forKey: "error") as? Int, error == 1 {
+                                    print("error : \(error)")
+                                    DispatchQueue.main.async {
+                                        let alertController = UIAlertController(title: nil, message: "\(message!)", preferredStyle: .alert)
+                                        let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                                            UIAlertAction in
+                                            let remoteDownLoadToNas = false
+                                            UserDefaults.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
+                                            
+                                            
+                                        }
+                                        alertController.addAction(yesAction)
+                                        self.present(alertController, animated: true, completion: nil)
+                                    }
+                                }
                                 break
                             case .failure(let error):
+                                let remoteDownLoadToNas = false
+                                UserDefaults.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
+                                
                                 
                                 print(error.localizedDescription)
                             }
@@ -845,6 +867,12 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
     }
     
+    @objc func callSendToNasFromLocal(fileDict:NSNotification){
+        print("callSendToNasFromLocal")
+        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+    }
+    
     func sendToNasFromLocal(url:URL, name:String, toOsCd:String){
         
         let userId = toUserId
@@ -903,12 +931,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     func notifyNasUploadFinish(name:String, toOsCd:String){
         let urlString = App.URL.server+"nasUpldCmplt.do"
-        let inFileId:Int = Int(originalFileId)!
-        let size = Decimal(inFileId)
-        let test = pow(size, 2) - 1
-        let result = NSDecimalNumber(decimal: test)
-        print(Int(result)) // testing the cast to Int
-        let decimalFileId:Decimal = Decimal.init(inFileId)
+     
 
         let paramas:[String : Any] = ["userId":toUserId,"fileId":originalFileId,"toFoldr":newFoldrWholePathNm,"toFileNm":name,"toOsCd":toOsCd]
         print("notifyNasUploadFinish param : \(paramas)")

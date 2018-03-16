@@ -83,7 +83,10 @@ class RemoteFileListCellController {
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             break
         case cell.btnDwnld:
-            
+            let remoteDownLoadToNas = false
+            UserDefaults.standard.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
+            UserDefaults.standard.synchronize()
+
             print("folder : \(folderArray[indexPath.row])")
             print("fileId: \(fileId) , fromUserId : \(selectedDevUserId), fromDevUuid : \(currentDevUuid), fromFoldr : \(foldrWholePathNm)")
             remoteDownloadRequest(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: currentDevUuid, fromFileNm: fileNm, fromFileId: fileId)
@@ -92,10 +95,13 @@ class RemoteFileListCellController {
             
         case cell.btnNas:
             
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"state":"remote","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd, "fromDevUuid" : currentDevUuid, "fromFoldr" : foldrWholePathNm]
-            print("fileDict : \(fileDict)")
-            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-//
+           
+            let remoteDownLoadToNas = true
+            UserDefaults.standard.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
+            UserDefaults.standard.synchronize()
+
+            remoteDownloadRequest(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: currentDevUuid, fromFileNm: fileNm, fromFileId: fileId)
+
             break
             
        
@@ -104,7 +110,9 @@ class RemoteFileListCellController {
         }
     }
     
-    
+    @objc func callNasFolderSelectSegue(){
+        
+    }
     
     
     func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){

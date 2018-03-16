@@ -155,7 +155,8 @@ class FileUtil {
                     let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
                     let stringModifiedDate = Util.date(text: modifiedDate)
                     print("fileNm : \(fileNm), localFilFullName : \(localFilFullName), amdDate: \(amdDate) , stringModifiedDate : \(stringModifiedDate)")
-                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
+//                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
+                    if(fileNm == decodedFileName ){
                         retrunUrl = f
                     } 
                     
