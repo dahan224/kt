@@ -245,17 +245,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                           encoding : JSONEncoding.default,
                           headers: headers).responseJSON { response in
                             print(response.result.value)
+                            let statusCode = (response.response?.statusCode)! //example : 200
+                            print("create folder status code : \(statusCode)")
                             switch response.result {
                             case .success(let JSON):
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
                                 print("message : \(message)")
-                                
                                 self.sendToNasFromLocalForDownload(url: fileUrl, name: name, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
                                 break
                             case .failure(let error):
-                                self.sendToNasFromLocalForDownload(url: fileUrl, name: name, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
                                 print("create temp folder error : \(error.localizedDescription)")
+                                self.sendToNasFromLocalForDownload(url: fileUrl, name: name, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
                             }
         }
     }
@@ -318,9 +319,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                           parameters: paramas,
                           encoding : JSONEncoding.default,
                           headers: App.Headrs.jsonHeader).responseJSON { response in
+                            let statusCode = (response.response?.statusCode)! //example : 200
+                            print("notifyNasUploadFinishToRemoteDownload  status code : \(statusCode)")
                             switch response.result {
                             case .success(let JSON):
-                                
                                 print(response.result.value)
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
