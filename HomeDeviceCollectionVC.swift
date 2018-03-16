@@ -321,8 +321,8 @@ let quickLookController = QLPreviewController()
                 
                                 let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
                                 rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-                         
                                 cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                                
                                 cells.append(cell4)
                             } else {
                                 let cell4 = NasFileListCellController(indexPathRow: indexPath.row)
@@ -337,7 +337,8 @@ let quickLookController = QLPreviewController()
                         } else {
                             
                             if(fromOsCd != "S" && fromOsCd != "G"){
-                              let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
+//                              let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
+                                let cell4 = NasFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
                                 cells.append(cell4)
                                 if(folderArray[indexPath.row].foldrNm == "..."){
                                     cell4.lblSub.isHidden = true
@@ -345,7 +346,16 @@ let quickLookController = QLPreviewController()
                                     cell2.lblSub.isHidden = true
                                 }
                             } else {
-                                let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
+                                let cell4 = NasFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                                
+                                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
+                                swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                                cell4.btnOption.addGestureRecognizer(swipeLeft)
+                                
+                                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
+                                rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                                cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                                
                                 cells.append(cell4)
                                  if(folderArray[indexPath.row].foldrNm == "..."){
                                     cell4.lblSub.isHidden = true
@@ -378,7 +388,8 @@ let quickLookController = QLPreviewController()
                             cell2.ivSub.image = UIImage(named: imageString)
                             
                         } else {
-                            let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
+                            let cell4 = NasFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                            
                             cells.append(cell4)
                             
                             cell2.lblMain.text = folderArray[indexPath.row].foldrNm
@@ -933,227 +944,6 @@ let quickLookController = QLPreviewController()
         RemoteFileListCellController().remoteFileContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId:selectedDevUserId, currentFolderId:  currentFolderId)
     }
     
-    
-    
-    
-    func getFolderIdsToDownload(foldrId:Int, foldrWholePathNm:String) {
-        print("get folders")
-        folderIdsToDownLoad.append(foldrId)
-        folderPathToDownLoad.append(foldrWholePathNm)
-        
-        var param = ["userId": userId, "devUuid":devUuid, "foldrId":String(foldrId),"sortBy":sortBy]
-        print("param : \(param)")
-        GetListFromServer().showInsideFoldrList(params: param, deviceName:deviceName) { responseObject, error in
-            let json = JSON(responseObject!)
-            if(json["listData"].exists()){
-                let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
-                print("download serverList :\(serverList)")
-                if (serverList.count > 0){
-                    for list in serverList{
-                        let folder = App.FolderStruct(data: list as AnyObject)
-                        
-                        if (self.folderIdsToDownLoad.contains(folder.foldrId)){
-                            return
-                        } else {
-                            print("folder : \(folder.foldrId)")
-                            self.folderIdsToDownLoad.append(folder.foldrId)
-                            self.folderPathToDownLoad.append(folder.foldrWholePathNm)
-                            let foldrLevel = list["foldrLevel"] as? Int ?? 0
-                            if(foldrLevel > 0){
-                                self.getFolderIdsToDownload(foldrId: folder.foldrId, foldrWholePathNm: folder.foldrWholePathNm)
-                                return
-                            }
-                        }
-                    }
-                }
-                self.printFolderPath()
-            }
-        }
-      
-    }
-    
-    func printFolderPath(){
-        print("folderPathToDownLoad: \(folderPathToDownLoad)")
-        print("folderIdsToDownLoad: \(folderIdsToDownLoad)")
-        var localPathArray:[URL] = []
-        for name in folderPathToDownLoad {
-            let fullNameArr = name.components(separatedBy: "/")
-            var folderName = ""
-                for (index, name) in fullNameArr.enumerated() {
-                    print("name : \(name), index : \(index)")
-                    if(1 < index && index < fullNameArr.count ){
-                        folderName += "/\(fullNameArr[index])"
-                    }
-                }
-            print("folderName : \(folderName)")
-            let createdPath:URL = self.createLocalFolder(folderName: folderName)!
-            localPathArray.append(createdPath)
-            }
-
-            getFilesFromFolder()
-        
-        
-    }
-    func createLocalFolder(folderName: String) -> URL? {
-        let fileManager = FileManager.default
-        if let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first {
-            let filePath = documentDirectory.appendingPathComponent(folderName)
-            if !fileManager.fileExists(atPath: filePath.path) {
-                do {
-                    try fileManager.createDirectory(atPath: filePath.path, withIntermediateDirectories: true, attributes: nil)
-                } catch {
-                    print(error.localizedDescription)
-                    
-                    return nil
-                }
-            }
-            
-            return filePath
-        } else {
-            return nil
-        }
-    }
-    
-    func getFilesFromFolder(){
-        
-        if(folderIdsToDownLoad.count > 0){
-            let index = folderIdsToDownLoad.count - 1
-            if(index > -1){
-                let stringFolderId = String(folderIdsToDownLoad[index])
-                getFileListToDownload(userId: userId, devUuid: selectedDevUuid, foldrId: stringFolderId, index:index)
-                return
-            }
-        }
-        self.downloadFile()
-    
-    }
-    
-    func getFileListToDownload(userId: String, devUuid: String, foldrId: String, index:Int){
-        let param:[String : Any] = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"page":1,"sortBy":sortBy]
-        print("param : \(param)")
-        GetListFromServer().getFileList(params: param){ responseObject, error in
-            let json = JSON(responseObject!)
-            //            let message = responseObject?.object(forKey: "message")
-            if(json["listData"].exists()){
-                let listData = json["listData"]
-                //                print("getFileListToDownloadlistData : \(listData)")
-                let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-                for list in serverList{
-                    let folder = App.FolderStruct(data: list as AnyObject)
-                    self.fileArrayToDownload.append(folder)
-                }
-            }
-            self.folderIdsToDownLoad.remove(at: index)
-            self.getFilesFromFolder()
-        }
-        
-        
-    }
-    
-    func downloadFile(){
-        print("fileArrayToDownload : \(fileArrayToDownload)")
-        for file in fileArrayToDownload{
-            print("download file : \(file)")
-        }
-        if(fileArrayToDownload.count > 0){
-            let index = fileArrayToDownload.count - 1
-            if(index > -1){
-                let downFileName = fileArrayToDownload[index].fileNm
-                let downPath = fileArrayToDownload[index].foldrWholePathNm
-                let downId = String(fileArrayToDownload[index].fileId)
-                downloadFromNasFolder(name: downFileName, path: downPath, fileId: downId, index:index)
-                return
-            }
-        }
-        self.finishDownload()
-    }
-
-    
-    func downloadFromNasFolder(name:String, path:String, fileId:String, index:Int){
-        ContextMenuWork().downloadFromNasFolder(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
-            if let success = responseObject {
-                print(success)
-                if(success == "success"){
-                }
-            }
-            self.fileArrayToDownload.remove(at: index)
-            self.downloadFile()
-        }
-    }
-    
-    func finishDownload(){
-        SyncLocalFilleToNas().sync()
-        print("download finish")
-    }
-    
-    
-    func NasFolderContextMenuCalled(cell:NasFolderListCell, indexPath:IndexPath, sender:UIButton){
-        let foldrNm = folderArray[indexPath.row].foldrNm
-        let etsionNm = folderArray[indexPath.row].etsionNm
-        let amdDate = folderArray[indexPath.row].amdDate
-        foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
-        fileId = String(folderArray[indexPath.row].fileId)
-        let foldrId = folderArray[indexPath.row].foldrId
-        switch sender {
-        case cell.btnDwnld:
-            
-//            getFolderIdsToDownload(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:devUuid)
-            ContextMenuWork().downloadFolderFromNas(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:selectedDevUuid, deviceName:deviceName)
-            
-            break
-        case cell.btnNas:
-            print(deviceName)
-            switch(flickState){
-            case .main :
-                switch mainContentState {
-                case .oneViewList:
-                    let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":userId]
-                    print("fileDict : \(fileDict)")
-                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                    showOptionMenu(sender: sender, style: 0)
-                    
-                case .googleDriveList:
-                    break
-                }
-                break
-            case .lately:
-                break
-            }
-            break
-            
-        case cell.btnGDrive:
-            
-            self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
-            showOptionMenu(sender: sender, style: 0)
-            break
-        case cell.btnDelete:
-            let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
-            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                UIAlertAction in
-                let pathForRemove:String = FileUtil().getFilePath(fileNm: self.fileNm, amdDate: amdDate)
-                self.removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync()
-                DispatchQueue.main.async {
-                    let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
-                    let noAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel, handler:nil)
-                    //                        self.deviceCollectionView.reloadData()
-                    alertController.addAction(noAction)
-                    self.present(alertController, animated: true)
-                }
-                
-            }
-            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
-            alertController.addAction(yesAction)
-            alertController.addAction(noAction)
-            self.present(alertController, animated: true)
-            break
-        default:
-            break
-        }
-    }
-    
-    
-  
     
     func numberOfPreviewItems(in controller: QLPreviewController) -> Int {
         return localFileArray.count
@@ -1772,56 +1562,7 @@ let quickLookController = QLPreviewController()
         return cell
     }
     
-    
-    func NasFolderListCellController(indexPathRow:Int) -> NasFolderListCell {
-        let indexPath = IndexPath(row: indexPathRow, section: 0)
-        let cell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "NasFolderListCell", for: indexPath) as! NasFolderListCell
-        
-        if (multiCheckListState == .active){
-            cell.btnMultiCheck.isHidden = false
-            cell.btnMultiCheck.tag = indexPath.row
-            cell.btnMultiCheck.addTarget(self, action: #selector(btnMultiCheckClicked(sender:)), for: .touchUpInside)
-            cell.btnOption.isHidden = true
-            
-        } else {
-            cell.btnOption.isHidden = false
-            cell.btnMultiCheck.isHidden = true
-        }
-        if(folderArray[indexPath.row].foldrNm == "..."){
-            cell.btnOption.isHidden = true
-        }
-        
-        cell.ivSub.image = UIImage(named: "ico_folder")
-        cell.optionSHowCheck = 0
-        cell.optionHide()
-        cell.lblMain.text = folderArray[indexPath.row].foldrNm
-        cell.lblSub.text = folderArray[indexPath.row].amdDate
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
-        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-        cell.btnOption.addGestureRecognizer(swipeLeft)
-        cell.btnOption.tag = indexPath.row
-        cell.btnOption.addTarget(self, action: #selector(btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
-        
-        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
-        rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-        cell.btnOptionRed.addGestureRecognizer(rightSwipe)
-        cell.btnOptionRed.tag = indexPath.row
-        cell.btnOptionRed.addTarget(self, action: #selector(btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
-        
-        
-        cell.btnOption.isHidden = false
-        cell.btnShow.tag = indexPath.row
-        cell.btnShow.addTarget(self, action: #selector(optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDwnld.tag = indexPath.row
-        cell.btnDwnld.addTarget(self, action: #selector(optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        return cell
-    }
+ 
     @objc func btnNasFolderOptionClicked(sender:UIButton){
         showNasFolderOption(tag:sender.tag)
     }
@@ -1861,7 +1602,9 @@ let quickLookController = QLPreviewController()
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFolderListCell
-        self.NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
+//        self.NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
+        
+        NasFolderListCellController().NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
     }
     
     func LocalFileListCellController(indexPathRow:Int) -> LocalFileListCell {
