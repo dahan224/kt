@@ -556,5 +556,25 @@ class ContextMenuWork {
         print("download finish")
     }
     
+    
+    func removeNasFolder(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        Alamofire.request(App.URL.server+"nasFoldrDel.do"
+            , method: .post
+            , parameters:parameters
+            , encoding : JSONEncoding.default
+            , headers: App.Headrs.jsonHeader
+            ).responseJSON { response in
+                switch response.result {
+                case .success(let value):
+                    completionHandler(value as? NSDictionary, nil)
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    completionHandler(nil, error as NSError)
+                    break
+                }
+        }
+    }
    
 }

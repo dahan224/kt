@@ -579,7 +579,7 @@ let quickLookController = QLPreviewController()
                 NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
                 self.showInsideListGDrive(userId: userId, devUuid: currentDevUuid, foldrId: stringFoldrId, deviceName: deviceName)
                 searchStepState = .folder
-                var state = HomeViewController.bottomListEnum.localFileInfo
+                let state = HomeViewController.bottomListEnum.localFileInfo
                 //수정 요망
                 Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: currentDevUuid, getCurrentFolderId: currentFolderId)
             } else { // 파일
@@ -1199,17 +1199,16 @@ let quickLookController = QLPreviewController()
                         self.showInsideList(userId: param["userId"] as! String, devUuid: param["devUuid"] as! String, foldrId: foldrId, deviceName:self.deviceName)
                         let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
-                        
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
                     }
                 }
             }
-            
-        
             return
         }
     }
+    
+    
     
     
     
@@ -1603,6 +1602,7 @@ let quickLookController = QLPreviewController()
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFolderListCell
 //        self.NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
+        
         
         NasFolderListCellController().NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
     }

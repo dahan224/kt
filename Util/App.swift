@@ -145,6 +145,7 @@ struct App {
         var fileNm:String
         var fileShar:String
         var fileSize:Int
+        var upFoldrId:Int
         
         init(data: AnyObject) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
@@ -165,6 +166,7 @@ struct App {
             self.fileNm = data["fileNm"] as? String ?? "nil"
             self.fileShar = data["fileShar"] as? String ?? "nil"
             self.fileSize = data["fileSize"] as? Int ?? 0
+            self.upFoldrId = data["upFoldrId"] as? Int ?? 0
         }
         init(data: [String:Any]) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
@@ -182,6 +184,7 @@ struct App {
             self.fileNm = data["fileNm"] as? String ?? "nil"
             self.fileShar = data["fileShar"] as? String ?? "nil"
             self.fileSize = data["fileSize"] as? Int ?? 0
+            self.upFoldrId = data["upFoldrId"] as? Int ?? 0
         }
     }
     struct SearchedFileStruct {
