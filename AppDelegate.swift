@@ -188,10 +188,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
-                    SyncLocalFilleToNas().sync()
                     DispatchQueue.main.async {
                         let fileDict = ["fileId":fileId, "fileNm":name,"amdDate":amdDate, "oldFoldrWholePathNm":path,"state":"remote","fromUserId":fromUserId, "fromOsCd":fromOsCd, "fromDevUuid" : fromDevUuid, "fromFoldr" : fromFoldr]
                         print("fileDict : \(fileDict)")
+                        SyncLocalFilleToNas().sync()
+                        
                         NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
                     }
                 }

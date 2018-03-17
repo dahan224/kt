@@ -325,7 +325,15 @@ let quickLookController = QLPreviewController()
                                 
                                 cells.append(cell4)
                             } else {
-                                let cell4 = NasFileListCellController(indexPathRow: indexPath.row)
+                                print("NasFileCellController get cell")
+                                let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
+                                swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                                cell4.btnOption.addGestureRecognizer(swipeLeft)
+                                
+                                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
+                                rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                                cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
                                 cells.append(cell4)
                             }
                             
@@ -380,8 +388,17 @@ let quickLookController = QLPreviewController()
                         
                     } else {
                         if(folderArray[indexPath.row].fileNm != "nil"){
-                            let cell4 = LocalFileListCellController(indexPathRow: indexPath.row)
+//                            let cell4 = LocalFileListCellController(indexPathRow: indexPath.row)
+                            let cell4 = LocalFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
                             cells.append(cell4)
+                            let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
+                            swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                            cell4.btnOption.addGestureRecognizer(swipeLeft)
+                            
+                            let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
+                            rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                            cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                            
                             cell2.lblMain.text = folderArray[indexPath.row].fileNm
                             let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
                             cell2.ivMain.image = UIImage(named: imageString)
@@ -389,7 +406,6 @@ let quickLookController = QLPreviewController()
                             
                         } else {
                             let cell4 = NasFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
-                            
                             cells.append(cell4)
                             
                             cell2.lblMain.text = folderArray[indexPath.row].foldrNm
@@ -648,7 +664,7 @@ let quickLookController = QLPreviewController()
          showNasFileOption(tag:sender.tag)
     }
     
-    @objc func cellSwipeToLeft(sender:UIGestureRecognizer){
+    @objc func cellNasFileSwipeToLeft(sender:UIGestureRecognizer){
         
         print("swipe to left")
         if let button = sender.view as? UIButton {
@@ -722,7 +738,7 @@ let quickLookController = QLPreviewController()
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! LocalFileListCell
 //        self.localContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        LocalContextMenuController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId:  currentFolderId)
+        LocalFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId:  currentFolderId)
     }
     
     
@@ -880,7 +896,9 @@ let quickLookController = QLPreviewController()
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFileListCell
-        self.nasContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
+//        self.nasContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
+        NasFileCellController().nasContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
+        
     }
     
     @objc func btnMultiCheckClicked(sender:UIButton){
@@ -939,7 +957,6 @@ let quickLookController = QLPreviewController()
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! RemoteFileListCell
-        //        self.localContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
         
         RemoteFileListCellController().remoteFileContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId:selectedDevUserId, currentFolderId:  currentFolderId)
     }
@@ -997,6 +1014,7 @@ let quickLookController = QLPreviewController()
                 case .oneViewList:
                     //            print("fileNm : \(fileNm), filePaht : \(foldrWholePathNm)")
                     self.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
+                    
                     break
                 case .googleDriveList:
                     let fileId = driveFileArray[indexPath.row].fileId
@@ -1150,19 +1168,26 @@ let quickLookController = QLPreviewController()
     
   
     func downloadFromNas(name:String, path:String, fileId:String){
+        NotificationCenter.default.post(name: Notification.Name("toggleIndicator"), object: self, userInfo: nil)
         ContextMenuWork().downloadFromNas(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
-                    SyncLocalFilleToNas().sync()
+                    
                     DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: Notification.Name("toggleIndicator"), object: self, userInfo: nil)
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        
+                        SyncLocalFilleToNas().sync()
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
                     }
+                } else {
+                    NotificationCenter.default.post(name: Notification.Name("toggleIndicator"), object: self, userInfo: nil)
                 }
             }
+            
             return
         }
     }
@@ -1462,13 +1487,13 @@ let quickLookController = QLPreviewController()
                 cell.optionHide()
                 cell.lblMain.text = folderArray[indexPath.row].fileNm
                 cell.lblSub.text = folderArray[indexPath.row].amdDate
-                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellSwipeToLeft(sender:)))
+                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                 cell.btnOption.addGestureRecognizer(swipeLeft)
                 cell.btnOption.tag = indexPath.row
                 cell.btnOption.addTarget(self, action: #selector(btnOptionClicked(sender:)), for: .touchUpInside)
                 
-                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellSwipeToLeft(sender:)))
+                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
                 rightSwipe.direction = UISwipeGestureRecognizerDirection.right
                 cell.btnOptionRed.addGestureRecognizer(rightSwipe)
                 cell.btnOptionRed.tag = indexPath.row
@@ -1508,60 +1533,7 @@ let quickLookController = QLPreviewController()
     }
     
     
-    func NasFileListCellController(indexPathRow:Int) -> NasFileListCell {
-        let indexPath = IndexPath(row: indexPathRow, section: 0)
-        let cell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "NasFileListCell", for: indexPath) as! NasFileListCell
-        
-        if (multiCheckListState == .active){
-            cell.btnMultiCheck.isHidden = false
-            cell.btnMultiCheck.tag = indexPath.row
-            cell.btnMultiCheck.addTarget(self, action: #selector(btnMultiCheckClicked(sender:)), for: .touchUpInside)
-            cell.btnOption.isHidden = true
-            
-        } else {
-            cell.btnOption.isHidden = false
-            cell.btnMultiCheck.isHidden = true
-        }
-        if(folderArray[indexPath.row].foldrNm == "..."){
-            cell.btnOption.isHidden = true
-        }
-        let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
-        
-        cell.ivSub.image = UIImage(named: imageString)
-        cell.optionSHowCheck = 0
-        cell.optionHide()
-        cell.lblMain.text = folderArray[indexPath.row].fileNm
-        cell.lblSub.text = folderArray[indexPath.row].amdDate
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellSwipeToLeft(sender:)))
-        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-        cell.btnOption.addGestureRecognizer(swipeLeft)
-        cell.btnOption.tag = indexPath.row
-        cell.btnOption.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
-        
-        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellSwipeToLeft(sender:)))
-        rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-        cell.btnOptionRed.addGestureRecognizer(rightSwipe)
-        cell.btnOptionRed.tag = indexPath.row
-        cell.btnOptionRed.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
-        
-        
-        cell.btnOption.isHidden = false
-        cell.btnShow.tag = indexPath.row
-        cell.btnShow.addTarget(self, action: #selector(optionNasFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnAction.tag = indexPath.row
-        cell.btnAction.addTarget(self, action: #selector(optionNasFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDwnld.tag = indexPath.row
-        cell.btnDwnld.addTarget(self, action: #selector(optionNasFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(optionNasFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(optionNasFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(optionNasFileShowClicked(sender:)), for: .touchUpInside)
-        return cell
-    }
-    
- 
+   
     @objc func btnNasFolderOptionClicked(sender:UIButton){
         showNasFolderOption(tag:sender.tag)
     }
@@ -1607,55 +1579,6 @@ let quickLookController = QLPreviewController()
         NasFolderListCellController().NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
     }
     
-    func LocalFileListCellController(indexPathRow:Int) -> LocalFileListCell {
-        let indexPath = IndexPath(row: indexPathRow, section: 0)
-        let cell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "LocalFileListCell", for: indexPath) as! LocalFileListCell
-        
-        if (multiCheckListState == .active){
-            cell.btnMultiCheck.isHidden = false
-            cell.btnMultiCheck.tag = indexPath.row
-            cell.btnMultiCheck.addTarget(self, action: #selector(btnMultiCheckClicked(sender:)), for: .touchUpInside)
-            cell.btnOption.isHidden = true
-            
-        } else {
-            cell.btnOption.isHidden = false
-            cell.btnMultiCheck.isHidden = true
-        }
-        if(folderArray[indexPath.row].foldrNm == "..."){
-            cell.btnOption.isHidden = true
-        }
-        
-        let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
-        cell.ivSub.image = UIImage(named: imageString)
-        cell.optionSHowCheck = 0
-        cell.optionHide()
-        cell.lblMain.text = folderArray[indexPath.row].fileNm
-        cell.lblSub.text = folderArray[indexPath.row].amdDate
-        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
-        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-        cell.btnOption.addGestureRecognizer(swipeLeft)
-        cell.btnOption.tag = indexPath.row
-        cell.btnOption.addTarget(self, action: #selector(btnLocalFileOptionClicked(sender:)), for: .touchUpInside)
-        
-        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
-        rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-        cell.btnOptionRed.addGestureRecognizer(rightSwipe)
-        cell.btnOptionRed.tag = indexPath.row
-        cell.btnOptionRed.addTarget(self, action: #selector(btnLocalFileOptionClicked(sender:)), for: .touchUpInside)
-        
-        
-        cell.btnOption.isHidden = false
-        cell.btnShow.tag = indexPath.row
-        cell.btnShow.addTarget(self, action: #selector(optionLocalFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnAction.tag = indexPath.row
-        cell.btnAction.addTarget(self, action: #selector(optionLocalFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(optionLocalFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(optionLocalFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(optionLocalFileShowClicked(sender:)), for: .touchUpInside)
-        return cell
-    }
+    
     
 }

@@ -504,10 +504,6 @@ struct App {
                 "userId" : userId,
                 "devUuid" : devUuid,
                 "fileNm" : fileNm,
-                "etsionNm" : etsionNm,
-                "fileSize" : fileSize,
-                "cretDate" : cretDate,
-                "amdDate" : amdDate,
                 "foldrWholePathNm":foldrWholePathNm
             ]
         }

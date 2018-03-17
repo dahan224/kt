@@ -361,37 +361,9 @@ class ContextMenuWork {
                 }
         }
     }
-    func uploadToNasFromLocal(userId:String, fileNm:String, path:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
-        stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let user = userId
-        let password = "1234"
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
-        let base64Credentials = credentialData.base64EncodedString()
-        let headers = [
-            "Authorization": "Basic \(base64Credentials)"
-        ]
-        print("stringUrl : \(stringUrl)")
-        let downloadUrl:URL = URL(string: stringUrl)!
-        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
-            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            documentsURL.appendPathComponent("\(fileNm)")
-            return (documentsURL, [.removePreviousFile])
-        }
-        
-        Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
-            .downloadProgress(closure: { (progress) in
-                print("download progress : \(progress.fractionCompleted)")
-                //                 completionHandler(progress.fractionCompleted, nil)
-            })
-            .response { response in
-                print("response : \(response)")
-                if response.destinationURL != nil {
-                    print(response.destinationURL!)
-                    completionHandler("success", nil)
-                }
-        }
-    }
+   
+    
+    
     func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String){
         selectedUserId = userId
         selectedDevUuid = devUuid

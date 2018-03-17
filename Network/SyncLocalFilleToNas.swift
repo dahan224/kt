@@ -205,6 +205,7 @@ class SyncLocalFilleToNas {
                                         
                                     var localFilePathArray:[String] = []
                                     
+                                    
                                     if(self.localFileArray.count > 0){
                                         for localFile in self.localFileArray {
                                             let localFilePath = "\(localFile.foldrWholePathNm)/\(localFile.fileNm).\(localFile.etsionNm)"
@@ -232,6 +233,7 @@ class SyncLocalFilleToNas {
                                             let deleteFileParameter = App.FilesToEdit(file:deleteFile, cmd:"D").getDeleteParameter
                                             self.fileArrayToDelete.append(deleteFileParameter)
                                         } else {
+                                            
                                             print("server")
                                         }
                                     }
@@ -243,25 +245,24 @@ class SyncLocalFilleToNas {
                                             
                                         }
                                     }
-                                } else {
-                                    if(self.localFileArray.count > 0 ){
-                                        for localFile in self.localFileArray {
-                                            self.fileArrayToCreate.append(localFile.getParameter)
-                                            print("fileArrayToCreate2 : \(self.fileArrayToCreate.count)")
+                                    
+                                    if(self.fileArrayToDelete.count > 0){
+                                        print("fileArrayToDelete : \(self.fileArrayToDelete)" )
+                                        self.deleteFileListToServer(parameters: self.fileArrayToDelete)
+                                    } else {
+                                        if(self.fileArrayToCreate.count>0){
+                                            print("create filelist : \(self.fileArrayToCreate)")
+                                            self.createFileListToServer(parameters: self.fileArrayToCreate)
                                         }
                                     }
-                                }
-                               
-                               
-                                if(self.fileArrayToDelete.count > 0){
-                                    print("fileArrayToDelete : \(self.fileArrayToDelete)" )
-                                    self.deleteFileListToServer(parameters: self.fileArrayToDelete)
                                 } else {
                                     if(self.fileArrayToCreate.count>0){
                                         print("create filelist : \(self.fileArrayToCreate)")
                                         self.createFileListToServer(parameters: self.fileArrayToCreate)
                                     }
                                 }
+                               
+                               
                                 break
                             case .failure(let error):
                                 NSLog(error.localizedDescription)
@@ -313,7 +314,9 @@ class SyncLocalFilleToNas {
                     
                     if(fileExtension.isEmpty){
                         var foldrWholePathNm = "/Mobile"
-                        if let folderNmArray = URLComponents(string: fileSavedPath)?.path.components(separatedBy: "/") {
+//                        if let folderNmArray = URLComponents(string: fileSavedPath)?.path.components(separatedBy: "/") {
+                        if let folderNmArray = URLComponents(string: fileSavedPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)?.path.components(separatedBy: "/") {
+                            
                             let documentIndex = folderNmArray.index(of: "Documents")
                             for (index, path) in folderNmArray.enumerated() {
                                 if(documentIndex! < index && index < folderNmArray.count){

@@ -42,6 +42,7 @@ class ContainerViewController: UIViewController {
     var fromUserId = ""
     var fileSavedPath = ""
     var fromOsCd = ""
+    
     enum googleSignInSegueEnum: String {
         case loginForList = "loginForList"
         case loginForSend = "loginForSend"
@@ -51,7 +52,7 @@ class ContainerViewController: UIViewController {
     var oneViewSortState:DbHelper.sortByEnum = DbHelper.sortByEnum.none
     var DeviceArray:[App.DeviceStruct] = []
     
-    var storageKind = NasSendFolderSelectVC.storageKind.nas
+    var storageKind = NasSendFolderSelectVC.toStorageKind.nas
     var savedPath = ""
     var amdDate = ""
     
@@ -322,37 +323,25 @@ class ContainerViewController: UIViewController {
     }
     
     @objc func nasFolderSelectSegue(fileDict:NSNotification){
-        if let getFileId = fileDict.userInfo?["fileId"] as? String, let getFileNm = fileDict.userInfo?["fileNm"] as? String, let getFoldrWholePathNm = fileDict.userInfo?["oldFoldrWholePathNm"] as? String, let getState = fileDict.userInfo?["state"] as? String, let getUserId = fileDict.userInfo?["fromUserId"] as? String, let getOsCd = fileDict.userInfo?["fromOsCd"] as? String  {
+        if let getFileId = fileDict.userInfo?["fileId"] as? String, let getFromDevUuid = fileDict.userInfo?["fromDevUuid"] as? String, let getUserId = fileDict.userInfo?["fromUserId"] as? String, let getOsCd = fileDict.userInfo?["fromOsCd"] as? String, let getToState = fileDict.userInfo?["toStorage"] as? String {
             fileId = getFileId
-            foldrWholePathNm = getFoldrWholePathNm
-            fileNm = getFileNm
+            foldrWholePathNm = fileDict.userInfo?["oldFoldrWholePathNm"] as? String ?? "nil"
+            fileNm = fileDict.userInfo?["fileNm"] as? String ?? "nil"
             fromOsCd = getOsCd
-            switch getState {
+            fromDevUuid = getFromDevUuid
+            fromFoldr = fileDict.userInfo?["fromFoldr"] as? String ?? "nil"
+            if let getDate =  fileDict.userInfo?["amdDate"] as? String {
+                amdDate = getDate
+            }
+            
+            switch getToState {
                 case "nas":
                     storageKind = .nas
-                    
                 break
-                case "local":
-                    if let getDate =  fileDict.userInfo?["amdDate"] as? String {
-                        amdDate = getDate
-                    }
-                    storageKind = .local
-                    break
-                case "remote":
-                    if let getFromUserId =  fileDict.userInfo?["fromUserId"] as? String, let getFromDevUuid =  fileDict.userInfo?["fromDevUuid"] as? String, let getFromFoldr =  fileDict.userInfo?["fromFoldr"] as? String {
-                        fromUserId = getFromUserId
-                        fromDevUuid = getFromDevUuid
-                        fromFoldr = getFromFoldr
-                        
-                    }
-                    storageKind = .remote
-                
-                break
-                
                 case "googleDrive":
                     storageKind = .googleDrive
                 break
-                
+
                 default:
                 break
             }

@@ -18,6 +18,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    var indicatorAnimating = false
     
     @IBOutlet weak var customNavBar: UIView!
     @IBOutlet weak var tableView: UITableView!
@@ -146,6 +147,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var listStyleCheck = 1;
     
     @IBOutlet weak var containerViewA: UIView!
+    
     
     
     
@@ -345,20 +347,17 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                                                name: NSNotification.Name("setGoogleDriveFileListView"),
                                                object: nil)
         
-   
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(toggleIndicator),
+                                               name: NSNotification.Name("toggleIndicator"),
+                                               object: nil)
+        
         setHomeView()
         tableView.delegate = self
         tableView.dataSource = self
         tableView.reloadData()
-
-        
         
     }
-    
-    
-    
-  
-    
     
     func setHomeView(){
         bottomListState = .oneView
@@ -1316,10 +1315,14 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
-                    SyncLocalFilleToNas().sync()
+                    
                     DispatchQueue.main.async {
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
-                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){
+                        UIAlertAction in
+                            print("download from nas finish")
+                            SyncLocalFilleToNas().sync()
+                        }
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
                     }
@@ -1372,7 +1375,15 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         
     }
     
-    
+    @objc func toggleIndicator(){
+        if(indicatorAnimating){
+            activityIndicator.stopAnimating()
+            indicatorAnimating = false
+        } else {
+            activityIndicator.startAnimating()
+            indicatorAnimating = true
+        }
+    }
 }
 
 

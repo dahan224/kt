@@ -52,13 +52,12 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var fromDevUuid = ""
     var fromFoldr = ""
     
-    enum storageKind:String {
+    enum toStorageKind:String {
         case nas = "nas"
         case googleDrive = "googleDrive"
-        case local = "local"
-        case remote = "remote"
     }
-    var storageState = storageKind.nas
+    
+    var storageState = toStorageKind.nas
     
     enum listEnum {
         case deviceSelect
@@ -75,62 +74,28 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        nasDevId = UserDefaults.standard.string(forKey: "nasDevId")!
-        storageDevId = UserDefaults.standard.string(forKey: "storageDevId")!
+        print("fromDevUuid : \(fromDevUuid)")
         
-        nasDevIdArray.append(nasDevId)
-        nasDevIdArray.append(storageDevId)
-        
-        let nasUserId:String = UserDefaults.standard.string(forKey: "nasUserId")!
-        let storageUserId:String = UserDefaults.standard.string(forKey: "storageUserId")!
-        nasUserIdArray.append(nasUserId)
-        nasUserIdArray.append(storageUserId)
-        nasArray = ["GIGA NAS", "GIGA Storage"]
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(callSendToNasFromLocal(fileDict:)),
                                                name: NSNotification.Name("callSendToNasFromLocal"),
                                                object: nil)
+        
+        
         switch storageState {
         case .nas:
-//            nasDevId = UserDefaults.standard.string(forKey: "nasDevId")!
-//            storageDevId = UserDefaults.standard.string(forKey: "storageDevId")!
-//
-//            nasDevIdArray.append(nasDevId)
-//            nasDevIdArray.append(storageDevId)
-//
-//            let nasUserId:String = UserDefaults.standard.string(forKey: "nasUserId")!
-//            let storageUserId:String = UserDefaults.standard.string(forKey: "storageUserId")!
-//            nasUserIdArray.append(nasUserId)
-//            nasUserIdArray.append(storageUserId)
-//            nasArray = ["GIGA NAS", "GIGA Storage"]
-            break
+            nasDevId = UserDefaults.standard.string(forKey: "nasDevId")!
+            storageDevId = UserDefaults.standard.string(forKey: "storageDevId")!
             
-        case .local :
-//            nasDevId = UserDefaults.standard.string(forKey: "nasDevId")!
-//            storageDevId = UserDefaults.standard.string(forKey: "storageDevId")!
-//
-//            nasDevIdArray.append(nasDevId)
-//            nasDevIdArray.append(storageDevId)
-//
-//            let nasUserId:String = UserDefaults.standard.string(forKey: "nasUserId")!
-//            let storageUserId:String = UserDefaults.standard.string(forKey: "storageUserId")!
-//            nasUserIdArray.append(nasUserId)
-//            nasUserIdArray.append(storageUserId)
-//            nasArray = ["GIGA NAS", "GIGA Storage"]
-//            print("local")
-            break
-        case .remote:
-//            nasDevId = UserDefaults.standard.string(forKey: "nasDevId")!
-//            storageDevId = UserDefaults.standard.string(forKey: "storageDevId")!
-//
-//            nasDevIdArray.append(nasDevId)
-//            nasDevIdArray.append(storageDevId)
-//
-//            let nasUserId:String = UserDefaults.standard.string(forKey: "nasUserId")!
-//            let storageUserId:String = UserDefaults.standard.string(forKey: "storageUserId")!
-//            nasUserIdArray.append(nasUserId)
-//            nasUserIdArray.append(storageUserId)
-//            nasArray = ["GIGA NAS", "GIGA Storage"]
+            nasDevIdArray.append(nasDevId)
+            nasDevIdArray.append(storageDevId)
+            
+            let nasUserId:String = UserDefaults.standard.string(forKey: "nasUserId")!
+            let storageUserId:String = UserDefaults.standard.string(forKey: "storageUserId")!
+            nasUserIdArray.append(nasUserId)
+            nasUserIdArray.append(storageUserId)
+            nasArray = ["GIGA NAS", "GIGA Storage"]
+            
             
             break
         default:
@@ -221,77 +186,6 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     break
             }
             break
-            
-        case .local:
-            switch listState {
-            case .deviceSelect:
-                let imageString = deviceImageArray[indexPath.row]
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblMain.text = nasArray[indexPath.row]
-                cell.checkButton.isHidden = true
-                
-                break
-            case .deviceRoot:
-                cell.ivIcon.image = UIImage(named: "ico_folder")
-                cell.lblMain.text = folderNameArray[indexPath.row]
-                cell.checkButton.isHidden = false
-                if(indexPath.row == 0){
-                    cell.checkButton.isHidden = true
-                }
-                cell.checkButton.isHidden = false
-                cell.checkButton.tag = indexPath.row
-                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
-                break
-            case .folder:
-                cell.ivIcon.image = UIImage(named: "ico_folder")
-                cell.lblMain.text = folderArray[indexPath.row].foldrNm
-                cell.checkButton.isHidden = false
-                if(indexPath.row == 0){
-                    cell.checkButton.isHidden = true
-                }
-                cell.checkButton.tag = indexPath.row
-                cell.btnChecked = 0
-                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
-                break
-            }
-            break
-        case .remote:
-            switch listState {
-            case .deviceSelect:
-                let imageString = deviceImageArray[indexPath.row]
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblMain.text = nasArray[indexPath.row]
-                cell.checkButton.isHidden = true
-                
-                break
-            case .deviceRoot:
-                cell.ivIcon.image = UIImage(named: "ico_folder")
-                cell.lblMain.text = folderNameArray[indexPath.row]
-                cell.checkButton.isHidden = false
-                if(indexPath.row == 0){
-                    cell.checkButton.isHidden = true
-                }
-                cell.checkButton.isHidden = false
-                cell.checkButton.tag = indexPath.row
-                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
-                break
-            case .folder:
-                cell.ivIcon.image = UIImage(named: "ico_folder")
-                cell.lblMain.text = folderArray[indexPath.row].foldrNm
-                cell.checkButton.isHidden = false
-                if(indexPath.row == 0){
-                    cell.checkButton.isHidden = true
-                }
-                cell.checkButton.tag = indexPath.row
-                cell.btnChecked = 0
-                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
-                break
-            }
-            break
         default:
             switch listState {
             case .deviceSelect:
@@ -303,7 +197,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 break
             case .deviceRoot:
                 cell.ivIcon.image = UIImage(named: "ico_folder")
-                cell.lblMain.text = folderNameArray[indexPath.row]
+                cell.lblMain.text = driveFileArray[indexPath.row].name
                 cell.checkButton.isHidden = false
                 if(indexPath.row == 0){
                     cell.checkButton.isHidden = true
@@ -335,71 +229,84 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
-        switch listState {
-        case .deviceRoot:
-            newFoldrId = String(folderIdArray[sender.tag])
-            newFoldrWholePathNm = folderPathArray[sender.tag]
-            print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
-            if(cell.btnChecked == 0){
-                for index in 0..<folderIdArray.count{
-                    let indexPath = IndexPath(row: index, section: 0)
-                    let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
-                    removeCheckCell.btnChecked = 0
-                    removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                }
-                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.btnChecked = 1
-                folderChecked = 1
-            } else {
-                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.btnChecked = 0
-                folderChecked = 0
-            }
-            break
-            
-        default:
-            fileId = String(folderArray[buttonRow].fileId)
-            newFoldrId = String(folderArray[sender.tag].foldrId)
-            newFoldrWholePathNm = folderArray[sender.tag].foldrWholePathNm
-            print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
-            if(cell.btnChecked == 0){
-                for index in 0..<folderArray.count{
-                    let indexPath = IndexPath(row: index, section: 0)
-                    let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
-                    removeCheckCell.btnChecked = 0
-                    removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                }
-                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.btnChecked = 1
-                folderChecked = 1
-            } else {
-                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.btnChecked = 0
-                folderChecked = 0
-            }
-            
-            
-        }
+      
         
         switch storageState {
-        case .nas:
-          break
-        case .local :
-           
-            break
-        case .remote:
-            break
         case .googleDrive:
             switch listState {
-            case .deviceSelect :
-                googleDriveFileIdPath = ""
-                break
-            default:
-                googleDriveFileIdPath = "\(driveFileArray[buttonRow].fileId)"
-            }
+                case .deviceSelect :
+                    googleDriveFileIdPath = ""
+                    newFoldrId = String(driveFileArray[sender.tag].fileId)
+                    newFoldrWholePathNm = driveFileArray[sender.tag].name
+                    print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
+                    if(cell.btnChecked == 0){
+                        for index in 0..<driveFileArray.count{
+                            let indexPath = IndexPath(row: index, section: 0)
+                            let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
+                            removeCheckCell.btnChecked = 0
+                            removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                        }
+                        sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
+                        cell.btnChecked = 1
+                        folderChecked = 1
+                    } else {
+                        sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                        cell.btnChecked = 0
+                        folderChecked = 0
+                    }
+                    break
+                default:
+                    googleDriveFileIdPath = "\(driveFileArray[buttonRow].fileId)"
+                }
             break
+        default:
+            switch listState {
+                case .deviceRoot:
+                newFoldrId = String(folderIdArray[sender.tag])
+                newFoldrWholePathNm = folderPathArray[sender.tag]
+                print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
+                if(cell.btnChecked == 0){
+                for index in 0..<folderIdArray.count{
+                let indexPath = IndexPath(row: index, section: 0)
+                let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
+                removeCheckCell.btnChecked = 0
+                removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
+                cell.btnChecked = 1
+                folderChecked = 1
+                } else {
+                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                cell.btnChecked = 0
+                folderChecked = 0
+                }
+                break
+        
+                default:
+                fileId = String(folderArray[buttonRow].fileId)
+                newFoldrId = String(folderArray[sender.tag].foldrId)
+                newFoldrWholePathNm = folderArray[sender.tag].foldrWholePathNm
+                print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
+                if(cell.btnChecked == 0){
+                for index in 0..<folderArray.count{
+                let indexPath = IndexPath(row: index, section: 0)
+                let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
+                removeCheckCell.btnChecked = 0
+                removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
+                cell.btnChecked = 1
+                folderChecked = 1
+                } else {
+                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                cell.btnChecked = 0
+                folderChecked = 0
+            }
         }
+        break
        
+        
+        }
         
     }
     
@@ -487,56 +394,58 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         if(folderChecked == 1){
             switch storageState {
             case .nas:
-                if(fromOsCd == "G"){
-                    print("deviceName : \(deviceName)")
+                if(fromDevUuid == Util.getUuid()){
+                    // local to Nas
+                    var toOsCd = "G"
                     if(toUserId != App.defaults.userId){
-                        let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"G","toOsCd":"S"]
-                        print("from g to s param : \(param)")
-                        self.sendNasToStorage(params: param)
-                        
-                    } else {
-                        let param = ["userId":toUserId, "devUuid": currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName,"foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm]
-                        print("from s to s param : \(param), \(deviceName)")
-                        self.sendNasToNas(params: param)
+                        toOsCd = "S"
                     }
+                    let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+                    sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
                     
-                } else{
-                    if(toUserId != App.defaults.userId){
-                        let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"S"]
-                        print("param : \(param)")
-                        //shared to shared
-                        self.sendStorageToNas(params: param)
+                    
+                } else {
+                    if(fromOsCd == "G"){
+                        print("deviceName : \(deviceName)")
+                        if(toUserId != App.defaults.userId){
+                            let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"G","toOsCd":"S"]
+                            print("from g to s param : \(param)")
+                            self.sendNasToShareNas(params: param)
+                        } else {
+                            let param = ["userId":toUserId, "devUuid": currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName,"foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm]
+                            print("from s to s param : \(param), \(deviceName)")
+                            self.sendNasToNas(params: param)
+                        }
+                        
+                    } else if (fromOsCd == "S") {
+                        if(toUserId != App.defaults.userId){
+                            let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"S"]
+                            print("param : \(param)")
+                            //shared to shared
+                            self.sendShareNasToNas(params: param)
+                        } else {
+                            let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"G"]
+                            print("param : \(param) to G")
+                            self.sendShareNasToNas(params: param)
+                        }
                     } else {
-                        let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"G"]
-                        print("param : \(param) to G")
-                        self.sendStorageToNas(params: param)
+                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+                        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                        
                     }
                 }
-                
                 break
-                
-            case .local:
-                var toOsCd = "G"
-                if(toUserId != App.defaults.userId){
-                    toOsCd = "S"
-                }
-//
-//                let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"I","toOsCd":"G"]
-//                print("param : \(param)")
-                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
-                sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
-                
-                break
-            case .remote:
-                
-                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
-                sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
-                
-                break
-                
             case .googleDrive:
                 print("googleDriveFileIdPath : \(googleDriveFileIdPath)")
+                if(fromDevUuid == Util.getUuid()){
+                    let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+                    self.sendToDriveFromLocal(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath, fileURL:fileURL)
+                    
+                } else {
+                    
                     self.downloadFromNasToDrive(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath)
+                }
+                
                 break
             }
                 
@@ -613,6 +522,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                             fileSize = size.doubleValue
                             print("fileSzie : \(fileSize)")
                         }
+                        
                     } catch {
                         print("Error: \(error)")
                     }
@@ -677,6 +587,73 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             return
         }
     }
+    
+    func sendToDriveFromLocal(name:String, path:String, fileId:String, fileURL:URL){
+        var fileSize:Double = 0
+        do {
+            let attribute = try FileManager.default.attributesOfItem(atPath: (fileURL.path))
+            if let size = attribute[FileAttributeKey.size] as? NSNumber {
+                fileSize = size.doubleValue
+                print("fileSzie : \(fileSize)")
+            }
+        } catch {
+            print("Error: \(error)")
+        }
+        let fileExtension = fileURL.pathExtension
+        let accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+        let stringUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
+        let headers = [
+            "Authorization": "Bearer \(accessToken)",
+            "Content-type": "multipart/related; boundary=foo_bar_baz",
+            "Content-Length": "\(fileSize)"
+        ]
+        var addParents = ""
+        if (fileId.isEmpty){
+            
+        } else {
+            addParents = ",'parents' : [ '\(fileId)' ]"
+        }
+        do {
+            let data = try Data(contentsOf: fileURL as URL)
+            Alamofire.upload(multipartFormData: { multipartFormData in
+                multipartFormData.append("{'name':'\(name)'\(addParents) }".data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName :"foo_bar_baz", mimeType: "application/json; charset=UTF-8")
+                
+                multipartFormData.append(data, withName: "foo_bar_baz", fileName: name, mimeType: fileExtension)
+                
+            }, usingThreshold: UInt64.init(), to: stringUrl, method: .post, headers: headers,
+               encodingCompletion: { encodingResult in
+                switch encodingResult {
+                case .success(let upload, _, _):
+                    upload.responseJSON { response in
+                        print("response:: \(response)")
+                        let fileManager = FileManager.default
+                        do {
+                            try fileManager.removeItem(atPath: fileURL.path)
+                            let alertController = UIAlertController(title: nil, message: "파일 업로드에 성공 하였습니다.", preferredStyle: .alert)
+                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)  {
+                                UIAlertAction in
+                                Util().dismissFromLeft(vc: self)
+                            }
+                            alertController.addAction(yesAction)
+                            self.present(alertController, animated: true)
+                        }
+                        catch let error as NSError {
+                            print("Ooops! Something went wrong: \(error)")
+                        }
+                        
+                    }
+                    break
+                case .failure(let encodingError):
+                    print(encodingError.localizedDescription)
+                    break
+                }
+            })
+        } catch {
+            print("Unable to load data: \(error)")
+        }
+        
+    }
+    
     func getFilesFromGoogleDrive(accessToken:String, root:String){
         self.driveFileArray.removeAll()
         var upFolder = App.DriveFileStruct(fileId: "root", kind: "d", mimeType: "d", name: "...")
@@ -816,7 +793,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             return
         }
     }
-    func sendStorageToNas(params:[String:Any]){
+    func sendShareNasToNas(params:[String:Any]){
         ContextMenuWork().fromNasToStorage(parameters: params){ responseObject, error in
             let json = JSON(responseObject)
             let message = responseObject?.object(forKey: "message")
@@ -842,7 +819,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     }
     
     
-    func sendNasToStorage(params:[String:Any]){
+    func sendNasToShareNas(params:[String:Any]){
         ContextMenuWork().fromNasToStorage(parameters: params){ responseObject, error in
             let json = JSON(responseObject)
             let message = responseObject?.object(forKey: "message")
