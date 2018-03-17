@@ -1068,7 +1068,7 @@ let quickLookController = QLPreviewController()
             break
             
         case cell.btnGDrive:
-            self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
+//            self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
             showNasFileOption(tag: sender.tag)
             
             break
@@ -1121,11 +1121,12 @@ let quickLookController = QLPreviewController()
     
     
  
-    func googleSignInCheck(name:String, path:String){
+    func googleSignInCheck(name:String, path:String, fileDict:[String:String]){
         if GIDSignIn.sharedInstance().hasAuthInKeychain() == true {
             GIDSignIn.sharedInstance().signInSilently()
             print("sign in silently")
-            let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"googleDrive", "fromUserId":userId,"fromOsCd":fromOsCd]
+//            let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"toStorageState":"googleDrive", "fromUserId":userId,"fromOsCd":fromOsCd]
+            
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
             
 //            downloadFromNasToDrive(name: name, path: path)

@@ -132,4 +132,57 @@ class Util{
         }        
         return imageString
     }
+    
+    let googleMimeTypeCheck = [
+        ["etsionNm": "png",  "googleMimeType": "image/png"],
+        ["etsionNm": "gif",  "googleMimeType": "image/gif"],
+        ["etsionNm": "svg",  "googleMimeType": "image/svg"],
+        ["etsionNm": "jpg",  "googleMimeType": "image/jpeg"],
+        ["etsionNm": "jpeg",  "googleMimeType": "image/jpeg"],
+        ["etsionNm": "csv",  "googleMimeType": "text/csv"],
+        ["etsionNm": "html",  "googleMimeType": "text/html"],
+        ["etsionNm": "htm",  "googleMimeType": "text/html"],
+        ["etsionNm": "text",  "googleMimeType": "text/plain"],
+        ["etsionNm": "txt",  "googleMimeType": "text/plain"],
+        ["etsionNm": "xml", "googleMimeType": "text/xml"],
+        ["etsionNm": "odt", "googleMimeType": "application/vnd.oasis.opendocument.text"],
+        ["etsionNm": "odm", "googleMimeType": "application/vnd.oasis.opendocument.text-master"],
+        ["etsionNm": "ott", "googleMimeType": "application/vnd.oasis.opendocument.text-template"],
+        ["etsionNm": "ods", "googleMimeType": "application/vnd.oasis.opendocument.sheet"],
+        ["etsionNm": "ots", "googleMimeType": "application/vnd.oasis.opendocument.spreadsheet-template"],
+        ["etsionNm": "odg", "googleMimeType": "application/vnd.oasis.opendocument.graphics"],
+        ["etsionNm": "otg", "googleMimeType": "application/vnd.oasis.opendocument.graphics-template"],
+        ["etsionNm": "oth", "googleMimeType": "application/vnd.oasis.opendocument.text-web"],
+        ["etsionNm": "odp", "googleMimeType": "application/vnd.oasis.opendocument.presentation"],
+        ["etsionNm": "otp", "googleMimeType": "application/vnd.oasis.opendocument.presentation-template"],
+        ["etsionNm": "odi", "googleMimeType": "application/vnd.oasis.opendocument.image"],
+        ["etsionNm": "odb", "googleMimeType": "application/vnd.oasis.opendocument.database"],
+        ["etsionNm": "oxt", "googleMimeType": "application/vnd.openofficeorg.extension"],
+        ["etsionNm": "rtf", "googleMimeType": "application/rtf"],
+        ["etsionNm": "pdf", "googleMimeType": "application/pdf"],
+        ["etsionNm": "docx", "googleMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+        ["etsionNm": "doc", "googleMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.document"],
+        ["etsionNm": "ppt", "googleMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.presentation"],
+        ["etsionNm": "pptx", "googleMimeType": "application/vnd.openxmlformats-officedocument.wordprocessingml.presentation"],
+        ["etsionNm": "xlsx", "googleMimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+        ["etsionNm": "xls", "googleMimeType": "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"],
+        ["etsionNm": "json", "googleMimeType":  "application/json"],
+        ["etsionNm": "js", "googleMimeType": "application/x-javascript"],
+        ["etsionNm": "apk", "googleMimeType": "application/vnd.android.package-archive"],
+        ["etsionNm": "bin", "googleMimeType": "application/octet-stream"],
+        ["etsionNm": "tif", "googleMimeType": "image/tiff"],
+        ["etsionNm": "tiff", "googleMimeType": "image/tiff"],
+        ["etsionNm": "tgz", "googleMimeType": "application/x-compressed"],
+        ["etsionNm": "zip", "googleMimeType":  "application/zip"],
+        ["etsionNm": "mp3", "googleMimeType": "audio/mpeg"]
+    ]
+    
+    class func getGoogleMimeType(etsionNm:String) -> String {
+        var imageString = ""
+        let result = Util().googleMimeTypeCheck.filter({ $0["etsionNm"] == etsionNm})
+        if (!result.isEmpty){
+            imageString = result[0]["googleMimeType"]!
+        } 
+        return imageString
+    }
 }

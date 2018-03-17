@@ -186,39 +186,39 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     break
             }
             break
-        default:
+        case .googleDrive:
             switch listState {
-            case .deviceSelect:
-                let imageString = deviceImageArray[indexPath.row]
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblMain.text = nasArray[indexPath.row]
-                cell.checkButton.isHidden = true
-                
-                break
-            case .deviceRoot:
-                cell.ivIcon.image = UIImage(named: "ico_folder")
-                cell.lblMain.text = driveFileArray[indexPath.row].name
-                cell.checkButton.isHidden = false
-                if(indexPath.row == 0){
-                    cell.checkButton.isHidden = true
-                }
-                cell.checkButton.isHidden = false
-                cell.checkButton.tag = indexPath.row
-                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
-                break
-            case .folder:
-                cell.ivIcon.image = UIImage(named: "ico_folder")
-                cell.lblMain.text = folderArray[indexPath.row].foldrNm
-                cell.checkButton.isHidden = false
-                if(indexPath.row == 0){
-                    cell.checkButton.isHidden = true
-                }
-                cell.checkButton.tag = indexPath.row
-                cell.btnChecked = 0
-                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
-                break
+                case .deviceSelect:
+                    let imageString = deviceImageArray[indexPath.row]
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblMain.text = nasArray[indexPath.row]
+                    cell.checkButton.isHidden = false
+                    
+                    break
+                case .deviceRoot:
+                    cell.ivIcon.image = UIImage(named: "ico_folder")
+                    cell.lblMain.text = driveFileArray[indexPath.row].name
+                    cell.checkButton.isHidden = false
+                    if(indexPath.row == 0){
+                        cell.checkButton.isHidden = true
+                    }
+                    cell.checkButton.isHidden = false
+                    cell.checkButton.tag = indexPath.row
+                    cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                    cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
+                    break
+                case .folder:
+                    cell.ivIcon.image = UIImage(named: "ico_folder")
+                    cell.lblMain.text = folderArray[indexPath.row].foldrNm
+                    cell.checkButton.isHidden = false
+                    if(indexPath.row == 0){
+                        cell.checkButton.isHidden = true
+                    }
+                    cell.checkButton.tag = indexPath.row
+                    cell.btnChecked = 0
+                    cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                    cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
+                    break
             }
             break
         }
@@ -240,7 +240,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     newFoldrWholePathNm = driveFileArray[sender.tag].name
                     print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
                     if(cell.btnChecked == 0){
-                        for index in 0..<driveFileArray.count{
+                        for index in 0..<nasArray.count{
                             let indexPath = IndexPath(row: index, section: 0)
                             let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
                             removeCheckCell.btnChecked = 0
@@ -257,6 +257,22 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     break
                 default:
                     googleDriveFileIdPath = "\(driveFileArray[buttonRow].fileId)"
+                    if(cell.btnChecked == 0){
+                        for index in 0..<driveFileArray.count{
+                            let indexPath = IndexPath(row: index, section: 0)
+                            let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
+                            removeCheckCell.btnChecked = 0
+                            removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                        }
+                        sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
+                        cell.btnChecked = 1
+                        folderChecked = 1
+                    } else {
+                        sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                        cell.btnChecked = 0
+                        folderChecked = 0
+                    }
+                break
                 }
             break
         default:
@@ -283,29 +299,28 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 break
         
                 default:
-                fileId = String(folderArray[buttonRow].fileId)
-                newFoldrId = String(folderArray[sender.tag].foldrId)
-                newFoldrWholePathNm = folderArray[sender.tag].foldrWholePathNm
-                print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
-                if(cell.btnChecked == 0){
-                for index in 0..<folderArray.count{
-                let indexPath = IndexPath(row: index, section: 0)
-                let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
-                removeCheckCell.btnChecked = 0
-                removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                }
-                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.btnChecked = 1
-                folderChecked = 1
-                } else {
-                sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                cell.btnChecked = 0
-                folderChecked = 0
+                    fileId = String(folderArray[buttonRow].fileId)
+                    newFoldrId = String(folderArray[sender.tag].foldrId)
+                    newFoldrWholePathNm = folderArray[sender.tag].foldrWholePathNm
+                    print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
+                    if(cell.btnChecked == 0){
+                    for index in 0..<folderArray.count{
+                    let indexPath = IndexPath(row: index, section: 0)
+                    let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
+                    removeCheckCell.btnChecked = 0
+                    removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                    }
+                    sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
+                    cell.btnChecked = 1
+                    folderChecked = 1
+                    } else {
+                    sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                    cell.btnChecked = 0
+                    folderChecked = 0
+                break
             }
         }
         break
-       
-        
         }
         
     }
@@ -327,10 +342,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     self.listState = .deviceSelect
                 } else {
                     root = driveFileArray[indexPath.row].fileId
-                    
                 }
-                
-                
                 self.getFilesFromGoogleDrive(accessToken: accessToken, root: root)
                 break
             }
@@ -541,6 +553,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     }
                     do {
                         let data = try Data(contentsOf: fileURL as URL)
+                        
                         Alamofire.upload(multipartFormData: { multipartFormData in
                             multipartFormData.append("{'name':'\(name)'\(addParents) }".data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName :"foo_bar_baz", mimeType: "application/json; charset=UTF-8")
                             
@@ -600,6 +613,20 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             print("Error: \(error)")
         }
         let fileExtension = fileURL.pathExtension
+        let googleMimeType:String = Util.getGoogleMimeType(etsionNm: fileExtension)
+        print("fileExtension : \(fileExtension), googleMimeType : \(googleMimeType)")
+        if(googleMimeType.isEmpty){
+            DispatchQueue.main.async {
+                let alertController = UIAlertController(title: nil, message: "지원하지 않는 파일 형식 입니다.", preferredStyle: .alert)
+                let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                    UIAlertAction in
+                    Util().dismissFromLeft(vc: self)
+                }
+                alertController.addAction(yesAction)
+                self.present(alertController, animated: true, completion: nil)
+            }
+            return
+        }
         let accessToken = UserDefaults.standard.string(forKey: "accessToken")!
         let stringUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
         let headers = [
@@ -618,7 +645,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             Alamofire.upload(multipartFormData: { multipartFormData in
                 multipartFormData.append("{'name':'\(name)'\(addParents) }".data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName :"foo_bar_baz", mimeType: "application/json; charset=UTF-8")
                 
-                multipartFormData.append(data, withName: "foo_bar_baz", fileName: name, mimeType: fileExtension)
+                multipartFormData.append(data, withName: "foo_bar_baz", fileName: name, mimeType: googleMimeType)
                 
             }, usingThreshold: UInt64.init(), to: stringUrl, method: .post, headers: headers,
                encodingCompletion: { encodingResult in
@@ -627,19 +654,13 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     upload.responseJSON { response in
                         print("response:: \(response)")
                         let fileManager = FileManager.default
-                        do {
-                            try fileManager.removeItem(atPath: fileURL.path)
-                            let alertController = UIAlertController(title: nil, message: "파일 업로드에 성공 하였습니다.", preferredStyle: .alert)
-                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)  {
-                                UIAlertAction in
-                                Util().dismissFromLeft(vc: self)
-                            }
-                            alertController.addAction(yesAction)
-                            self.present(alertController, animated: true)
+                        let alertController = UIAlertController(title: nil, message: "파일 업로드에 성공 하였습니다.", preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)  {
+                            UIAlertAction in
+                            Util().dismissFromLeft(vc: self)
                         }
-                        catch let error as NSError {
-                            print("Ooops! Something went wrong: \(error)")
-                        }
+                        alertController.addAction(yesAction)
+                        self.present(alertController, animated: true)
                         
                     }
                     break

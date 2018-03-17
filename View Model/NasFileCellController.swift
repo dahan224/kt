@@ -99,7 +99,8 @@ class NasFileCellController {
             break
             
         case cell.btnGDrive:
-            dv?.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
+            
+//            dv?.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
             
             break
             

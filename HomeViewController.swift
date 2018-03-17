@@ -708,7 +708,14 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         case cell.btnAction:
             let mailURL = URL(string: "photos-redirect://")!
             if UIApplication.shared.canOpenURL(mailURL) {
-                UIApplication.shared.openURL(mailURL)
+//                UIApplication.shared.openURL(mailURL)
+                
+                UIApplication.shared.open(mailURL, options: [:], completionHandler: {
+                    (success) in
+                    
+                    
+                })
+                
             }
             break
         case cell.btnNas:
@@ -1256,7 +1263,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 
             case .localFileInfo:
                 print("localFileInfo folderArray : \(folderArray), indexpathrow : \(intFolderArrayIndexPathRow)")
-                LocalContextMenuController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
+//                LocalContextMenuController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
+                
+//                 LocalFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId:  currentFolderId)
                 break
             case .remoteFileInfo:
                 
