@@ -353,12 +353,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             let json = JSON(responseObject as Any)
             if let statusCode = json["statusCode"].int, statusCode == 100 {
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-                                print("one view list : \(serverList)")
+//                                print("one view list : \(serverList)")
                 for device in serverList {
                     let deviceStruct = App.DeviceStruct(device: device)
                     self.DeviceArray.append(deviceStruct)
                     let defaults = UserDefaults.standard
-                    print("deviceStruct.devNm : \(deviceStruct.devNm)")
+//                    print("deviceStruct.devNm : \(deviceStruct.devNm)")
                     if(deviceStruct.osCd == "G"){
                         print("giga nas id saved : \(deviceStruct.devNm)")
                         defaults.set(deviceStruct.devUuid, forKey: "nasDevId")

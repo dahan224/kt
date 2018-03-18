@@ -55,6 +55,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var amdDate = ""
     var fromDevUuid = ""
     var fromFoldr = ""
+    var fromFoldrId = ""
     
     enum toStorageKind:String {
         case nas = "nas"
@@ -78,12 +79,13 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("fromDevUuid : \(fromDevUuid)")
+        print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId)")
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(callSendToNasFromLocal(fileDict:)),
                                                name: NSNotification.Name("callSendToNasFromLocal"),
                                                object: nil)
+        
         
         switch storageState {
         case .nas:
@@ -422,12 +424,18 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             case .nas:
                 if(fromDevUuid == Util.getUuid()){
                     // local to Nas
-                    var toOsCd = "G"
-                    if(toUserId != App.defaults.userId){
-                        toOsCd = "S"
+                    
+                    if(fromFoldrId.isEmpty){
+                        var toOsCd = "G"
+                        if(toUserId != App.defaults.userId){
+                            toOsCd = "S"
+                        }
+                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+                        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                    } else {
+                        // local 폴더 업로드 to nas
                     }
-                    let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
-                    sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                    
                     
                     
                 } else {

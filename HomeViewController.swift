@@ -845,7 +845,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             
             filckView.isHidden = true
             containerViewABottomConstraint.constant = 0
-            
             bottomListState = bottomListEnum(rawValue: bottomState)!
             fileId = getFileId
             foldrWholePathNm = getFoldrWholePathNm
@@ -858,30 +857,31 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             fromOsCd = getFomOsCd
             currentFolderId = getCurrentFolderId
             print("bottomListState: \(bottomListState), foldrWholePathNm : \(foldrWholePathNm)")
-            let fileIdDict = ["fileId":"\(fileId)"]
-            
             ifNavBarClicked = false
-            if(listViewStyleState == .grid){
-                if let getCellStyle = stateInfo.userInfo?["cellStyle"] as? String {
-                    print("getCellStyle : \(getCellStyle)")
-                    
-                    ifNavBarClicked = true
-                    tableView.reloadData()
-                } else {
-                    if let getFolderArray = stateInfo.userInfo?["folderArray"] as? [App.FolderStruct], let getIndexPath = stateInfo.userInfo?["selectedIndex"] as? IndexPath {
-                        
-                        print("getFolderArray : \(getFolderArray)")
-                        print("getIndexPath : \(getIndexPath)")
-                        folderArray = getFolderArray
-                        intFolderArrayIndexPathRow = getIndexPath.row
-                        
-                    }
-                tableView.reloadData()
-                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
-                }
-            }
+            
         } else {
             print("not called")
+        }
+        
+        if(listViewStyleState == .grid){
+            if let getCellStyle = stateInfo.userInfo?["cellStyle"] as? String {
+                print("getCellStyle : \(getCellStyle)")
+                
+                ifNavBarClicked = true
+                tableView.reloadData()
+            } else {
+                if let getFolderArray = stateInfo.userInfo?["folderArray"] as? [App.FolderStruct], let getIndexPath = stateInfo.userInfo?["selectedIndex"] as? IndexPath {
+                    
+                    print("getFolderArray : \(getFolderArray)")
+                    print("getIndexPath : \(getIndexPath)")
+                    folderArray = getFolderArray
+                    intFolderArrayIndexPathRow = getIndexPath.row
+                    
+                }
+                tableView.reloadData()
+                let fileIdDict = ["fileId":"\(fileId)"]
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+            }
         }
     }
     

@@ -42,6 +42,7 @@ class ContainerViewController: UIViewController {
     var fromUserId = ""
     var fileSavedPath = ""
     var fromOsCd = ""
+    var fromFoldrId = ""
     
     enum googleSignInSegueEnum: String {
         case loginForList = "loginForList"
@@ -262,7 +263,7 @@ class ContainerViewController: UIViewController {
                 vc.fromOsCd = fromOsCd
                 vc.fromDevUuid = fromDevUuid
                 vc.fromFoldr = fromFoldr
-                
+                vc.foldrId = fromFoldrId
             }
             
         }
@@ -332,6 +333,10 @@ class ContainerViewController: UIViewController {
             fromFoldr = fileDict.userInfo?["fromFoldr"] as? String ?? "nil"
             if let getDate =  fileDict.userInfo?["amdDate"] as? String {
                 amdDate = getDate
+            }
+            
+            if let getFromFoldrId = fileDict.userInfo?["fromFoldrId"] as? String {
+                fromFoldrId = getFromFoldrId
             }
             
             switch getToState {

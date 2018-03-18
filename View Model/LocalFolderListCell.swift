@@ -215,19 +215,10 @@ class LocalFolderListCell: UICollectionViewCell {
         
         
         
-        btnDwnld.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
-        btnDwnld.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        btnDwnld.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        
-        
-        btnDwnldTrailingAnchor = btnDwnld.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
-        btnDwnldTrailingAnchor?.isActive = true
-        btnDwnld.setImage(textToImage(drawText: "다운로드", inImage: UIImage(named: "ico_18dp_contextmenu_dwld")!.withRenderingMode(.alwaysOriginal)), for: .normal)
-        
         btnNas.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnNas.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnNas.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnNasTrailingAnchor = btnNas.leadingAnchor.constraint(equalTo: btnDwnld.trailingAnchor, constant: spacing)
+        btnNasTrailingAnchor = btnNas.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
         btnNasTrailingAnchor?.isActive = true
         
         btnNas.setImage(textToImage2(drawText: "GiGA NAS로\n보내기", inImage: UIImage(named: "ico_18dp_contextmenu_send")!.withRenderingMode(.alwaysOriginal)), for: .normal)
@@ -262,7 +253,6 @@ class LocalFolderListCell: UICollectionViewCell {
         
         self.spacing = spacing
         optionViewTrailingAnchor?.isActive = false
-        btnDwnldTrailingAnchor?.isActive = false
         btnNasTrailingAnchor?.isActive = false
         btnShowTrailingAnchor?.isActive = false
         btnActionTrailingAnchor?.isActive = false
@@ -284,7 +274,6 @@ class LocalFolderListCell: UICollectionViewCell {
         let spacing = (width - 240) / 4
         self.spacing = spacing
         optionViewTrailingAnchor?.isActive = false
-        btnDwnldTrailingAnchor?.isActive = false
         btnNasTrailingAnchor?.isActive = false
         btnShowTrailingAnchor?.isActive = false
         btnActionTrailingAnchor?.isActive = false

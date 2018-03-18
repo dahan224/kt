@@ -66,6 +66,30 @@ class GetListFromServer {
                 }
         }
     }
+    func getMobileFileLIst(devUuid:String, userId:String, deviceName:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        let filnalUrl = "mobileFileList.json"
+        var params:[String:Any] = [String:Any]()
+        params = ["userId":userId,"devUuid":devUuid]        
+        Alamofire.request(App.URL.server+filnalUrl
+            , method: .post
+            , parameters:params
+            , encoding : JSONEncoding.default
+            , headers: App.Headrs.jsonHeader
+            ).responseJSON { response in
+                
+                switch response.result {
+                case .success(let value):
+                    completionHandler(value as? NSDictionary, nil)
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    completionHandler(nil, error as NSError)
+                    break
+                    
+                }
+        }
+    }
     
     func showInsideFoldrList(params:[String:Any], deviceName:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         let filnalUrl = "listFoldr.json"

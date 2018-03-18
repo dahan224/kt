@@ -39,16 +39,7 @@ class LocalFileListCellController{
 //        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
 //        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
 //        cell.btnOption.addGestureRecognizer(swipeLeft)
-        cell.btnOption.tag = indexPath.row
-        cell.btnOption.addTarget(self, action: #selector(parentView.btnLocalFileOptionClicked(sender:)), for: .touchUpInside)
-        
-//        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
-//        rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-//        cell.btnOptionRed.addGestureRecognizer(rightSwipe)
-        cell.btnOptionRed.tag = indexPath.row
-        cell.btnOptionRed.addTarget(self, action: #selector(parentView.btnLocalFileOptionClicked(sender:)), for: .touchUpInside)
-        
-        
+       
         cell.btnOption.isHidden = false
         cell.btnShow.tag = indexPath.row
         cell.btnShow.addTarget(self, action: #selector(parentView.optionLocalFileShowClicked(sender:)), for: .touchUpInside)
