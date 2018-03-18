@@ -1114,7 +1114,7 @@ let quickLookController = QLPreviewController()
                 if(success == "success"){
                     SyncLocalFilleToNas().sync()
                     
-                    let url:URL = FileUtil().getFileUrl(fileNm: name, amdDate: amdDate)
+                    let url:URL = FileUtil().getFileUrl(fileNm: name, amdDate: amdDate)!
                     self.documentController = UIDocumentInteractionController(url: url)
                     self.documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
                     

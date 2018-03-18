@@ -201,84 +201,16 @@ class SyncLocalFilleToNas {
         localFileArray.removeAll()
         localFolderArray.removeAll()
         folderPathArray.removeAll()
-        let fileManager = FileManager.default
-        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
-//        localFileArray = FileUtil().getFileList()
-
         let today = Date()
-        
-        let subDirs = documentsURL.subDirectories
-        let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "Mobile", foldrWholePathNm: "/Mobile", cretDate : Util.date(text: today), amdDate : Util.date(text: today))
+         let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "Mobile", foldrWholePathNm: "/Mobile", cretDate : Util.date(text: today), amdDate : Util.date(text: today))
         localFolderArray.append(folder)
-//         print("subDirs : \(subDirs)")
-//        getSubDirectories(subDirs: subDirs, foldrWholePath: "/Mobile")
-
-        getFolderList(foldrWholePath: "/Mobile")
-//        print("localFolderArray : \(localFolderArray)" )
-//        print("localFileArray : \(localFileArray)" )
-        
+        localFileArray = FileUtil().getFileLIst()
+        let folders:[App.Folders] = FileUtil().getFolderList()
+        for folder in folders {
+            localFolderArray.append(folder)
+        }
          self.sysncFoldrInfo()
     }
-    
-    func getFolderList(foldrWholePath:String) {
-            let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
-            let fileEnumerator = FileManager.default.enumerator(at: documentsDirectory!, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions())
-            while let file = fileEnumerator?.nextObject() as? URL {
-                let fileSavedPath = file.path
-                do {
-                    let attribute = try FileManager.default.attributesOfItem(atPath: fileSavedPath)
-                    let fileName:String = (NSURL(fileURLWithPath: file.lastPathComponent).deletingPathExtension?.lastPathComponent)!
-                    let fileExtension = file.pathExtension
-                    let folderCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
-                    let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
-                    let decodedFileName:String = fileName.removingPercentEncoding!
-                  
-                    let fileCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
-                    
-                    if(fileExtension.isEmpty){
-                        var foldrWholePathNm = "/Mobile"
-//                        if let folderNmArray = URLComponents(string: fileSavedPath)?.path.components(separatedBy: "/") {
-                        if let folderNmArray = URLComponents(string: fileSavedPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)?.path.components(separatedBy: "/") {
-                            
-                            let documentIndex = folderNmArray.index(of: "Documents")
-                            for (index, path) in folderNmArray.enumerated() {
-                                if(documentIndex! < index && index < folderNmArray.count){
-                                    foldrWholePathNm += "/\(folderNmArray[index])"
-                                }
-                            }
-                        }
-                        
-                        let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : fileName, foldrWholePathNm: foldrWholePathNm, cretDate : Util.date(text: folderCreateDate), amdDate : Util.date(text: modifiedDate))
-                        localFolderArray.append(folder)
-                    } else {
-                        var foldrWholePathNm = "/Mobile"
-                        if let folderNmArray = URLComponents(string: fileSavedPath)?.path.components(separatedBy: "/") {
-                            let documentIndex = folderNmArray.index(of: "Documents")
-                            let folderNm = folderNmArray[(folderNmArray.count) - 2]
-                            let pathLastIndex = (folderNmArray.count) - 1
-                            for (index, path) in folderNmArray.enumerated() {
-                                if(documentIndex! < index && index < pathLastIndex){
-                                    foldrWholePathNm += "/\(folderNmArray[index])"
-                                }
-                            }
-                            
-                            if let size = attribute[FileAttributeKey.size] as? NSNumber {
-                                if(!fileExtension.isEmpty){
-                                    let files = App.LocalFiles(cmd:"C",userId:App.defaults.userId,devUuid:Util.getUuid(),fileNm:decodedFileName,etsionNm:fileExtension,fileSize:size.stringValue,cretDate:Util.date(text: fileCreateDate),amdDate:Util.date(text: modifiedDate), foldrWholePathNm: foldrWholePathNm, savedPath: fileSavedPath)
-                                    
-                                    localFileArray.append(files)
-                                }
-                            }
-                        }
-                    }
-                } catch {
-                    
-                }
-        
-            }
-    }
-    
-  
     
     
     func createFolderListToServer(parameters:[[String: Any]]){

@@ -79,11 +79,16 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId)")
+        print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm)")
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(callSendToNasFromLocal(fileDict:)),
                                                name: NSNotification.Name("callSendToNasFromLocal"),
+                                               object: nil)
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(NasSendFolderSelectVCToggleIndicator),
+                                               name: NSNotification.Name("NasSendFolderSelectVCToggleIndicator"),
                                                object: nil)
         
         
@@ -418,6 +423,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     }
     
     
+   
+    
     @IBAction func selectFinish(_ sender: UIButton) {
         if(folderChecked == 1){
             switch storageState {
@@ -430,13 +437,14 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                         if(toUserId != App.defaults.userId){
                             toOsCd = "S"
                         }
-                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
                         sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
                     } else {
                         // local 폴더 업로드 to nas
+                        print("upload path : \(newFoldrWholePathNm)")
+                        ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm)
+                       
                     }
-                    
-                    
                     
                 } else {
                     if(fromOsCd == "G"){
@@ -463,7 +471,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                             self.sendShareNasToNas(params: param)
                         }
                     } else {
-                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
                         sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
                         
                     }
@@ -472,21 +480,20 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             case .googleDrive:
                 print("googleDriveFileIdPath : \(googleDriveFileIdPath)")
                 if(fromDevUuid == Util.getUuid()){
-                    let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+                    let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
                     self.sendToDriveFromLocal(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath, fileURL:fileURL)
                     
                 } else {
                     
                     self.downloadFromNasToDrive(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath)
                 }
-                
                 break
             }
-                
-           
-            
         }
     }
+    
+  
+    
     func remoteDownloadRequestToSend(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
         
         let urlString = App.URL.server+"reqFileDown.do"
@@ -870,7 +877,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         ContextMenuWork().fromNasToStorage(parameters: params){ responseObject, error in
             let json = JSON(responseObject)
             let message = responseObject?.object(forKey: "message")
-            print("\(message), \(json["statusCode"].int)")
+            print("\(message), \(String(describing: json["statusCode"].int))")
             if let statusCode = json["statusCode"].int, statusCode == 100 {
                 DispatchQueue.main.async {
                     let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
@@ -884,7 +891,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     
                 }
             } else {
-                print(error?.localizedDescription)
+                print(error?.localizedDescription as Any)
             }
             
             return
@@ -893,7 +900,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     @objc func callSendToNasFromLocal(fileDict:NSNotification){
         print("callSendToNasFromLocal")
-        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)
+        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
         sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
     }
     
@@ -919,6 +926,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
         print("headers : \(headers)")
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
+        stringUrl =  stringUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
         
         let filePath = url.path
@@ -996,6 +1004,30 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     @IBAction func btnBackClicked(_ sender: UIButton) {
         Util().dismissFromLeft(vc: self)
+    }
+    
+    @objc func NasSendFolderSelectVCToggleIndicator(){
+        if(indicatorAnimating){
+            activityIndicator.stopAnimating()
+            indicatorAnimating = false
+        } else {
+            activityIndicator.startAnimating()
+            indicatorAnimating = true
+        }
+    }
+    
+    @objc func NasSendFolderSelectVCAlert(){
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                //Do you Success button Stuff here
+                Util().dismissFromLeft(vc: self)
+            }
+            alertController.addAction(yesAction)
+            self.present(alertController, animated: true)
+            
+        }
     }
     
     

@@ -218,7 +218,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                 let fileData = json["fileData"]
                 let amdDate = fileData["amdDate"].stringValue
                 print("fileAmdDate : \(amdDate)")
-                let fileUrl:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)
+                let fileUrl:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
                 self.createTmpFolder(fileUrl: fileUrl, name: fileNm, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
 //                self.sendToNasFromLocalForDownload(url: fileUrl, name: fileNm, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
             }

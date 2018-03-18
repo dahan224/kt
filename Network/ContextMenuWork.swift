@@ -364,6 +364,10 @@ class ContextMenuWork {
    
     
     
+    
+    ///NAS 폴더 다운로드 시작
+    
+    
     func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String){
         selectedUserId = userId
         selectedDevUuid = devUuid
@@ -502,15 +506,16 @@ class ContextMenuWork {
                 let downFileName = fileArrayToDownload[index].fileNm
                 let downPath = fileArrayToDownload[index].foldrWholePathNm
                 let downId = String(fileArrayToDownload[index].fileId)
-                downloadFromNasFolder(name: downFileName, path: downPath, fileId: downId, index:index)
+                callDownloadFromNasFolder(name: downFileName, path: downPath, fileId: downId, index:index)
                 return
             }
+            
         }
         self.finishDownload()
     }
     
     
-    func downloadFromNasFolder(name:String, path:String, fileId:String, index:Int){
+    func callDownloadFromNasFolder(name:String, path:String, fileId:String, index:Int){
         ContextMenuWork().downloadFromNasFolder(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
@@ -549,4 +554,27 @@ class ContextMenuWork {
         }
     }
    
+    // NAS 폴더 업로드 From Local 시작
+    
+   
+    func createNasFolder(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        Alamofire.request(App.URL.server+"nasFoldrCret.do"
+            , method: .post
+            , parameters:parameters
+            , encoding : JSONEncoding.default
+            , headers: App.Headrs.jsonHeader
+            ).responseJSON { response in
+                switch response.result {
+                case .success(let value):
+                    completionHandler(value as? NSDictionary, nil)
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    completionHandler(nil, error as NSError)
+                    break
+                }
+        }
+    }
+    
 }

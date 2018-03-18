@@ -422,8 +422,9 @@ struct App {
         var cretDate : String
         var amdDate : String
         var foldrWholePathNm: String
+        var fileId : Int
         
-        init(cmd : String, userId : String, devUuid : String, fileNm : String, etsionNm : String, fileSize : String, cretDate : String, amdDate : String, foldrWholePathNm: String) {
+        init(cmd : String, userId : String, devUuid : String, fileNm : String, etsionNm : String, fileSize : String, cretDate : String, amdDate : String, foldrWholePathNm: String, fileId:Int) {
             self.cmd   = cmd
             self.userId   = userId
             self.devUuid   = devUuid
@@ -433,6 +434,7 @@ struct App {
             self.cretDate   = cretDate
             self.amdDate   = amdDate
             self.foldrWholePathNm = foldrWholePathNm
+            self.fileId = fileId
             
         }
         init(data: AnyObject) {
@@ -445,6 +447,7 @@ struct App {
             self.cretDate   = data["cretDate"] as? String ?? "nil"
             self.amdDate   = data["amdDate"] as! String
             self.foldrWholePathNm = data["foldrWholePathNm"] as! String
+            self.fileId = data["fileId"] as? Int ?? 0
            
         }
         var getParameter: [String: Any] {
@@ -457,7 +460,8 @@ struct App {
                 "fileSize" : fileSize,
                 "cretDate" : cretDate,
                 "amdDate" : amdDate,
-                "foldrWholePathNm":foldrWholePathNm
+                "foldrWholePathNm":foldrWholePathNm,
+                "fileId":fileId
             ]
         }
     }
