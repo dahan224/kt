@@ -35,15 +35,7 @@ class NasFolderListCellController {
         cell.optionHide()
         cell.lblMain.text = folderArray[indexPath.row].foldrNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
-
-        cell.btnOption.tag = indexPath.row
-        cell.btnOption.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
-        
-
-        cell.btnOptionRed.tag = indexPath.row
-        cell.btnOptionRed.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
-        
-        
+    
         cell.btnOption.isHidden = false
         cell.btnShow.tag = indexPath.row
         cell.btnShow.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionNasFolderShowClicked(sender:)), for: .touchUpInside)

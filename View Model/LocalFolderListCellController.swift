@@ -37,12 +37,6 @@ class LocalFolderListCellController {
         cell.lblMain.text = folderArray[indexPath.row].foldrNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
         
-        cell.btnOption.tag = indexPath.row
-        cell.btnOption.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnLocalFolderOptionClicked(sender:)), for: .touchUpInside)
-        
-        
-        cell.btnOptionRed.tag = indexPath.row
-        cell.btnOptionRed.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnLocalFolderOptionClicked(sender:)), for: .touchUpInside)
         
         
         cell.btnOption.isHidden = false
@@ -67,7 +61,8 @@ class LocalFolderListCellController {
         switch sender {
         case cell.btnNas:
             print(deviceName)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":userId, "fromFoldrId":String(foldrId)]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
+            
             print("fileDict : \(fileDict)")
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
             dv?.showLocalFolderOption(tag: sender.tag)

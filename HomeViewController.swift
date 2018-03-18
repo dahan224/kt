@@ -1206,76 +1206,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 
                 break
             case .nasFileInfo:
-                switch (indexPath.row){
-                    case 0 :
-                        let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
-                        NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
-                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                        break
-                    case 1:
-                        switch mainContentState{
-                        case .oneViewList:
-                            //            print("fileNm : \(fileNm), filePaht : \(foldrWholePathNm)")
-                            self.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
-                            break
-                        case .googleDriveList:
-                            let fileId = driveFileArray[indexPath.row].fileId
-                            let mimeType = driveFileArray[indexPath.row].mimeType
-                            let name = driveFileArray[indexPath.row].name
-    //                        downloadFromDrive(fileId: fileId, mimeType:mimeType, name:name)
-                            break
-                        }
-                        break
-                        
-                    case 2:
-                        switch mainContentState{
-                        case .oneViewList:
-                           
-                            switch fromOsCd {
-                            case "S":
-                                let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"nas","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
-                                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                                break
-                            case "G":
-                                let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"nas","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
-                                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                                break
-                            default:
-                                let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd]
-                                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                                break
-                            }
-                            break
-                        case .googleDriveList:
-                            
-                            break
-                        }
-                        break
-                    case 3:
-//                        self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
-                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                        break
-                    case 4:
-                        let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
-                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                            UIAlertAction in
-                            //Do you Success button Stuff here
-                            let params = ["userId":self.selectedDevUserId,"devUuid":self.selectedDevUserId,"fileId":self.fileId,"fileNm":self.fileNm,"foldrWholePathNm":self.foldrWholePathNm]
-                            self.deleteNasFile(param: params, foldrId:self.foldrId)
-                        }
-                        let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
-                        alertController.addAction(yesAction)
-                        alertController.addAction(noAction)
-                        self.present(alertController, animated: true)
-                        break
-                    
-                    default :
-                        
-                        break
-                    }
+               NasFileCellController().nasFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
                 break
                 
             case .localFileInfo:

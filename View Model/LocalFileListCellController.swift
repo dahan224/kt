@@ -66,7 +66,7 @@ class LocalFileListCellController{
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             break
         case cell.btnAction:
-            let url:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)
+            let url:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
             let urlDict = ["url":url]
             NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
             print("btnActino called")
@@ -74,7 +74,7 @@ class LocalFileListCellController{
             
         case cell.btnNas:
             
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
             print("fileDict : \(fileDict)")
             
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
@@ -139,7 +139,7 @@ class LocalFileListCellController{
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             break
         case 1:
-            let url:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)
+            let url:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
             let urlDict = ["url":url]
             NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
             

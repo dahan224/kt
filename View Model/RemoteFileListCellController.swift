@@ -41,14 +41,6 @@ class RemoteFileListCellController {
 //        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellSwipeToLeft(sender:)))
 //        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
 //        cell.btnOption.addGestureRecognizer(swipeLeft)
-        cell.btnOption.tag = indexPath.row
-        cell.btnOption.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnRemoteFileOptionClicked(sender:)), for: .touchUpInside)
-        
-//        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellSwipeToLeft(sender:)))
-//        rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-//        cell.btnOptionRed.addGestureRecognizer(rightSwipe)
-        cell.btnOptionRed.tag = indexPath.row
-        cell.btnOptionRed.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnRemoteFileOptionClicked(sender:)), for: .touchUpInside)
         
         
         cell.btnOption.isHidden = false

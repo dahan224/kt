@@ -35,11 +35,6 @@ class NasFileCellController {
         cell.optionHide()
         cell.lblMain.text = folderArray[indexPath.row].fileNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
-        cell.btnOption.tag = indexPath.row
-        cell.btnOption.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnNasOptionClicked(sender:)), for: .touchUpInside)
-        
-        cell.btnOptionRed.tag = indexPath.row
-        cell.btnOptionRed.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnNasOptionClicked(sender:)), for: .touchUpInside)
         
         
         cell.btnOption.isHidden = false
@@ -121,6 +116,40 @@ class NasFileCellController {
         default:
             break
         }
+    }
+    
+    func nasFileContextMenuCalledFromGrid(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:HomeViewController, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int){
+        let fileNm = folderArray[intFolderArrayIndexPathRow].fileNm
+        //        let etsionNm = folderArray[intFolderArrayIndexPathRow].etsionNm
+        let amdDate = folderArray[intFolderArrayIndexPathRow].amdDate
+        let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePathNm
+        let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
+        let foldrId = folderArray[intFolderArrayIndexPathRow].foldrId
+        switch indexPath.row {
+            case 0 :
+                let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+                NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                break
+            case 1:
+                //            print("fileNm : \(fileNm), filePaht : \(foldrWholePathNm)")
+//                self.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
+                break
+            
+            case 2:
+
+                break
+            case 3:
+                
+                break
+            case 4:
+        
+            break
+            
+            default :
+            
+            break
+            }
         
     }
 }

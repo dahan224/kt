@@ -185,7 +185,7 @@ let quickLookController = QLPreviewController()
         case .grid:
             break
         case .list:
-            cellWidth = width - 20
+            cellWidth = width 
             height = 80.0
             minimumSpacing = 10
             if(cellStyle == 2 || flickState == .lately){
@@ -287,10 +287,14 @@ let quickLookController = QLPreviewController()
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
-                
+                                cell4.btnOption.tag = indexPath.row
+                                cell4.btnOption.addTarget(self, action: #selector(btnRemoteFileOptionClicked(sender:)), for: .touchUpInside)
+                                
                                 let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
                                 rightSwipe.direction = UISwipeGestureRecognizerDirection.right
                                 cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                                cell4.btnOptionRed.tag = indexPath.row
+                                cell4.btnOptionRed.addTarget(self, action: #selector(btnRemoteFileOptionClicked(sender:)), for: .touchUpInside)
                                 
                                 cells.append(cell4)
                             } else {
@@ -299,10 +303,15 @@ let quickLookController = QLPreviewController()
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
+                                cell4.btnOption.tag = indexPath.row
+                                cell4.btnOption.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
                                 
                                 let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
                                 rightSwipe.direction = UISwipeGestureRecognizerDirection.right
                                 cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                                cell4.btnOptionRed.tag = indexPath.row
+                                cell4.btnOptionRed.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
+                                
                                 cells.append(cell4)
                             }
                             
@@ -328,10 +337,14 @@ let quickLookController = QLPreviewController()
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
+                                cell4.btnOption.tag = indexPath.row
+                                cell4.btnOption.addTarget(self, action: #selector(btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
                                 
                                 let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
                                 rightSwipe.direction = UISwipeGestureRecognizerDirection.right
                                 cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                                cell4.btnOptionRed.tag = indexPath.row
+                                cell4.btnOptionRed.addTarget(self, action: #selector(btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
                                 
                                 cells.append(cell4)
                                  if(folderArray[indexPath.row].foldrNm == "..."){
@@ -384,9 +397,14 @@ let quickLookController = QLPreviewController()
                             let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFolderSwipeToLeft(sender:)))
                             swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                             cell4.btnOption.addGestureRecognizer(swipeLeft)
+                            cell4.btnOption.tag = indexPath.row
+                            cell4.btnOption.addTarget(self, action: #selector(btnLocalFolderOptionClicked(sender:)), for: .touchUpInside)
+                            
                             let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFolderSwipeToLeft(sender:)))
                             rightSwipe.direction = UISwipeGestureRecognizerDirection.right
                             cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                            cell4.btnOptionRed.tag = indexPath.row
+                            cell4.btnOptionRed.addTarget(self, action: #selector(btnLocalFolderOptionClicked(sender:)), for: .touchUpInside)
                             
                             cell2.lblMain.text = folderArray[indexPath.row].foldrNm
                             cell2.ivMain.image = UIImage(named: "ico_folder")
