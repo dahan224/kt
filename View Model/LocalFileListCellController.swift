@@ -10,7 +10,6 @@ import UIKit
 
 class LocalFileListCellController{
     var dv:HomeDeviceCollectionVC?
-    var documentController : UIDocumentInteractionController!
     
     
     func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC) -> LocalFileListCell {
@@ -65,23 +64,20 @@ class LocalFileListCellController{
     }
     func localContextMenuCalled(cell:LocalFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String){
         let fileNm = folderArray[indexPath.row].fileNm
-        let etsionNm = folderArray[indexPath.row].etsionNm
+//        let etsionNm = folderArray[indexPath.row].etsionNm
         let amdDate = folderArray[indexPath.row].amdDate
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
-        var btn = "show"
         switch sender {
         case cell.btnShow:
-            btn = "show"
             print("fileId: \(fileId)")
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             break
         case cell.btnAction:
-            
             let url:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)
-            documentController = UIDocumentInteractionController(url: url)
-            documentController.presentOptionsMenu(from: CGRect.zero, in: deviceView.view, animated: true)
+            let urlDict = ["url":url]
+            NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
             print("btnActino called")
             break
             
@@ -140,25 +136,23 @@ class LocalFileListCellController{
     
     func localContextMenuCalledFromGrid(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:HomeViewController, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int){
         let fileNm = folderArray[intFolderArrayIndexPathRow].fileNm
-        let etsionNm = folderArray[intFolderArrayIndexPathRow].etsionNm
+//        let etsionNm = folderArray[intFolderArrayIndexPathRow].etsionNm
         let amdDate = folderArray[intFolderArrayIndexPathRow].amdDate
         let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePathNm
         let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
         let foldrId = folderArray[intFolderArrayIndexPathRow].foldrId
         switch indexPath.row {
         case 0:
-            print("fileId: \(fileId)")
+//            print("fileId: \(fileId)")
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             break
         case 1:
             let url:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)
             let urlDict = ["url":url]
-//            documentController = UIDocumentInteractionController(url: url)
-//            documentController.presentOptionsMenu(from: CGRect.zero, in: deviceView.view, animated: true)
             NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
             
-            print("btnActino called")
+//            print("btnActino called")
             break
             
         case 2:
@@ -169,7 +163,7 @@ class LocalFileListCellController{
             break
         case 3:
             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
-            print("fileDict : \(fileDict)")
+//            print("fileDict : \(fileDict)")
             GoogleWork().googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
             break

@@ -1427,7 +1427,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         print("documentInteractionControllerDidEndPreview")
         toggleIndicator()
         let fileIdDict = ["fileId":"0"]
-        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+        if (listViewStyleState == .grid) {
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+        }
     
     }
 }
