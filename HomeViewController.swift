@@ -147,7 +147,12 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var flickCheck = 1;
     var listStyleCheck = 1;
     
+    @IBOutlet weak var filckView: UIStackView!
+    
+    
+    
     @IBOutlet weak var containerViewA: UIView!
+    @IBOutlet weak var containerViewABottomConstraint: NSLayoutConstraint!
     
     
     
@@ -216,7 +221,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     let searchButton:UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(#imageLiteral(resourceName: "search_input").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.setImage(#imageLiteral(resourceName: "search").withRenderingMode(.alwaysOriginal), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(searchButtonInFileViewClicked), for: .touchUpInside)
         
@@ -837,6 +842,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     @objc func bottomStateFromContainer(stateInfo: NSNotification){
         if let bottomState = stateInfo.userInfo?["bottomState"] as? String, let getFileId = stateInfo.userInfo?["fileId"] as? String, let getFoldrWholePathNm = stateInfo.userInfo?["foldrWholePathNm"] as? String, let getDeviceName = stateInfo.userInfo?["deviceName"] as? String, let getDevUuid = stateInfo.userInfo?["selectedDevUuid"] as? String, let getFileNm = stateInfo.userInfo?["fileNm"] as? String, let getUserId = stateInfo.userInfo?["userId"] as? String, let getFoldrId = stateInfo.userInfo?["foldrId"] as? String, let getFomOsCd = stateInfo.userInfo?["fromOsCd"] as? String, let getCurrentFolderId = stateInfo.userInfo?["currentFolderId"] as? String{
+            
+            filckView.isHidden = true
+            containerViewABottomConstraint.constant = 0
+            
             bottomListState = bottomListEnum(rawValue: bottomState)!
             fileId = getFileId
             foldrWholePathNm = getFoldrWholePathNm
@@ -1166,6 +1175,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         if(ifNavBarClicked){
             if(indexPath.row == 0){
                 print("back to main")
+                self.filckView.isHidden = false
+                containerViewABottomConstraint.constant = 40
                 self.mainContentState = .oneViewList
                 backToHome()
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)

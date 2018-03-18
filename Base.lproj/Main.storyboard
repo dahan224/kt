@@ -629,6 +629,7 @@
                                 </subviews>
                                 <constraints>
                                     <constraint firstItem="Xt8-hq-dmw" firstAttribute="leading" secondItem="pen-5z-AEw" secondAttribute="trailing" constant="2" id="4zo-dw-39S"/>
+                                    <constraint firstAttribute="height" constant="30" id="7np-2N-vYx"/>
                                 </constraints>
                             </stackView>
                             <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="HqD-9B-8IY">
@@ -838,7 +839,9 @@
                         <outlet property="btnLIst" destination="fy8-fI-2Fj" id="uvq-Dk-WTy"/>
                         <outlet property="btnSel" destination="2Ho-jI-jm2" id="8Dn-xi-GWY"/>
                         <outlet property="containerViewA" destination="HqD-9B-8IY" id="KlH-Ah-Uqy"/>
+                        <outlet property="containerViewABottomConstraint" destination="voz-SC-PXK" id="wuM-tg-AKC"/>
                         <outlet property="customNavBar" destination="RRC-MR-BKO" id="b2M-ud-bo9"/>
+                        <outlet property="filckView" destination="8Ol-VW-APP" id="gw1-gr-mxD"/>
                         <outlet property="lblTitle" destination="MgF-tK-g6o" id="esI-NY-gWc"/>
                         <outlet property="searchCategoryHeightConstraint" destination="HZR-ik-fAd" id="3Dx-iU-02d"/>
                         <outlet property="searchCategoryView" destination="e7s-xl-63I" id="5Wq-vD-UOP"/>
