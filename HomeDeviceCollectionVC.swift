@@ -23,7 +23,6 @@ let quickLookController = QLPreviewController()
     var loginCookie = ""
     var loginToken = ""
     var userId = ""
-    var currentDevUuid = ""
     var fromOsCd = ""
     var folderPathToLabel = ""
     var foldrWholePathNm = ""
@@ -31,7 +30,6 @@ let quickLookController = QLPreviewController()
     var foldrId = ""
     var fileNm = ""
     var deviceName = ""
-    var devUuid = ""
     var test = ""
     var selectedDevUuid = ""
     var selectedDevUserId = ""
@@ -45,32 +43,6 @@ let quickLookController = QLPreviewController()
     var driveFileArray:[App.DriveFileStruct] = []
     var driveFolderIdArray:[String] = ["root"] // 0eun
     var driveFolderNameArray:[String] = ["root"] // 0eun
-    
-    
-    struct DeviceStruct:Codable {
-        var devNm:String
-        var devUuid:String
-        var mkngVndrNm:String
-        var onoff:String
-        var osCd:String
-        var osDesc:String
-        var osNm:String
-        var userId:String
-        var userName:String
-        
-        init(devNm : String, devUuid : String, mkngVndrNm : String, onoff : String, osCd : String, osDesc : String, osNm : String, userId : String, userName : String) {
-            self.devNm   = devNm
-            self.devUuid   = devUuid
-            self.mkngVndrNm   = mkngVndrNm
-            self.onoff   = onoff
-            self.osCd   = osCd
-            self.osDesc   = osDesc
-            self.osNm   = osNm
-            self.userId   = userId
-            self.userName   = userName
-        }
-        
-    }
     
     
     
@@ -140,9 +112,6 @@ let quickLookController = QLPreviewController()
         loginToken = UserDefaults.standard.string(forKey: "token")!
         userId = UserDefaults.standard.string(forKey: "userId")!
         
-        currentDevUuid = Util.getUuid()
-        
-        
 //        print("deviceList: \(DeviceArray)")
         deviceCollectionView.reloadData()
         
@@ -166,7 +135,7 @@ let quickLookController = QLPreviewController()
                                                name: NSNotification.Name("changeListStyle"),
                                                object: nil)
         NotificationCenter.default.addObserver(self,
-                                               selector: #selector(refreshInsideList),
+                                               selector: #selector(refreshInsideList(folderIdDict:)),
                                                name: NSNotification.Name("refreshInsideList"),
                                                object: nil)
         
@@ -488,9 +457,8 @@ let quickLookController = QLPreviewController()
         
         if(cellStyle == 1){
             let indexPathRow = ["indexPathRow":"\(indexPath.row)"]
-            devUuid = DeviceArray[indexPath.row].devUuid
             fromOsCd = DeviceArray[indexPath.row].osCd
-            selectedDevUuid = devUuid
+            selectedDevUuid = DeviceArray[indexPath.row].devUuid
             selectedDevUserId = DeviceArray[indexPath.row].userId
             NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
             
@@ -510,23 +478,22 @@ let quickLookController = QLPreviewController()
         } else if (cellStyle == 2){
             //            if(contextMenuState == .nas){
             print("2")
-            let foldrId = folderArray[indexPath.row].foldrId
+            let infoldrId = folderArray[indexPath.row].foldrId
+            foldrId = String(infoldrId)
             let fileId = folderArray[indexPath.row].fileId
             let folderNm = folderArray[indexPath.row].foldrNm
             fileNm = folderArray[indexPath.row].fileNm
-            id = currentDevUuid
             foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
             print("foldrWholePathNm: \(foldrWholePathNm)")
             let intIndexPathRow = indexPath.row
             Vc.getFolderArrayFromContainer(getFolderArray:folderArray, getFolderArrayIndexPathRow:intIndexPathRow)
             if(fileId == 0){
-                let stringFoldrId = String(foldrId)
                 //                print("foldrId : \(stringFoldrId)")
                 if(folderArray[indexPath.row].foldrNm == "..."){
                     folderIdArray.remove(at: folderIdArray.count-1)
                     folderNameArray.remove(at: folderNameArray.count-1)
                 } else {
-                    self.folderIdArray.append(foldrId)
+                    self.folderIdArray.append(infoldrId)
                     self.folderNameArray.append(folderNm)
                 }
                 var folderNameArrayCount = 0
@@ -537,7 +504,7 @@ let quickLookController = QLPreviewController()
                 }
                 let folderName = ["folderName":"\(folderNameArray[folderNameArrayCount])","deviceName":deviceName]
                 NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
-                self.showInsideList(userId: userId, devUuid: currentDevUuid, foldrId: stringFoldrId,deviceName: deviceName)
+                self.showInsideList(userId: userId, devUuid: selectedDevUuid, foldrId: foldrId,deviceName: deviceName)
                 searchStepState = .folder
                 var state = HomeViewController.bottomListEnum.nasFileInfo
                 if(fromOsCd == "G" || fromOsCd == "S"){
@@ -548,7 +515,7 @@ let quickLookController = QLPreviewController()
                         state = HomeViewController.bottomListEnum.localFileInfo
                     }
                 }
-                Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid:currentDevUuid, getCurrentFolderId : currentFolderId)
+                Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid:selectedDevUuid, getCurrentFolderId : currentFolderId)
             } else {
                 
                 print("selectedFileId : \(folderArray[indexPath.row].fileId)")
@@ -593,11 +560,11 @@ let quickLookController = QLPreviewController()
                 }
                 let folderName = ["folderName":"\(driveFolderNameArray[driveFolderNameArrayCount])","deviceName":deviceName]
                 NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
-                self.showInsideListGDrive(userId: userId, devUuid: currentDevUuid, foldrId: stringFoldrId, deviceName: deviceName)
+                self.showInsideListGDrive(userId: userId, devUuid: selectedDevUuid, foldrId: stringFoldrId, deviceName: deviceName)
                 searchStepState = .folder
                 let state = HomeViewController.bottomListEnum.localFileInfo
                 //수정 요망
-                Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: currentDevUuid, getCurrentFolderId: currentFolderId)
+                Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: selectedDevUuid, getCurrentFolderId: currentFolderId)
             } else { // 파일
                 
             }
@@ -738,7 +705,7 @@ let quickLookController = QLPreviewController()
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! LocalFileListCell
 //        self.localContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        LocalFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId:  currentFolderId)
+        LocalFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, currentFolderId:  currentFolderId)
     }
     
     
@@ -794,7 +761,7 @@ let quickLookController = QLPreviewController()
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                         UIAlertAction in
                         
-                        self.showInsideList(userId: self.userId, devUuid: self.currentDevUuid, foldrId: self.currentFolderId, deviceName: self.deviceName)
+                        self.showInsideList(userId: self.userId, devUuid: self.selectedDevUuid, foldrId: self.currentFolderId, deviceName: self.deviceName)
                         
                     }
                     alertController.addAction(yesAction)
@@ -897,7 +864,7 @@ let quickLookController = QLPreviewController()
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFileListCell
 //        self.nasContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        NasFileCellController().nasContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
+        NasFileCellController().nasContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
         
     }
     
@@ -958,7 +925,7 @@ let quickLookController = QLPreviewController()
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! RemoteFileListCell
         
-        RemoteFileListCellController().remoteFileContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId:selectedDevUserId, currentFolderId:  currentFolderId)
+        RemoteFileListCellController().remoteFileContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId:selectedDevUserId, currentFolderId:  currentFolderId)
     }
     
     
@@ -1077,7 +1044,7 @@ let quickLookController = QLPreviewController()
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 //Do you Success button Stuff here
-                let params = ["userId":self.userId,"devUuid":self.devUuid,"fileId":self.fileId,"fileNm":self.fileNm,"foldrWholePathNm":self.foldrWholePathNm]
+                let params = ["userId":self.userId,"devUuid":self.selectedDevUuid,"fileId":self.fileId,"fileNm":self.fileNm,"foldrWholePathNm":self.foldrWholePathNm]
                 self.deleteNasFile(param: params, foldrId:self.foldrId)
             }
             let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
@@ -1260,8 +1227,8 @@ let quickLookController = QLPreviewController()
                     NotificationCenter.default.post(name: Notification.Name("googleSignInSegue"), object: self, userInfo: fileDict)
                 } else {
                     
-                    currentDevUuid = DeviceArray[indexPathRow].devUuid
-                    if(currentDevUuid == Util.getUuid()){
+                    selectedDevUuid = DeviceArray[indexPathRow].devUuid
+                    if(selectedDevUuid == Util.getUuid()){
                         contextMenuState = .local
                         print("contextMenuState local")
                     } else {
@@ -1271,14 +1238,12 @@ let quickLookController = QLPreviewController()
                     userId = DeviceArray[indexPathRow].userId
                     deviceName = DeviceArray[indexPathRow].devNm
                     print("userId:\(userId)")
-                    getRootFolder(userId:userId, devUuid: currentDevUuid, deviceName:deviceName)
+                    getRootFolder(userId:userId, devUuid: selectedDevUuid, deviceName:deviceName)
                     let folderName = ["folderName":"\(DeviceArray[indexPathRow].devNm)","deviceName":deviceName]
                     NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
                     searchStepState = .device
-                    id = currentDevUuid
                     foldrWholePathNm = ""
                     fromOsCd = DeviceArray[indexPathRow].osCd
-                    selectedDevUuid = currentDevUuid
                     var state = HomeViewController.bottomListEnum.nasFileInfo
                     if(fromOsCd == "G" || fromOsCd == "S"){
                         state = HomeViewController.bottomListEnum.nasFileInfo
@@ -1288,7 +1253,7 @@ let quickLookController = QLPreviewController()
                             state = HomeViewController.bottomListEnum.localFileInfo
                         }
                     }
-                    Vc.dataFromContainer(containerData: indexPathRow, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: currentDevUuid, getCurrentFolderId: currentFolderId)
+                    Vc.dataFromContainer(containerData: indexPathRow, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: selectedDevUuid, getCurrentFolderId: currentFolderId)
                     
                 }
                 
@@ -1331,15 +1296,17 @@ let quickLookController = QLPreviewController()
             
             print("getState: \(getState)")
             sortBy = getState
-            showInsideList(userId: userId, devUuid: currentDevUuid, foldrId: currentFolderId, deviceName: deviceName)
+            showInsideList(userId: userId, devUuid: selectedDevUuid, foldrId: currentFolderId, deviceName: deviceName)
             
         }
     }
     
-    @objc func refreshInsideList(){
-        let params = ["userId":self.userId,"devUuid":self.devUuid,"foldrId":self.foldrId,"fileNm":self.fileNm,"foldrWholePathNm":self.foldrWholePathNm]
-        print("refreshParam : \(params)")
-        self.showInsideList(userId: self.userId, devUuid: self.devUuid, foldrId: foldrId, deviceName:self.deviceName)
+    @objc func refreshInsideList(folderIdDict:NSNotification){
+        if let getfolderId = folderIdDict.userInfo?["foldrId"] as? String {
+            print("refreshInsideList userId: \(self.userId), devUuid: \(self.selectedDevUuid), foldrId:\(getfolderId), deviceName : \(self.deviceName)")
+            self.showInsideList(userId: self.userId, devUuid: selectedDevUuid, foldrId: getfolderId, deviceName:self.deviceName)
+        }
+        
         
     }
     
@@ -1577,7 +1544,7 @@ let quickLookController = QLPreviewController()
 //        self.NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
         
         
-        NasFolderListCellController().NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
+        NasFolderListCellController().NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
     }
     
     

@@ -88,20 +88,23 @@ class Util{
     }
     
     let fileImageCheck = [
-        ["etsionNm": "sound",  "image": "file_format_sound"],
-        ["etsionNm": "code",  "image": "ico_24dp_filetype_code"],
-        ["etsionNm": "etc",  "image": "ico_24dp_filetype_etc"],
-        ["etsionNm": "exe",  "image": "ico_24dp_filetype_exe"],
-        ["etsionNm": "hwp",  "image": "ico_24dp_filetype_hwp"],
-        ["etsionNm": "img",  "image": "ico_24dp_filetype_img"],
-        ["etsionNm": "jpg",  "image": "ico_24dp_filetype_img"],
-        ["etsionNm": "png",  "image": "ico_24dp_filetype_img"],
-        ["etsionNm": "pdf",  "image": "ico_24dp_filetype_pdf"],
-        ["etsionNm": "ppt",  "image": "ico_24dp_filetype_ppt"],
-        ["etsionNm": "txt",  "image": "ico_24dp_filetype_txt"],
-        ["etsionNm": "webcode",  "image": "ico_24dp_filetype_webcode"],
-        ["etsionNm": "xls",  "image": "ico_24dp_filetype_xls"],
-        ["etsionNm": "zip",  "image": "ico_24dp_filetype_zip"]
+        ["etsionNm": "sound",  "image": "file_format_sound_192_list"],
+        ["etsionNm": "code",  "image": "file_format_code_192_list"],
+        ["etsionNm": "doc",  "image": "file_format_doc_192_list"],
+        ["etsionNm": "etc",  "image": "file_format_etc_192_list"],
+        ["etsionNm": "exe",  "image": "file_format_exe_192_list"],
+        ["etsionNm": "film",  "image": "file_format_film_192_list"],
+        ["etsionNm": "foldr",  "image": "file_format_folder_192_list"],
+        ["etsionNm": "hwp",  "image": "file_format_hwp_192_list"],
+        ["etsionNm": "img",  "image": "file_format_img_192_list"],
+        ["etsionNm": "jpg",  "image": "file_format_img_192_list"],
+        ["etsionNm": "png",  "image": "file_format_img_192_list"],
+        ["etsionNm": "pdf",  "image": "file_format_pdf_192_list"],
+        ["etsionNm": "ppt",  "image": "file_format_ppt_192_list"],
+        ["etsionNm": "txt",  "image": "file_format_txt_192_list"],
+        ["etsionNm": "webcode",  "image": "file_format_webcode_192_list"],
+        ["etsionNm": "xls",  "image": "file_format_xls_192_list"],
+        ["etsionNm": "zip",  "image": "file_format_zip_192_list"]
     ]
     class func getFileImageString(fileExtension:String) -> String {
         var imageString = ""
@@ -110,7 +113,7 @@ class Util{
 //            print("result  \(String(describing: result[0]["image"]))")
             imageString = result[0]["image"]!
         } else {
-            imageString = "ico_24dp_filetype_etc"
+            imageString = "file_format_etc_192_list"
         }
         
         return imageString

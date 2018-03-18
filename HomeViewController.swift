@@ -14,8 +14,9 @@ import GoogleSignIn
 
 import SQLite
 
-class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource{
+class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource, UIDocumentInteractionControllerDelegate{
     
+    var documentController:UIDocumentInteractionController = UIDocumentInteractionController()
     
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var indicatorAnimating = false
@@ -305,6 +306,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
 
         // Do any additional setup after loading the view.
         sBar.delegate = self
+        documentController.delegate = self
          
         customNavBar.layer.shadowColor = UIColor.lightGray.cgColor
         customNavBar.layer.shadowOffset = CGSize(width:0,height: 2.0)
@@ -350,6 +352,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(toggleIndicator),
                                                name: NSNotification.Name("toggleIndicator"),
+                                               object: nil)
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(openDocument(urlDict:)),
+                                               name: NSNotification.Name("openDocument"),
                                                object: nil)
         
         setHomeView()
@@ -966,7 +973,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
       
         if bottomMenuOpen {
             UIView.animate(withDuration: 0.2, animations: {
-                self.tableBottomConstant.constant = 240
+                self.tableBottomConstant.constant = 260
                 self.bottomMenuOpen = false
                 self.view.layoutIfNeeded()
                 print("animation duration")
@@ -1069,7 +1076,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 return bottomListFileInfo.count
             case .localFileInfo:
                 return bottomListLocalFileInfo.count
-                break
                 
             case .remoteFileInfo:
                 return bottomListRemoteFileInfo.count
@@ -1238,7 +1244,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                         }
                         break
                     case 3:
-                        self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
+//                        self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
                         NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                         break
                     case 4:
@@ -1263,9 +1269,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 
             case .localFileInfo:
                 print("localFileInfo folderArray : \(folderArray), indexpathrow : \(intFolderArrayIndexPathRow)")
-//                LocalContextMenuController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
-                
-//                 LocalFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId:  currentFolderId)
+                LocalFileListCellController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
                 break
             case .remoteFileInfo:
                 
@@ -1368,7 +1372,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             return
         }
     }
-    func googleSignInCheck(name:String, path:String){
+    func googleSignInCheck(name:String, path:String, fileDict:[String:String]){
         if GIDSignIn.sharedInstance().hasAuthInKeychain() == true {
             GIDSignIn.sharedInstance().signInSilently()
             print("sign in silently")
@@ -1392,6 +1396,39 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             activityIndicator.startAnimating()
             indicatorAnimating = true
         }
+    }
+    
+    @objc func openDocument(urlDict:NSNotification){
+        
+        if let getUrl = urlDict.userInfo!["url"] as? URL {
+            toggleIndicator()
+            documentController = UIDocumentInteractionController(url: getUrl)
+            documentController.delegate = self
+//            documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
+            documentController.presentPreview(animated: true)
+        }
+    }
+    
+    func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
+        return self
+    }
+    func documentInteractionControllerViewForPreview(_ controller: UIDocumentInteractionController) -> UIView? {
+        return self.view
+    }
+    
+    func documentInteractionControllerRectForPreview(_ controller: UIDocumentInteractionController) -> CGRect {
+    
+        return self.view.frame
+    }
+    func documentInteractionControllerWillBeginPreview(_ controller: UIDocumentInteractionController) {
+        print("documentInteractionControllerWillBeginPreview")
+    }
+    func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
+        print("documentInteractionControllerDidEndPreview")
+        toggleIndicator()
+        let fileIdDict = ["fileId":"0"]
+        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+    
     }
 }
 
