@@ -1246,9 +1246,8 @@ let quickLookController = QLPreviewController()
                             let stringFoldrId = String(foldrId)
                             let froldrNm = rootFolder["foldrNm"] as? String ?? "nil"
                             let stringFoldrNm = String(froldrNm)
-                            let replacedDeviceName = deviceName.replacingOccurrences(of: " ", with: "_")
-                            print("replacedDeviceName : \(replacedDeviceName), stringFoldrNm : \(stringFoldrNm)")
-                            if(stringFoldrNm == replacedDeviceName){
+                            let childCnt = rootFolder["childCnt"] as? Int ?? 0
+                            if(childCnt > 0){
                                 print("name equal")
                                 self.folderIdArray.append(foldrId)
                                 self.folderNameArray.append(stringFoldrNm)
