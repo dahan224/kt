@@ -1103,14 +1103,14 @@ let quickLookController = QLPreviewController()
     
   
     func downloadFromNas(name:String, path:String, fileId:String){
-        NotificationCenter.default.post(name: Notification.Name("toggleIndicator"), object: self, userInfo: nil)
+        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         ContextMenuWork().downloadFromNas(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
                     
                     DispatchQueue.main.async {
-                        NotificationCenter.default.post(name: Notification.Name("toggleIndicator"), object: self, userInfo: nil)
+                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                         
@@ -1119,7 +1119,7 @@ let quickLookController = QLPreviewController()
                         self.present(alertController, animated: true)
                     }
                 } else {
-                    NotificationCenter.default.post(name: Notification.Name("toggleIndicator"), object: self, userInfo: nil)
+                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                 }
             }
             
@@ -1148,6 +1148,7 @@ let quickLookController = QLPreviewController()
    
     func deleteNasFile(param:[String:Any], foldrId:String){
         print(param)
+        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         ContextMenuWork().deleteNasFile(parameters:param){ responseObject, error in
             if let obj = responseObject {
                 print(obj)
@@ -1156,12 +1157,15 @@ let quickLookController = QLPreviewController()
                 print("\(message), \(json["statusCode"].int)")
                 if let statusCode = json["statusCode"].int, statusCode == 100 {
                     DispatchQueue.main.async {
+                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                         self.showInsideList(userId: param["userId"] as! String, devUuid: param["devUuid"] as! String, foldrId: foldrId, deviceName:self.deviceName)
                         let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
                     }
+                } else {
+                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                 }
             }
             return

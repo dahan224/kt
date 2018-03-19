@@ -355,8 +355,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                                                object: nil)
         
         NotificationCenter.default.addObserver(self,
-                                               selector: #selector(toggleIndicator),
-                                               name: NSNotification.Name("toggleIndicator"),
+                                               selector: #selector(homeViewToggleIndicator),
+                                               name: NSNotification.Name("homeViewToggleIndicator"),
                                                object: nil)
         
         NotificationCenter.default.addObserver(self,
@@ -1266,12 +1266,16 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func downloadFromNas(name:String, path:String, fileId:String){
+        homeViewToggleIndicator()
         ContextMenuWork().downloadFromNas(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
                     
                     DispatchQueue.main.async {
+                        let fileIdDict = ["fileId":"0"]
+                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+                        self.homeViewToggleIndicator()
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){
                         UIAlertAction in
@@ -1283,6 +1287,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     }
                     
                     
+                } else {
+                    self.homeViewToggleIndicator()
+                    let fileIdDict = ["fileId":"0"]
+                    NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
                 }
                 
             }
@@ -1292,6 +1300,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     func deleteNasFile(param:[String:Any], foldrId:String){
         print(param)
+        homeViewToggleIndicator()
         ContextMenuWork().deleteNasFile(parameters:param){ responseObject, error in
             if let obj = responseObject {
                 print(obj)
@@ -1300,13 +1309,18 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 print("\(message), \(json["statusCode"].int)")
                 if let statusCode = json["statusCode"].int, statusCode == 100 {
                     DispatchQueue.main.async {
+                        self.homeViewToggleIndicator()
                         NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self)
                         let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                         
+                        let fileIdDict = ["fileId":"0"]
+                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
                     }
+                } else {
+                    self.homeViewToggleIndicator()
                 }
             }
             
@@ -1330,7 +1344,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         
     }
     
-    @objc func toggleIndicator(){
+    @objc func homeViewToggleIndicator(){
         if(indicatorAnimating){
             activityIndicator.stopAnimating()
             indicatorAnimating = false
@@ -1343,7 +1357,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     @objc func openDocument(urlDict:NSNotification){
         
         if let getUrl = urlDict.userInfo!["url"] as? URL {
-            toggleIndicator()
+            homeViewToggleIndicator()
             documentController = UIDocumentInteractionController(url: getUrl)
             documentController.delegate = self
 //            documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
@@ -1367,7 +1381,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
         print("documentInteractionControllerDidEndPreview")
-        toggleIndicator()
+        homeViewToggleIndicator()
         let fileIdDict = ["fileId":"0"]
         if (listViewStyleState == .grid) {
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)

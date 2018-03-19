@@ -10,7 +10,7 @@ import UIKit
 
 class NasFileCellController {
     var dv:HomeDeviceCollectionVC?
-    
+    var hv:HomeViewController?
     func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC) -> NasFileListCell {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NasFileListCell", for: indexPath) as! NasFileListCell
@@ -61,6 +61,7 @@ class NasFileCellController {
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
         let foldrId = String(folderArray[indexPath.row].foldrId)
+        let amdDate = folderArray[indexPath.row].amdDate
         dv?.showNasFileOption(tag: sender.tag)
         switch sender {
         case cell.btnShow:
@@ -74,23 +75,12 @@ class NasFileCellController {
             dv?.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
             
         case cell.btnNas:
-            switch fromOsCd {
-                case "S":
-                    let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"nas","fromUserId":userId, "fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                    dv?.showNasFileOption(tag: sender.tag)
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
+                
+                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+                dv?.showNasFileOption(tag: sender.tag)
                     break
-                case "G":
-                    let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"nas","fromUserId":userId, "fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                    dv?.showNasFileOption(tag: sender.tag)
-                    break
-                default:
-                    let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":userId, "fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                    dv?.showNasFileOption(tag: sender.tag)
-                    break
-            }
+             
             break
             
         case cell.btnGDrive:
@@ -124,26 +114,50 @@ class NasFileCellController {
         let amdDate = folderArray[intFolderArrayIndexPathRow].amdDate
         let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePathNm
         let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
-        let foldrId = folderArray[intFolderArrayIndexPathRow].foldrId
+        let foldrId = String(folderArray[intFolderArrayIndexPathRow].foldrId)
+        hv = deviceView
         switch indexPath.row {
             case 0 :
+                //파일 상세보기
                 let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
                 NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 break
             case 1:
-                //            print("fileNm : \(fileNm), filePaht : \(foldrWholePathNm)")
-//                self.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
+                
+                //다운로드
+                hv?.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
                 break
             
             case 2:
-
+                
+                // nas로 보내기
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
+                
+                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+                
+                let fileIdDict = ["fileId":"0"]
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
                 break
             case 3:
+                //gdrive로 보내기
                 
                 break
             case 4:
-        
+                
+                // 삭제
+                let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
+                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                    UIAlertAction in
+                    //Do you Success button Stuff here
+                    let params = ["userId":userId,"devUuid":currentDevUuid,"fileId":fileId,"fileNm":fileNm,"foldrWholePathNm": foldrWholePathNm]
+                    self.hv?.deleteNasFile(param: params, foldrId: foldrId)
+                }
+                let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+                alertController.addAction(yesAction)
+                alertController.addAction(noAction)
+                hv?.present(alertController, animated: true)
+                
             break
             
             default :

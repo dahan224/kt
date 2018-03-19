@@ -874,6 +874,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     
     func sendNasToShareNas(params:[String:Any]){
+        activityIndicator.startAnimating()
         ContextMenuWork().fromNasToStorage(parameters: params){ responseObject, error in
             let json = JSON(responseObject)
             let message = responseObject?.object(forKey: "message")
@@ -884,7 +885,9 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                         UIAlertAction in
                         //Do you Success button Stuff here
+                        self.activityIndicator.stopAnimating()
                         Util().dismissFromLeft(vc: self)
+                        
                     }
                     alertController.addAction(yesAction)
                     self.present(alertController, animated: true)
