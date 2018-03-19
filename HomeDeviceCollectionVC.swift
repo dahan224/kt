@@ -35,6 +35,8 @@ let quickLookController = QLPreviewController()
     var selectedDevUserId = ""
     var currentFolderId = ""
     var sortBy = ""
+    var upFolderId = ""
+    
     
     var listViewStyleState = HomeViewController.listViewStyleEnum.grid
     var flickState = HomeViewController.flickEnum.main
@@ -517,7 +519,7 @@ let quickLookController = QLPreviewController()
             let intIndexPathRow = indexPath.row
             Vc.getFolderArrayFromContainer(getFolderArray:folderArray, getFolderArrayIndexPathRow:intIndexPathRow)
             if(fileId == 0){
-                //                print("foldrId : \(stringFoldrId)")
+                print("foldrId : \(foldrId)")
                 if(folderArray[indexPath.row].foldrNm == "..."){
                     folderIdArray.remove(at: folderIdArray.count-1)
                     folderNameArray.remove(at: folderNameArray.count-1)
@@ -1239,13 +1241,20 @@ let quickLookController = QLPreviewController()
                         let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                         print("nasfolderList :\(serverList)")
                         for rootFolder in serverList{
+                            
                             let foldrId = rootFolder["foldrId"] as? Int ?? 0
                             let stringFoldrId = String(foldrId)
                             let froldrNm = rootFolder["foldrNm"] as? String ?? "nil"
-                            let stringFroldrNm = String(froldrNm)
-                            self.folderIdArray.append(foldrId)
-                            self.folderNameArray.append(stringFroldrNm)
-                            self.showInsideList(userId: userId, devUuid: devUuid, foldrId: stringFoldrId, deviceName:deviceName)
+                            let stringFoldrNm = String(froldrNm)
+                            let replacedDeviceName = deviceName.replacingOccurrences(of: " ", with: "_")
+                            print("replacedDeviceName : \(replacedDeviceName), stringFoldrNm : \(stringFoldrNm)")
+                            if(stringFoldrNm == replacedDeviceName){
+                                print("name equal")
+                                self.folderIdArray.append(foldrId)
+                                self.folderNameArray.append(stringFoldrNm)
+                                self.showInsideList(userId: userId, devUuid: devUuid, foldrId: stringFoldrId, deviceName:deviceName)
+                            }
+                            
                         }
                     }
                 }
