@@ -114,6 +114,7 @@ class FileUtil {
                     print("fileNm : \(fileNm), localFilFullName : \(localFilFullName), decodedFileName: \(decodedFileName), amdDate: \(amdDate) , stringModifiedDate : \(stringModifiedDate)")
 //                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
                     if(fileExtension.isEmpty){
+                        
                     } else {
                         if(fileNm == decodedFileName ){
                             retrunUrl = file
@@ -142,7 +143,11 @@ class FileUtil {
                     let attribute = try FileManager.default.attributesOfItem(atPath: f.path)
                     let fileName:String = (NSURL(fileURLWithPath: f.lastPathComponent).deletingPathExtension?.lastPathComponent)!
                     let fileExtension = f.pathExtension
-                    let localFilFullName = "\(fileName).\(fileExtension)"
+                    var localFilFullName = "\(fileName).\(fileExtension)"
+                    if(fileExtension.isEmpty){
+                        localFilFullName = fileName
+                    } 
+                    
                     let decodedFileName:String = localFilFullName.removingPercentEncoding!
                     let fileSavedPath = f.path
                     print("fileSavedPath  : \(fileSavedPath)")

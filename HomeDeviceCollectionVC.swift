@@ -1251,12 +1251,12 @@ let quickLookController = QLPreviewController()
                             let froldrNm = rootFolder["foldrNm"] as? String ?? "nil"
                             let stringFoldrNm = String(froldrNm)
                             let childCnt = rootFolder["childCnt"] as? Int ?? 0
-                            if(childCnt > 0){
+//                            if(childCnt > 0){
                                 print("name equal")
                                 self.folderIdArray.append(foldrId)
                                 self.folderNameArray.append(stringFoldrNm)
                                 self.showInsideList(userId: userId, devUuid: devUuid, foldrId: stringFoldrId, deviceName:deviceName)
-                            }
+//                            }
                             
                         }
                     }
