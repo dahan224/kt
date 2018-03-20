@@ -79,7 +79,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm)")
+        print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm), originalFileId : \(originalFileId)")
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(callSendToNasFromLocal(fileDict:)),
@@ -436,7 +436,6 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             case .nas:
                 if(fromDevUuid == Util.getUuid()){
                     // local to Nas
-                    
                     if(fromFoldrId.isEmpty){
                         var toOsCd = "G"
                         if(toUserId != App.defaults.userId){
@@ -452,34 +451,54 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     }
                     
                 } else {
-                    if(fromOsCd == "G"){
-                        print("deviceName : \(deviceName)")
-                        if(toUserId != App.defaults.userId){
-                            let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"G","toOsCd":"S"]
-                            print("from g to s param : \(param)")
-                            self.sendNasToShareNas(params: param)
+                    if(fromFoldrId.isEmpty){
+                        // nas 보내기 파일
+                        if(fromOsCd == "G"){
+                            print("deviceName : \(deviceName)")
+                            if(toUserId != App.defaults.userId){
+                                let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"G","toOsCd":"S"]
+                                print("from g to s param : \(param)")
+                                self.sendNasToShareNas(params: param)
+                            } else {
+                                let param = ["userId":toUserId, "devUuid": currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName,"foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm]
+                                print("from s to s param : \(param), \(deviceName)")
+                                self.sendNasToNas(params: param)
+                            }
+                            
+                        } else if (fromOsCd == "S") {
+                            if(toUserId != App.defaults.userId){
+                                let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"S"]
+                                print("param : \(param)")
+                                //shared to shared
+                                self.sendShareNasToNas(params: param)
+                            } else {
+                                let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"G"]
+                                print("param : \(param) to G")
+                                self.sendShareNasToNas(params: param)
+                            }
                         } else {
-                            let param = ["userId":toUserId, "devUuid": currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName,"foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm]
-                            print("from s to s param : \(param), \(deviceName)")
-                            self.sendNasToNas(params: param)
-                        }
-                        
-                    } else if (fromOsCd == "S") {
-                        if(toUserId != App.defaults.userId){
-                            let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"S"]
-                            print("param : \(param)")
-                            //shared to shared
-                            self.sendShareNasToNas(params: param)
-                        } else {
-                            let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"G"]
-                            print("param : \(param) to G")
-                            self.sendShareNasToNas(params: param)
+                            let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+                            sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                            
                         }
                     } else {
-                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-                        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                        // nas 보내기 폴더
+                        var toOsCd = "G"
+                        if(toUserId != App.defaults.userId){
+                            toOsCd = "S"
+                        }
+                        let param = ["userId":fromUserId,"toUserId":toUserId, "foldrId":fromFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":fromOsCd,"toOsCd":toOsCd]
+                        if(fromOsCd == "S" || toOsCd == "S"){                            
+                            print("copyShareNasFolder param : \(param)")
+                            self.copyShareNasFolder(params: param)
+                        } else {
+                            print("fromOsCd: \(fromOsCd), toOsCd :  \(toOsCd)")
+                            print("copyNasFolder param : \(param)")
+                            self.copyNasFolder(params: param)
+                        }
                         
                     }
+                    
                 }
                 break
             case .googleDrive:
@@ -905,6 +924,63 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             return
         }
     }
+    
+    func copyNasFolder(params:[String:Any]){
+        activityIndicator.startAnimating()
+        ContextMenuWork().copyNasFolder(parameters: params){ responseObject, error in
+            let json = JSON(responseObject)
+            let message = responseObject?.object(forKey: "message") as? String
+            print("\(message), \(String(describing: json["statusCode"].int))")
+            if let statusCode = json["statusCode"].int, statusCode == 100 {
+                DispatchQueue.main.async {
+                    let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                        UIAlertAction in
+                        //Do you Success button Stuff here
+                        self.activityIndicator.stopAnimating()
+                        Util().dismissFromLeft(vc: self)
+                        
+                    }
+                    alertController.addAction(yesAction)
+                    self.present(alertController, animated: true)
+                    
+                }
+            } else {
+                print(error?.localizedDescription as Any)
+            }
+            
+            return
+        }
+    }
+    
+    func copyShareNasFolder(params:[String:Any]){
+        activityIndicator.startAnimating()
+        ContextMenuWork().copyShareNasFolder(parameters: params){ responseObject, error in
+            let json = JSON(responseObject)
+            let message = responseObject?.object(forKey: "message") as? String
+            print("\(message), \(String(describing: json["statusCode"].int))")
+            if let statusCode = json["statusCode"].int, statusCode == 100 {
+                DispatchQueue.main.async {
+                    let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                        UIAlertAction in
+                        //Do you Success button Stuff here
+                        self.activityIndicator.stopAnimating()
+                        Util().dismissFromLeft(vc: self)
+                        
+                    }
+                    alertController.addAction(yesAction)
+                    self.present(alertController, animated: true)
+                    
+                }
+            } else {
+                print(error?.localizedDescription as Any)
+            }
+            
+            return
+        }
+    }
+    
     
     @objc func callSendToNasFromLocal(fileDict:NSNotification){
         print("callSendToNasFromLocal")

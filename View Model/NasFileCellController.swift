@@ -78,9 +78,7 @@ class NasFileCellController {
                 let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
                 
                 NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                dv?.showNasFileOption(tag: sender.tag)
-                    break
-             
+                dv?.showNasFileOption(tag: sender.tag)                    
             break
             
         case cell.btnGDrive:

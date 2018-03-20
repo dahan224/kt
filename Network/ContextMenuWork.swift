@@ -126,6 +126,46 @@ class ContextMenuWork {
                 }
         }
     }
+    
+    func copyNasFolder(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        Alamofire.request(App.URL.server+"nasFoldrCopy.do"
+            , method: .post
+            , parameters:parameters
+            , encoding : JSONEncoding.default
+            , headers: App.Headrs.jsonHeader
+            ).responseJSON { response in
+                switch response.result {
+                case .success(let value):
+                    completionHandler(value as? NSDictionary, nil)
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    completionHandler(nil, error as NSError)
+                    break
+                }
+        }
+    }
+    func copyShareNasFolder(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        Alamofire.request(App.URL.server+"shareNasFoldrCopy.do"
+            , method: .post
+            , parameters:parameters
+            , encoding : JSONEncoding.default
+            , headers: App.Headrs.jsonHeader
+            ).responseJSON { response in
+                switch response.result {
+                case .success(let value):
+                    completionHandler(value as? NSDictionary, nil)
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    completionHandler(nil, error as NSError)
+                    break
+                }
+        }
+    }
+    
     func downloadFromNas(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
