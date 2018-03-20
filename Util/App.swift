@@ -90,6 +90,21 @@ struct App {
             ]
         }
     }
+    
+    struct smsInfo {
+        var smsCrtfcKey:String
+        var smsCrtfcNo:String
+        var today:String
+        var devBas:DeviceStruct
+        
+        init(sms:AnyObject) {
+            self.smsCrtfcKey = sms["smsCrtfcKey"] as? String ?? "nil"
+            self.smsCrtfcNo = sms["smsCrtfcNo"] as? String ?? "nil"
+            self.today = sms["today"] as? String ?? "nil"
+            self.devBas = App.DeviceStruct(device: ((sms["devBasVO"] as? Dictionary<String,Any> ?? [:]) as? AnyObject)!)
+        }
+    }
+    
     struct DeviceStruct:Codable {
         var devNm:String
         var devUuid:String
@@ -103,6 +118,10 @@ struct App {
         var userId:String
         var userName:String
         
+        var smsCrtfcKey:String
+        var smsCrtfcNo:String
+        var smsLoginDe:String
+        
         init(devNm : String, devUuid : String, logical:String, mkngVndrNm : String, newFlag:String, onoff : String, osCd : String, osDesc : String, osNm : String, userId : String, userName : String) {
             self.devNm   = devNm
             self.devUuid   = devUuid
@@ -115,6 +134,10 @@ struct App {
             self.osNm   = osNm
             self.userId   = userId
             self.userName   = userName
+            
+            self.smsCrtfcKey = "nil"
+            self.smsCrtfcNo = "nil"
+            self.smsLoginDe = "nil"
         }
         init(device: AnyObject) {
             self.devNm = device["devNm"] as? String ?? "nil"
@@ -128,6 +151,10 @@ struct App {
             self.osNm = device["osNm"] as? String ?? "nil"
             self.userId = device["userId"] as? String ?? "nil"
             self.userName = device["userName"] as? String ?? "nil"
+            
+            self.smsCrtfcKey = device["smsCrtfcKey"] as? String ?? "nil"
+            self.smsCrtfcNo = device["smsCrtfcNo"] as? String ?? "nil"
+            self.smsLoginDe = device["smsLoginDe"] as? String ?? "nil"
         }
     }
     struct FolderStruct {

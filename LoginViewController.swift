@@ -26,7 +26,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     var mkngVndrNm = "Apple"
     var rootFoldrNm = "Mobile"
     var lastUpdtId = "ktuser2"
-  
+    
     var userId:String = ""
     var userPassword:String = ""
     var loginToken:String = ""
@@ -45,7 +45,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     var fileSize = [NSNumber]()
     var fileDate = [Date]()
     
- 
+    
     var localFolderArray:[App.Folders] = []
     var folderPathArray = [String]()
     var folderArrayToCreate:[[String:Any]] = []
@@ -113,10 +113,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
+        UserDefaults.standard.removeObject(forKey: "cookie")
+        UserDefaults.standard.removeObject(forKey: "token")
+        
         let string = "/Mobile"
         let str =  string.cString(using: String.Encoding.utf8)
         print("encodedString : \(str)")
-
+        
         
         checkBox.boxType = BEMBoxType.square
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
@@ -125,7 +128,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         deviceModel = DeviceModel.getModel()
         print("uuId : \(uuId)")
         print("model :\(deviceModel)")
-       
+        
         autoLogin()
     }
     
@@ -162,7 +165,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     
-   
+    
     
     func login(){
         activityIndicator.startAnimating()
@@ -171,105 +174,105 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         loginWarningLabel.isHidden = true
         let urlString = App.URL.server+"login.do"
         
-//        ContextMenuWork().login(userId: userId, password: passwd, { value, error in
-//            let json = JSON(value!)
-//            if(json["fileData"].exists()){
-//                var fileData = json["fileData"]
-//                print("fileData : \(fileData["fileNm"])")
-//                DispatchQueue.main.async {
-//                    self.lblEtsion.text = fileData["etsionNm"].rawString()
-//                    self.lblSize.text = self.covertFileSize(getSize: fileData["fileSize"].rawString()!)
-//                    self.lblPath.text = self.foldrWholePathNm
-//                    self.lblCret.text = fileData["cretDate"].rawString()
-//                    self.lblAmd.text = fileData["amdDate"].rawString()
-//                    self.lblDevice.text = self.deviceName
-//                }
-//            }
-//
-//        }
+        //        ContextMenuWork().login(userId: userId, password: passwd, { value, error in
+        //            let json = JSON(value!)
+        //            if(json["fileData"].exists()){
+        //                var fileData = json["fileData"]
+        //                print("fileData : \(fileData["fileNm"])")
+        //                DispatchQueue.main.async {
+        //                    self.lblEtsion.text = fileData["etsionNm"].rawString()
+        //                    self.lblSize.text = self.covertFileSize(getSize: fileData["fileSize"].rawString()!)
+        //                    self.lblPath.text = self.foldrWholePathNm
+        //                    self.lblCret.text = fileData["cretDate"].rawString()
+        //                    self.lblAmd.text = fileData["amdDate"].rawString()
+        //                    self.lblDevice.text = self.deviceName
+        //                }
+        //            }
+        //
+        //        }
         Alamofire.request(urlString,
                           method: .post,
                           parameters: ["userId": userId,"password":userPassword],
                           encoding : URLEncoding.default,
                           headers: App.Headrs.loginHeader).responseJSON { response in
-            switch response.result {
-            case .success(let value) :
-                let json = JSON(value)
-                let responseData = value as! NSDictionary
-                let message = responseData.object(forKey: "message")
-                print(message)
-                if let statusCode = json["statusCode"].int, statusCode != 100 {
-                    let url = URL(string:urlString)
-                    let cstorage = HTTPCookieStorage.shared
-                    if let cookies = cstorage.cookies(for: url!) {
-                        for cookie in cookies {
-                            cstorage.deleteCookie(cookie)
-                        }
-                    }
-                    DispatchQueue.main.async {
-                        self.loginWarningLabelHeight.constant = 60
-                        self.loginWarningLabel.text = message as! String
-                        self.loginWarningLabel.isHidden = false
-                        self.activityIndicator.stopAnimating()
-                        print("whatCalled")
-                    }
-                } else {
-                    
-                    if let headerFields = response.response?.allHeaderFields as? [String: String]{
-                        if(headerFields["Cookie"] != nil){
-                            self.loginCookie = headerFields["Cookie"]!
-                            print("loginCookie : \(self.loginCookie)")
-                        }
-                        if(headerFields["X-Auth-Token"] != nil){
-                            self.loginToken = headerFields["X-Auth-Token"]!
-                            print("self.loginToken : \(self.loginToken)")
-                        }
-                        if(!self.loginCookie.isEmpty && !self.loginToken.isEmpty){
-                            
-                            let defaults = UserDefaults.standard
-                            defaults.set(self.loginCookie, forKey: "cookie")
-                            defaults.set(self.loginToken, forKey: "token")
-                            defaults.set(self.userId, forKey: "userId")
-                            defaults.synchronize()
-                            DispatchQueue.main.async {
-                                self.loginWarningLabelHeight.constant = 20
-                                self.loginWarningLabel.isHidden = true
-                            }
-                            if(self.loginCookie.isEmpty || self.loginToken.isEmpty){
-                                
-                            } else {
-                                
-                                if(self.loginCookie == UserDefaults.standard.string(forKey: "cookie")){
-                                    print("true")
+                            switch response.result {
+                            case .success(let value) :
+                                let json = JSON(value)
+                                let responseData = value as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print(message)
+                                if let statusCode = json["statusCode"].int, statusCode != 100 {
+                                    let url = URL(string:urlString)
+                                    let cstorage = HTTPCookieStorage.shared
+                                    if let cookies = cstorage.cookies(for: url!) {
+                                        for cookie in cookies {
+                                            cstorage.deleteCookie(cookie)
+                                        }
+                                    }
+                                    DispatchQueue.main.async {
+                                        self.loginWarningLabelHeight.constant = 60
+                                        self.loginWarningLabel.text = message as! String
+                                        self.loginWarningLabel.isHidden = false
+                                        self.activityIndicator.stopAnimating()
+                                        print("whatCalled")
+                                    }
                                 } else {
-                                    print("false")
+                                    
+                                    if let headerFields = response.response?.allHeaderFields as? [String: String]{
+                                        if(headerFields["Cookie"] != nil){
+                                            self.loginCookie = headerFields["Cookie"]!
+                                            print("loginCookie : \(self.loginCookie)")
+                                        }
+                                        if(headerFields["X-Auth-Token"] != nil){
+                                            self.loginToken = headerFields["X-Auth-Token"]!
+                                            print("self.loginToken : \(self.loginToken)")
+                                        }
+                                        if(!self.loginCookie.isEmpty && !self.loginToken.isEmpty){
+                                            
+                                            let defaults = UserDefaults.standard
+                                            defaults.set(self.loginCookie, forKey: "cookie")
+                                            defaults.set(self.loginToken, forKey: "token")
+                                            defaults.set(self.userId, forKey: "userId")
+                                            defaults.synchronize()
+                                            DispatchQueue.main.async {
+                                                self.loginWarningLabelHeight.constant = 20
+                                                self.loginWarningLabel.isHidden = true
+                                            }
+                                            if(self.loginCookie.isEmpty || self.loginToken.isEmpty){
+                                                
+                                            } else {
+                                                
+                                                if(self.loginCookie == UserDefaults.standard.string(forKey: "cookie")){
+                                                    print("true")
+                                                } else {
+                                                    print("false")
+                                                }
+                                                
+                                                self.registerDevice()
+                                            }
+                                            
+                                            
+                                        }
+                                    }
+                                }
+                                break
+                            case .failure(let error):
+                                print(error.localizedDescription)
+                                DispatchQueue.main.async {
+                                    self.loginWarningLabel.text = error.localizedDescription
+                                    self.loginWarningLabel.isHidden = false
                                 }
                                 
-                                self.registerDevice()
+                                break
                             }
-                            
-                            
-                        }
-                    }
-                }
-                break
-            case .failure(let error):
-                print(error.localizedDescription)
-                DispatchQueue.main.async {
-                    self.loginWarningLabel.text = error.localizedDescription
-                    self.loginWarningLabel.isHidden = false
-                }
-                
-            break
-            }
         }
-       
-
+        
+        
     }
     func initDevice(){
         
         let urlString = App.URL.server+"devDataInita.do"
-       
+        
         Alamofire.request(urlString,
                           method: .post,
                           parameters: ["userId":self.userId,"devUuid":uuId,"comnd":"N"],
@@ -298,10 +301,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         print("register headers : \(App.Headrs.jsonHeader)")
         print(" App.defaults.notificationToken : \( App.defaults.notificationToken)" )
         
-        
         let deviceParameter = App.DeviceInfo(userId: userId, devUuid: uuId, devNm: UIDevice.current.name, osCd: "I", osDesc: "IOS", mkngVndrNm: "apple", devAuthYn: "N", rootFoldrNm: "Mobile", lastUpdtId: userId, token: App.defaults.notificationToken)
         
-//        print("deviceParameter : \(deviceParameter.getParameter)")
+        //        print("deviceParameter : \(deviceParameter.getParameter)")
         let urlString = App.URL.server+"devAthn.do"
         Alamofire.request(urlString,
                           method: .post,
@@ -317,10 +319,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                 let message = responseData.object(forKey: "message")
                                 print("registerDevice message : \(String(describing: message))")
                                 if let statusCode = json["statusCode"].int, statusCode != 100 {
-                                   
+                                    
                                     
                                 } else {
-                                    self.sysncFileInfo()
+                                    self.smsAuth(device:deviceParameter)
                                 }
                                 
                                 break
@@ -329,8 +331,60 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                 NSLog(error.localizedDescription)
                                 break
                             }
-
-
+                            
+                            
+        }
+    }
+    
+    func smsAuth(device:App.DeviceInfo) {
+        
+        let urlString = App.URL.server+"smsAuth.do"
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: device.getParameter,
+                          encoding : JSONEncoding.default,
+                          headers: App.Headrs.jsonHeader).responseJSON{ (response) in
+                            switch response.result {
+                            case .success(let value):
+                                print(value)
+                                let json = JSON(value)
+                                let responseData = value as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("smsAuth message : \(message)")
+                                if let statusCode = json["statusCode"].int, statusCode != 100 {
+                                    
+                                } else {
+                                    
+                                    if let listData = responseData.object(forKey: "data") as? NSDictionary {
+                                        
+                                        // 사용자정의 팝업
+                                        let popup: PopupView = UINib(nibName: "PopupView", bundle: nil).instantiate(withOwner: self, options: nil)[0] as! PopupView
+                                        
+                                        // 팝업뷰 배경
+                                        let viewColor = UIColor.black
+                                        popup.backgroundColor = viewColor.withAlphaComponent(0.3)
+                                        popup.frame = self.view.frame // 팝업뷰를 화면크기에 맞추기
+                                        
+                                        // 팝업창 배경
+                                        let baseViewColor = UIColor.white
+                                        popup.popupView.backgroundColor = baseViewColor.withAlphaComponent(1.0)
+                                        
+                                        popup.lblTop.backgroundColor = HexStringToUIColor().getUIColor(hex: "FF0000")
+                                        popup.lblTop.textColor = UIColor.white
+                                        
+                                        //popup.devBas = App.DeviceStruct(device: data.object(forKey: "devBasVO") as! AnyObject)
+                                        popup.data = App.smsInfo(sms: listData as! AnyObject)
+                                        
+                                        self.view.addSubview(popup)
+                                        
+                                    } else {
+                                        self.sysncFileInfo()
+                                    }
+                                }
+                            case .failure(let error):
+                                self.activityIndicator.stopAnimating()
+                                NSLog(error.localizedDescription)
+                            }
         }
     }
     
@@ -338,7 +392,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-   
+    
     func sysncFileInfo() {
         print("syncFileInfo called")
         SyncLocalFilleToNas().sync()
@@ -353,12 +407,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             let json = JSON(responseObject as Any)
             if let statusCode = json["statusCode"].int, statusCode == 100 {
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-//                                print("one view list : \(serverList)")
+                //                                print("one view list : \(serverList)")
                 for device in serverList {
                     let deviceStruct = App.DeviceStruct(device: device)
                     self.DeviceArray.append(deviceStruct)
                     let defaults = UserDefaults.standard
-//                    print("deviceStruct.devNm : \(deviceStruct.devNm)")
+                    //                    print("deviceStruct.devNm : \(deviceStruct.devNm)")
                     if(deviceStruct.osCd == "G"){
                         print("giga nas id saved : \(deviceStruct.devNm)")
                         defaults.set(deviceStruct.devUuid, forKey: "nasDevId")
@@ -386,16 +440,20 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     func segueToMain(){
-//        print("segueToMain called \(self.folderSyncFinished), \(self.fileSyncFinished)")
-//        if(self.folderSyncFinished && self.fileSyncFinished){
-            self.activityIndicator.stopAnimating()
-            self.performSegue(withIdentifier: "LoginSegue", sender: nil)
-            self.dismiss(animated: false, completion: nil)
-            
-//        }
+        //        print("segueToMain called \(self.folderSyncFinished), \(self.fileSyncFinished)")
+        //        if(self.folderSyncFinished && self.fileSyncFinished){
+        self.activityIndicator.stopAnimating()
+        self.performSegue(withIdentifier: "LoginSegue", sender: nil)
+        self.dismiss(animated: false, completion: nil)
+        
+        //        }
     }
- 
-
+    
+    func stopAnimating() {
+        self.activityIndicator.stopAnimating()
+    }
+    
+    
 }
 
 extension URL {
@@ -416,3 +474,4 @@ extension UITextField {
         self.layer.addSublayer(border)
     }
 }
+

@@ -101,6 +101,7 @@ let quickLookController = QLPreviewController()
         deviceCollectionView.register(LocalFileListCell.self, forCellWithReuseIdentifier: "LocalFileListCell")
         deviceCollectionView.register(LocalFolderListCell.self, forCellWithReuseIdentifier: "LocalFolderListCell")
         deviceCollectionView.register(RemoteFileListCell.self, forCellWithReuseIdentifier: "RemoteFileListCell")
+        deviceCollectionView.register(RemoteFolderListCell.self, forCellWithReuseIdentifier: "RemoteFolderListCell")
         let lpgr : UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(gestureRecognizer:)))
         lpgr.minimumPressDuration = 0.5
         lpgr.delaysTouchesBegan = true
@@ -329,8 +330,8 @@ let quickLookController = QLPreviewController()
                         } else {
                             
                             if(fromOsCd != "S" && fromOsCd != "G"){
-//                              let cell4 = NasFolderListCellController(indexPathRow: indexPath.row)
-                                let cell4 = NasFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+
+                                let cell4 = RemoteFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
                                 cells.append(cell4)
                                 if(folderArray[indexPath.row].foldrNm == "..."){
                                     cell4.lblSub.isHidden = true
@@ -1267,6 +1268,16 @@ let quickLookController = QLPreviewController()
                                     self.folderNameArray.append(stringFoldrNm)
                                     self.showInsideList(userId: userId, devUuid: devUuid, foldrId: stringFoldrId, deviceName:deviceName)
                                 }
+                            } else if (self.fromOsCd == "W"){
+                                let folder = App.FolderStruct(data: rootFolder as AnyObject)
+                                self.folderArray.append(folder)
+                                self.cellStyle = 2
+                                self.collectionviewCellSpcing()
+                                self.currentFolderId = String(foldrId)
+                                self.deviceCollectionView.reloadData()
+                                self.deviceCollectionView.collectionViewLayout.invalidateLayout()
+                                
+                                
                             } else {
                                 self.folderIdArray.append(foldrId)
                                 self.folderNameArray.append(stringFoldrNm)
