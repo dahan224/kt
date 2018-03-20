@@ -524,35 +524,44 @@ let quickLookController = QLPreviewController()
             let intIndexPathRow = indexPath.row
             Vc.getFolderArrayFromContainer(getFolderArray:folderArray, getFolderArrayIndexPathRow:intIndexPathRow)
             if(fileId == 0){
-                print("foldrId : \(foldrId)")
-                if(folderArray[indexPath.row].foldrNm == "..."){
-                    folderIdArray.remove(at: folderIdArray.count-1)
-                    folderNameArray.remove(at: folderNameArray.count-1)
-                } else {
-                    self.folderIdArray.append(infoldrId)
-                    self.folderNameArray.append(folderNm)
-                }
-                var folderNameArrayCount = 0
-                if(folderNameArray.count < 1){
+                if(foldrId == "0") {
                     
+                    // 리모트 디아비스 최상위 폴더
+                    print("getRootFolder called")
+                    cellStyle = 1
+                    getRootFolder(userId: userId, devUuid: selectedDevUuid, deviceName: deviceName)
                 } else {
-                    folderNameArrayCount = folderNameArray.count-1
-                }
-                let folderName = ["folderName":"\(folderNameArray[folderNameArrayCount])","deviceName":deviceName]
-                NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
-                self.showInsideList(userId: userId, devUuid: selectedDevUuid, foldrId: foldrId,deviceName: deviceName)
-                searchStepState = .folder
-                var state = HomeViewController.bottomListEnum.nasFileInfo
-                if(fromOsCd == "G" || fromOsCd == "S"){
-                    state = HomeViewController.bottomListEnum.nasFileInfo
-                } else {
-                    state = HomeViewController.bottomListEnum.remoteFileInfo
-                    if(selectedDevUuid == Util.getUuid()){
-                        state = HomeViewController.bottomListEnum.localFileInfo
+                    print("foldrId : \(foldrId)")
+                    if(folderArray[indexPath.row].foldrNm == "..."){
+                        folderIdArray.remove(at: folderIdArray.count-1)
+                        folderNameArray.remove(at: folderNameArray.count-1)
+                    } else {
+                        self.folderIdArray.append(infoldrId)
+                        self.folderNameArray.append(folderNm)
                     }
+                    var folderNameArrayCount = 0
+                    if(folderNameArray.count < 1){
+                        
+                    } else {
+                        folderNameArrayCount = folderNameArray.count-1
+                    }
+                    let folderName = ["folderName":"\(folderNameArray[folderNameArrayCount])","deviceName":deviceName]
+                    NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
+                    self.showInsideList(userId: userId, devUuid: selectedDevUuid, foldrId: foldrId,deviceName: deviceName)
+                    searchStepState = .folder
+                    var state = HomeViewController.bottomListEnum.nasFileInfo
+                    if(fromOsCd == "G" || fromOsCd == "S"){
+                        state = HomeViewController.bottomListEnum.nasFileInfo
+                    } else {
+                        state = HomeViewController.bottomListEnum.remoteFileInfo
+                        if(selectedDevUuid == Util.getUuid()){
+                            state = HomeViewController.bottomListEnum.localFileInfo
+                        }
+                    }
+                    Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid:selectedDevUuid, getCurrentFolderId : currentFolderId)
+                    
                 }
-                Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid:selectedDevUuid, getCurrentFolderId : currentFolderId)
-                
+               
                 
             } else {
                 
@@ -614,56 +623,7 @@ let quickLookController = QLPreviewController()
         deviceCollectionView.reloadData()
         
     }
-    
-    
-    
-    @objc func 료(sender:UIButton){
-//        print("optionSHow")
-        
-        showOptionMenu(sender: sender, style:0)
-    }
-    
-    @objc func btnOptionFolderClicked(sender:UIButton){
-        //        print("optionSHow")
-        
-        showOptionMenu(sender: sender, style:1)
-    }
-    @objc func btnOptionLocalClicked(sender:UIButton){
-        //        print("optionSHow")
-        
-        showOptionMenu(sender: sender, style:2)
-    }
-    func showOptionMenu(sender:UIButton, style:Int){
-        
-        let buttonRow = sender.tag
-        let indexPath = IndexPath(row: buttonRow, section: 0)
-        let cell = deviceCollectionView.cellForItem(at: indexPath) as! FileListCell
-        if(cell.optionSHowCheck == 0){
-            if(style == 0) {
-                let width = App.Size.optionWidth
-                let spacing = (width - 300) / 6
-                cell.spacing = spacing
-                cell.optionShow(spacing: spacing, style: style)
-            } else if style == 1{
-                let width = App.Size.optionWidth
-                let spacing = (width - 240) / 5
-                cell.optionShow(spacing: spacing, style:style)
-            } else {
-                let width = App.Size.optionWidth
-                let spacing = (width - 180) / 5
-                cell.optionShow(spacing: spacing, style:style)
-            }
 
-            cell.optionSHowCheck = 1
-        } else {
-            cell.optionHide()
-            cell.optionSHowCheck = 0
-        }
-       
-        UIView.animate(withDuration: 0.3){
-            self.view.layoutIfNeeded()
-        }
-    }
     
     //Nas 파일 컨텍스트 시작
     
@@ -1153,6 +1113,27 @@ let quickLookController = QLPreviewController()
         }
     }
     
+    
+    func downloadFromRemote(userId:String, name:String, path:String, fileId:String){
+        ContextMenuWork().downloadFromRemote(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+            if let success = responseObject {
+                print(success)
+                if(success == "success"){
+                    SyncLocalFilleToNas().sync()
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        alertController.addAction(yesAction)
+                        print("download Success")
+                        
+                        
+                    }
+                }
+            }
+            return
+        }
+    }
+    
    
     func deleteNasFile(param:[String:Any], foldrId:String){
         print(param)
@@ -1247,6 +1228,7 @@ let quickLookController = QLPreviewController()
         self.folderIdArray.removeAll()
         self.folderNameArray.removeAll()
         self.localFileArray.removeAll()
+        self.folderArray.removeAll()
          GetListFromServer().getFoldrList(devUuid: devUuid, userId:userId, deviceName:deviceName){ responseObject, error in
                 if let obj = responseObject{
                     let json = JSON(obj)
@@ -1270,6 +1252,9 @@ let quickLookController = QLPreviewController()
                                 }
                             } else if (self.fromOsCd == "W"){
                                 let folder = App.FolderStruct(data: rootFolder as AnyObject)
+                                print("folder : \(folder)")
+                                self.folderIdArray.append(0)
+                                self.folderNameArray.append(stringFoldrNm)
                                 self.folderArray.append(folder)
                                 self.cellStyle = 2
                                 self.collectionviewCellSpcing()
@@ -1379,7 +1364,7 @@ let quickLookController = QLPreviewController()
             let json = JSON(responseObject!)
             if(json["listData"].exists()){
                 let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
-                print("serverList :\(serverList)")
+//                print("serverList :\(serverList)")
                 for list in serverList{
                     let folder = App.FolderStruct(data: list as AnyObject)
                     self.folderArray.append(folder)
@@ -1399,14 +1384,14 @@ let quickLookController = QLPreviewController()
 //            let message = responseObject?.object(forKey: "message")
             if(json["listData"].exists()){
                 var listData = json["listData"]
-                print("listData : \(listData)")
+//                print("listData : \(listData)")
                 var serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                 for list in serverList{
                     let folder = App.FolderStruct(data: list as AnyObject)
                     self.folderArray.append(folder)
                 }
             }
-            print("final folderArray : \(self.folderArray)")
+//            print("final folderArray : \(self.folderArray)")
             self.cellStyle = 2
             self.collectionviewCellSpcing()
             self.deviceCollectionView.reloadData()

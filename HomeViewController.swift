@@ -1215,6 +1215,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 break
             case .remoteFileInfo:
                 
+                RemoteFileListCellController().remoteFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
                 break
                 
            
@@ -1297,6 +1298,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             return
         }
     }
+    
+    
+    
     
     func deleteNasFile(param:[String:Any], foldrId:String){
         print(param)

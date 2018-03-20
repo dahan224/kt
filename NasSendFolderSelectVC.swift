@@ -97,6 +97,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                                name: NSNotification.Name("NasSendFolderSelectVCAlert"),
                                                object: nil)
         
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(downloadFromRemoteToNas(fileDict:)),
+                                               name: NSNotification.Name("downloadFromRemoteToNas"),
+                                               object: nil)
+        
         switch storageState {
         case .nas:
 //            nasDevId = UserDefaults.standard.string(forKey: "nasDevId")!
@@ -449,8 +454,15 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                         ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm)
                        
                     }
+                } else if (fromOsCd != "S" || fromOsCd != "G"){
+                    // remote to nas
+                    
+                    print("remote to nas")
+                    remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: fromOsCd, fromFoldr: fromFoldrId, fromFileNm: originalFileName, fromFileId: originalFileId)
+                    
                     
                 } else {
+                    // nas to nas or share nas
                     if(fromFoldrId.isEmpty){
                         // nas 보내기 파일
                         if(fromOsCd == "G"){
@@ -1115,14 +1127,74 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     }
     
     
-    /*
-    // MARK: - Navigation
-
-    // In a storyboard-based application, you will often want to do a little preparation before navigation
-    override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
-        // Get the new view controller using segue.destinationViewController.
-        // Pass the selected object to the new view controller.
+    func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
+        
+        let urlString = App.URL.server+"reqFileDown.do"
+        var comnd = "RALI"
+        switch fromOsCd {
+        case "W":
+            comnd = "RWLI"
+        case "A":
+            comnd = "RALI"
+        default:
+            comnd = "RILI"
+            break
+        }
+        let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
+        print("notifyNasUploadFinish param : \(paramas)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: paramas,
+                          encoding : JSONEncoding.default,
+                          headers: App.Headrs.jsonHeader).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+                                
+                                print(response.result.value)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("remoteDownloadRequest : \(message)")
+                                DispatchQueue.main.async {
+                                    let alertController = UIAlertController(title: nil, message: "\(message!)", preferredStyle: .alert)
+                                    let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                                        UIAlertAction in
+                                        
+                                    }
+                                    alertController.addAction(yesAction)
+                                    self.present(alertController, animated: true, completion: nil)
+                                }
+                                
+                                break
+                            case .failure(let error):
+                                
+                                print(error.localizedDescription)
+                            }
+        }
     }
-    */
+    
+    @objc func downloadFromRemoteToNas(fileDict:NSNotification){
+        if let getFromUserId = fileDict.userInfo?["fromUserId"] as? String, let getFromFileId = fileDict.userInfo?["fromFileId"] as? String, let getFromFoldr = fileDict.userInfo?["fromFoldr"] as? String, let getFromFileNm = fileDict.userInfo?["fromFileNm"] as? String {
+        
+            self.downloadFromRemoteToSend(userId: getFromUserId, name: getFromFileNm, path: getFromFoldr, fileId: getFromFileId)
+        }
+    }
+ 
+    
+    func downloadFromRemoteToSend(userId:String, name:String, path:String, fileId:String){
+        ContextMenuWork().downloadFromRemote(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+            if let success = responseObject {
+                print(success)
+                if(!success.isEmpty){
+                    SyncLocalFilleToNas().sync()
+                    print("url: \(success)")
+                    let fileUrl:URL = URL(string: success)!
+                    self.sendToNasFromLocal(url: fileUrl, name: name, toOsCd:self.toOsCd)
+                }
+            }
+            return
+        }
+    }
+    
+    
 
 }

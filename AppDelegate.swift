@@ -89,12 +89,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                         print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
                         if let remoteDownLoadToNas = UserDefaults.standard.bool(forKey: "remoteDownLoadToNas") as? Bool{
                             if(remoteDownLoadToNas) {
-                                
-                                self.showFileInfoToNas(fromUserId:fromUserId, fileId:fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid,fromOsCd:fromOsCd)
-                                
+                                  let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "queId":queId, "fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd]
+//                                self.showFileInfoToNas(fromUserId:fromUserId, fileId:fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid,fromOsCd:fromOsCd)
+                                NotificationCenter.default.post(name: Notification.Name("downloadFromRemoteToNas"), object: self, userInfo: fileDict)
                                 
                                 
                             } else {
+                               
+                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
                                 downloadFromRemote(userId: fromUserId, name: fromFileNm, path: fromFoldr, fileId: fromFileId)
                             }
                         }
@@ -158,8 +160,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                         alertController.addAction(yesAction)
                         print("download Success")
-                        
-                        self.window?.rootViewController?.present(alertController, animated: true, completion: nil)
+                        let alertWindow = UIWindow(frame: UIScreen.main.bounds)
+                        alertWindow.rootViewController = UIViewController()
+                        alertWindow.windowLevel = UIWindowLevelAlert + 1;
+                        alertWindow.makeKeyAndVisible()
+                        alertWindow.rootViewController?.present(alertController, animated: true, completion: nil)
                     }
                 }
             }
