@@ -61,16 +61,23 @@ class NasFolderListCellController {
         let upFoldrId = folderArray[indexPath.row].upFoldrId
         switch sender {
         case cell.btnDwnld:
-            ContextMenuWork().downloadFolderFromNas(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:currentDevUuid, deviceName:deviceName)
+            let alertController = UIAlertController(title: nil, message: "해당 폴더를 다운로드 하시겠습니까?", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                ContextMenuWork().downloadFolderFromNas(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:currentDevUuid, deviceName:deviceName)
+                
+                }
+            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+            alertController.addAction(yesAction)
+            alertController.addAction(noAction)
+            dv?.present(alertController, animated: true)
             break
         case cell.btnNas:
-            print(deviceName)
-                    let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":userId]
-                    print("fileDict : \(fileDict)")
-                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-//                    showOptionMenu(sender: sender, style: 0)
-            dv?.showNasFolderOption(tag: sender.tag)
-                    
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
+            
+            print("fileDict : \(fileDict)")
+            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+            
             
             
         case cell.btnGDrive:

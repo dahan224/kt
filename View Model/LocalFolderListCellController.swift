@@ -78,34 +78,27 @@ class LocalFolderListCellController {
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 삭제 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
-                
-                let param:[String:Any] = ["userId":userId, "foldrId":foldrId, "foldrWholePathNm":foldrWholePathNm]
-                ContextMenuWork().removeNasFolder(parameters:param){ responseObject, error in
-                    if let obj = responseObject {
-                        print(obj)
-                        let json = JSON(obj)
-                        let message = obj.object(forKey: "message")
-                        print("\(String(describing: message)), \(String(describing: json["statusCode"].int))")
-                        if let statusCode = json["statusCode"].int, statusCode == 100 {
-                            DispatchQueue.main.async {
-                                self.dv?.showNasFolderOption(tag: sender.tag)
-                                print("upFoldrId : \(upFoldrId)")
-                                self.dv?.showInsideList(userId: userId, devUuid: currentDevUuid, foldrId: String(upFoldrId), deviceName: deviceName)
-                                let alertController = UIAlertController(title: nil, message: "폴더 삭제가 완료 되었습니다.", preferredStyle: .alert)
-                                let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                                    UIAlertAction in
-                                    
-                                    
-                                }
-                                alertController.addAction(yesAction)
-                                self.dv?.present(alertController, animated: true)
-                            }
-                        }
+                let foldrNmArray = foldrWholePathNm.components(separatedBy: "/")
+                let foldrNm:String = foldrNmArray[foldrNmArray.count - 1]
+                print("foldrWholePathNm, :\(foldrWholePathNm), foldrNm : \(foldrNm), foldrNmArray:\(foldrNmArray)")
+                let pathForRemove:String = FileUtil().getFilePath(fileNm: foldrNm, amdDate: amdDate)
+                    print("pathForRemove : \(pathForRemove)")
+                self.removeFile(path: pathForRemove)
+                SyncLocalFilleToNas().sync()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                    let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
+                    let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                        UIAlertAction in
+                        let fileDict = ["foldrId":String(foldrId)]
+                        print("delete filedict : \(fileDict)")
+                        NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo: fileDict)
+
+
                     }
-                    
-                    
-                    return
-                }
+                    alertController.addAction(yesAction)
+                    self.dv?.present(alertController, animated: true)
+                })
+//
                 
                 
             }

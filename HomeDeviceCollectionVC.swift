@@ -1187,6 +1187,7 @@ let quickLookController = QLPreviewController()
         }
     }
 
+ 
     
     @objc func clickDeviceItem(stringIndexPathRow: NSNotification){
         
@@ -1430,8 +1431,6 @@ let quickLookController = QLPreviewController()
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFolderListCell
-//        self.NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        
         
         NasFolderListCellController().NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
     }

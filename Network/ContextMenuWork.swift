@@ -171,6 +171,9 @@ class ContextMenuWork {
         }
     }
     
+    
+    
+    
     func downloadFromNasFolder(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
@@ -376,6 +379,7 @@ class ContextMenuWork {
         folderIdsToDownLoad.removeAll()
         folderPathToDownLoad.removeAll()
         fileArrayToDownload.removeAll()
+        print("call from downloadFolderFromNas")
         getFolderIdsToDownload(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:selectedDevUuid,deviceName:deviceName)
     }
     
@@ -384,8 +388,9 @@ class ContextMenuWork {
     func getFolderIdsToDownload(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String) {
         print("get folders")
         folderIdsToDownLoad.append(foldrId)
+        print("folderIdsToDownLoad : \(folderIdsToDownLoad)")
         folderPathToDownLoad.append(foldrWholePathNm)
-        
+        var foldrLevel = 0
         var param = ["userId": userId, "devUuid":devUuid, "foldrId":String(foldrId),"sortBy":""]
         print("param : \(param)")
         GetListFromServer().showInsideFoldrList(params: param, deviceName:selectedDeviceName) { responseObject, error in
@@ -398,13 +403,15 @@ class ContextMenuWork {
                         let folder = App.FolderStruct(data: list as AnyObject)
                         
                         if (self.folderIdsToDownLoad.contains(folder.foldrId)){
+                            print("first return called")
                             return
                         } else {
                             print("folder : \(folder.foldrId)")
                             self.folderIdsToDownLoad.append(folder.foldrId)
                             self.folderPathToDownLoad.append(folder.foldrWholePathNm)
-                            let foldrLevel = list["foldrLevel"] as? Int ?? 0
+                            foldrLevel = list["foldrLevel"] as? Int ?? 0
                             if(foldrLevel > 0){
+                                print("second return called")
                                 self.getFolderIdsToDownload(foldrId: folder.foldrId, foldrWholePathNm: folder.foldrWholePathNm, userId: self.selectedUserId, devUuid: self.selectedDevUuid, deviceName: self.selectedDeviceName)
                                 return
                             }
@@ -414,6 +421,7 @@ class ContextMenuWork {
                 self.printFolderPath()
             }
         }
+        
         
     }
     
@@ -460,7 +468,7 @@ class ContextMenuWork {
     }
     
     func getFilesFromFolder(){
-        
+        print("folderIdsToDownLoad.count:  \(folderIdsToDownLoad.count)")
         if(folderIdsToDownLoad.count > 0){
             let index = folderIdsToDownLoad.count - 1
             if(index > -1){
@@ -470,6 +478,7 @@ class ContextMenuWork {
             }
         }
         self.downloadFile()
+        print("file download start")
         
     }
     

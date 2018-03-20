@@ -132,6 +132,7 @@ class LocalFileListCellController{
         let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePathNm
         let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
         let foldrId = folderArray[intFolderArrayIndexPathRow].foldrId
+        
         switch indexPath.row {
         case 0:
 //            print("fileId: \(fileId)")
@@ -164,7 +165,7 @@ class LocalFileListCellController{
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                
+              
                 let pathForRemove:String = FileUtil().getFilePath(fileNm: fileNm, amdDate: amdDate)
 //                print("pathForRemove : \(pathForRemove)")
                 self.removeFile(path: pathForRemove)
@@ -176,7 +177,7 @@ class LocalFileListCellController{
                         let fileDict = ["foldrId":String(foldrId)]
                         print("delete filedict : \(fileDict)")
                         NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo: fileDict)
-                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                        
                         
                     }
                     alertController.addAction(yesAction)
@@ -184,7 +185,7 @@ class LocalFileListCellController{
                 })
                 
             }
-            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.default) {
+            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel) {
                 UIAlertAction in
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
             }
