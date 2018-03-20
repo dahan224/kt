@@ -141,6 +141,10 @@ let quickLookController = QLPreviewController()
                                                selector: #selector(refreshInsideList(folderIdDict:)),
                                                name: NSNotification.Name("refreshInsideList"),
                                                object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(showAlert(messageDict:)),
+                                               name: NSNotification.Name("showAlert"),
+                                               object: nil)
         
         
 //        print("mainContentsStyleState : \((flickState))")
@@ -1054,6 +1058,9 @@ let quickLookController = QLPreviewController()
     }
     
     
+    
+    
+    
  
     func googleSignInCheck(name:String, path:String, fileDict:[String:String]){
         if GIDSignIn.sharedInstance().hasAuthInKeychain() == true {
@@ -1435,6 +1442,14 @@ let quickLookController = QLPreviewController()
         NasFolderListCellController().NasFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUserId, currentFolderId:  currentFolderId)
     }
     
+    @objc func showAlert(messageDict: NSNotification){
+        if let getMessage = messageDict.userInfo?["message"] as? String {
+            let alertController = UIAlertController(title: nil, message: getMessage, preferredStyle: .alert)
+            let noAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+            alertController.addAction(noAction)
+            self.present(alertController, animated: true)
+        }
+    }
     
     
 }

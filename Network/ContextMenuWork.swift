@@ -372,6 +372,7 @@ class ContextMenuWork {
     
     
     func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String){
+        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         selectedUserId = userId
         selectedDevUuid = devUuid
         selectedDeviceName = deviceName
@@ -524,6 +525,9 @@ class ContextMenuWork {
     }
     
     
+    //nas 폴더 다운로드 끝
+    
+    
     func callDownloadFromNasFolder(name:String, path:String, fileId:String, index:Int){
         ContextMenuWork().downloadFromNasFolder(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
@@ -540,6 +544,10 @@ class ContextMenuWork {
         SyncLocalFilleToNas().sync()
          
         print("download finish")
+        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+        
+        let messageDict = ["message":"폴더 다운로드를 성공하였습니다"]
+        NotificationCenter.default.post(name: Notification.Name("showAlert"), object: self, userInfo: messageDict)
     }
     
     
