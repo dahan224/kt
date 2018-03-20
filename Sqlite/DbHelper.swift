@@ -36,7 +36,11 @@ class DbHelper{
     var DriveFileArray = [App.DriveFileStruct]()
     
     let filePath = Expression<String>("filePath")
-    
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+    ]
     
     enum sortByEnum{
         case none

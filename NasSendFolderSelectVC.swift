@@ -15,7 +15,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
 
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var indicatorAnimating = false
-    
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+    ]
     
     var nasArray:[String] = []
     var nasDevIdArray:[String] = []
@@ -549,7 +553,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                           method: .post,
                           parameters: paramas,
                           encoding : JSONEncoding.default,
-                          headers: App.Headrs.jsonHeader).responseJSON { response in
+                          headers: jsonHeader).responseJSON { response in
                             switch response.result {
                             case .success(let JSON):
                                 
@@ -1067,7 +1071,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                           method: .post,
                           parameters: paramas,
                           encoding : JSONEncoding.default,
-                          headers: App.Headrs.jsonHeader).responseJSON { response in
+                          headers: jsonHeader).responseJSON { response in
                             switch response.result {
                             case .success(let JSON):
                                 
@@ -1146,7 +1150,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                           method: .post,
                           parameters: paramas,
                           encoding : JSONEncoding.default,
-                          headers: App.Headrs.jsonHeader).responseJSON { response in
+                          headers: jsonHeader).responseJSON { response in
                             switch response.result {
                             case .success(let JSON):
                                 

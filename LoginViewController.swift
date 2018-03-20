@@ -63,6 +63,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     var folderSyncFinished = false
     var fileSyncFinished = false
     
+  
+    
     @IBOutlet weak var textFieldId: UITextField!{
         didSet{
             textFieldId.placeholder = "아이디"
@@ -108,6 +110,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @objc func hideKeyboard() {
         view.endEditing(true)
     }
+    
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": "",
+        "Cookie": ""
+    ]
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -161,6 +169,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             defaults.set(userId, forKey: "userId")
             defaults.set(userPassword, forKey: "userPassword")
             self.login()
+            
         }
     }
     
@@ -173,23 +182,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         userPassword =  UserDefaults.standard.string(forKey: "userPassword") ?? "nil"
         loginWarningLabel.isHidden = true
         let urlString = App.URL.server+"login.do"
-        
-        //        ContextMenuWork().login(userId: userId, password: passwd, { value, error in
-        //            let json = JSON(value!)
-        //            if(json["fileData"].exists()){
-        //                var fileData = json["fileData"]
-        //                print("fileData : \(fileData["fileNm"])")
-        //                DispatchQueue.main.async {
-        //                    self.lblEtsion.text = fileData["etsionNm"].rawString()
-        //                    self.lblSize.text = self.covertFileSize(getSize: fileData["fileSize"].rawString()!)
-        //                    self.lblPath.text = self.foldrWholePathNm
-        //                    self.lblCret.text = fileData["cretDate"].rawString()
-        //                    self.lblAmd.text = fileData["amdDate"].rawString()
-        //                    self.lblDevice.text = self.deviceName
-        //                }
-        //            }
-        //
-        //        }
+        let url = URL(string:urlString)
+        let cstorage = HTTPCookieStorage.shared
+        if let cookies = cstorage.cookies(for: url!) {
+            for cookie in cookies {
+                print("cookie : \(cookie)")
+                cstorage.deleteCookie(cookie)
+            }
+        }
         Alamofire.request(urlString,
                           method: .post,
                           parameters: ["userId": userId,"password":userPassword],
@@ -217,7 +217,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                         print("whatCalled")
                                     }
                                 } else {
-                                    
+                                  
                                     if let headerFields = response.response?.allHeaderFields as? [String: String]{
                                         if(headerFields["Cookie"] != nil){
                                             self.loginCookie = headerFields["Cookie"]!
@@ -242,13 +242,19 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                                 
                                             } else {
                                                 
-                                                if(self.loginCookie == UserDefaults.standard.string(forKey: "cookie")){
+                                                if(self.loginCookie == UserDefaults.standard.string(forKey: "cookie") && self.loginToken == UserDefaults.standard.string(forKey: "token")){
                                                     print("true")
+                                                    self.jsonHeader = [
+                                                        "Content-Type": "application/json",
+                                                        "X-Auth-Token": self.loginToken,
+                                                        "Cookie": self.loginCookie
+                                                    ]
+                                                    self.registerDevice(jsonHeader:self.jsonHeader)
                                                 } else {
                                                     print("false")
                                                 }
                                                 
-                                                self.registerDevice()
+                                                
                                             }
                                             
                                             
@@ -277,7 +283,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                           method: .post,
                           parameters: ["userId":self.userId,"devUuid":uuId,"comnd":"N"],
                           encoding : JSONEncoding.default,
-                          headers: App.Headrs.jsonHeader).responseJSON{ (response) in
+                          headers: jsonHeader).responseJSON{ (response) in
                             print("init device response : \(response)")
                             switch response.result {
                             case .success(let JSON):
@@ -296,20 +302,15 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         }
     }
     
-    func registerDevice(){
-        print("cookie : \(self.loginCookie), token : \(self.loginToken)")
-        print("register headers : \(App.Headrs.jsonHeader)")
-        print(" App.defaults.notificationToken : \( App.defaults.notificationToken)" )
+    func registerDevice(jsonHeader:[String:String]){
         
         let deviceParameter = App.DeviceInfo(userId: userId, devUuid: uuId, devNm: UIDevice.current.name, osCd: "I", osDesc: "IOS", mkngVndrNm: "apple", devAuthYn: "N", rootFoldrNm: "Mobile", lastUpdtId: userId, token: App.defaults.notificationToken)
-        
-        //        print("deviceParameter : \(deviceParameter.getParameter)")
         let urlString = App.URL.server+"devAthn.do"
         Alamofire.request(urlString,
                           method: .post,
                           parameters: deviceParameter.getParameter,
                           encoding : JSONEncoding.default,
-                          headers: App.Headrs.jsonHeader).responseJSON{ (response) in
+                          headers: jsonHeader).responseJSON{ (response) in
                             print("registerDevice response : \(response.result)")
                             switch response.result {
                             case .success(let value):
@@ -343,7 +344,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                           method: .post,
                           parameters: device.getParameter,
                           encoding : JSONEncoding.default,
-                          headers: App.Headrs.jsonHeader).responseJSON{ (response) in
+                          headers: jsonHeader).responseJSON{ (response) in
                             switch response.result {
                             case .success(let value):
                                 print(value)

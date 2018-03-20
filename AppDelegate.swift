@@ -23,7 +23,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
 
     var serverURL: String?
     var notificationOnGoing = false
-    
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+    ]
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Initialize sign-in
@@ -325,7 +329,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                           method: .post,
                           parameters: paramas,
                           encoding : JSONEncoding.default,
-                          headers: App.Headrs.jsonHeader).responseJSON { response in
+                          headers: jsonHeader).responseJSON { response in
                             let statusCode = (response.response?.statusCode)! //example : 200
                             print("notifyNasUploadFinishToRemoteDownload  status code : \(statusCode)")
                             switch response.result {

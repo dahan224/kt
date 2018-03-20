@@ -14,7 +14,13 @@ class ContextMenuWork {
     var folderIdsToDownLoad:[Int] = []
     var folderPathToDownLoad:[String] = []
     var fileArrayToDownload:[App.FolderStruct] = []
-    
+    var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
+    var loginToken = UserDefaults.standard.string(forKey: "token")!
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+    ]
     var userId = UserDefaults.standard.string(forKey: "userId") as? String ?? "nil"
     var uuid = Util.getUuid()
     var selectedDevUuid = ""
@@ -29,7 +35,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:params
             , encoding : URLEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
@@ -52,7 +58,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                     case .success(let value):
@@ -70,8 +76,8 @@ class ContextMenuWork {
         var request = URLRequest(url: try! (App.URL.server+"nasFileTagUpdate.do").asURL())
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(App.defaults.loginToken, forHTTPHeaderField: "X-Auth-Token")
-        request.setValue(App.defaults.loginCookie, forHTTPHeaderField: "Cookie")
+        request.setValue(loginToken, forHTTPHeaderField: "X-Auth-Token")
+        request.setValue(loginCookie, forHTTPHeaderField: "Cookie")
         let values = parameters
         request.httpBody = try! JSONSerialization.data(withJSONObject: values)
         Alamofire.request(request).responseJSON { (response) in
@@ -92,7 +98,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
@@ -112,7 +118,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
@@ -132,7 +138,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
@@ -151,7 +157,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers:jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
@@ -390,7 +396,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
@@ -596,7 +602,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
@@ -619,7 +625,7 @@ class ContextMenuWork {
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):

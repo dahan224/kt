@@ -31,8 +31,6 @@ struct App {
     
     struct defaults {
         static let notificationToken = UserDefaults.standard.string(forKey: "notification_token")!
-        static let loginToken = UserDefaults.standard.string(forKey: "token")!
-        static let loginCookie = UserDefaults.standard.string(forKey: "cookie")!
         static let userId = UserDefaults.standard.string(forKey: "userId")!
        
     }
@@ -43,11 +41,7 @@ struct App {
         static let loginHeader:[String:String]  = [
             "Content-Type": "application/x-www-form-urlencoded"
         ]
-        static let jsonHeader:[String:String] = [
-            "Content-Type": "application/json",
-            "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
-            "Cookie": UserDefaults.standard.string(forKey: "cookie")!
-            ]
+       
     }
     
     struct DeviceInfo {

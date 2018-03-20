@@ -31,8 +31,8 @@ class SyncLocalFilleToNas {
     
     var folderSyncFinished = false
     var fileSyncFinished = false
-    var loginToken:String = App.defaults.loginToken
-    var loginCookie:String = App.defaults.loginCookie
+    var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
+    var loginToken = UserDefaults.standard.string(forKey: "token")!
     var userId = App.defaults.userId
     var uuId = Util.getUuid()
     
@@ -40,7 +40,11 @@ class SyncLocalFilleToNas {
         getFileList()
     }
     
-    
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+    ]
     
     func sysncFoldrInfo() {
         print("syncFolerInfo Called")
@@ -50,7 +54,7 @@ class SyncLocalFilleToNas {
             , method: .post
             , parameters:["userId":userId, "devUuid":uuId as Any]
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {

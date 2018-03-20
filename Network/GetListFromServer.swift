@@ -18,6 +18,11 @@ class GetListFromServer {
     var SearchedFileArray:[App.SearchedFileStruct] = []
     
     
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+    ]
     func getDevice(completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId]
@@ -27,7 +32,7 @@ class GetListFromServer {
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {
@@ -50,7 +55,7 @@ class GetListFromServer {
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {
@@ -74,7 +79,7 @@ class GetListFromServer {
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {
@@ -97,7 +102,7 @@ class GetListFromServer {
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {
@@ -121,7 +126,7 @@ class GetListFromServer {
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {

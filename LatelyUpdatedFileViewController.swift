@@ -41,7 +41,11 @@ class LatelyUpdatedFileViewController: UIViewController, UICollectionViewDelegat
         }
     }
     
-    
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+    ]
     @IBOutlet weak var btnLIst: UIButton!
     @IBOutlet weak var btnSel: UIButton!
     var hexStringToUIColor:HexStringToUIColor = HexStringToUIColor()
@@ -322,7 +326,7 @@ class LatelyUpdatedFileViewController: UIViewController, UICollectionViewDelegat
             , method: .post
             , parameters:["userId":App.defaults.userId]
             , encoding : JSONEncoding.default
-            , headers: App.Headrs.jsonHeader
+            , headers: jsonHeader
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
