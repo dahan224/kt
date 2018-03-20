@@ -59,6 +59,7 @@ class NasFolderListCellController {
         let fileId = String(folderArray[indexPath.row].fileId)
         let foldrId = folderArray[indexPath.row].foldrId
         let upFoldrId = folderArray[indexPath.row].upFoldrId
+        self.dv?.showNasFolderOption(tag: sender.tag)
         switch sender {
         case cell.btnDwnld:
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 다운로드 하시겠습니까?", preferredStyle: .alert)

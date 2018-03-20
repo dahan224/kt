@@ -1256,15 +1256,22 @@ let quickLookController = QLPreviewController()
                             
                             let foldrId = rootFolder["foldrId"] as? Int ?? 0
                             let stringFoldrId = String(foldrId)
-                            let froldrNm = rootFolder["foldrNm"] as? String ?? "nil"
-                            let stringFoldrNm = String(froldrNm)
+                            let foldrNm = rootFolder["foldrNm"] as? String ?? "nil"
+                            
+                            let stringFoldrNm = String(foldrNm)
                             let childCnt = rootFolder["childCnt"] as? Int ?? 0
-//                            if(childCnt > 0){
-                                print("name equal")
+                            let osCd = rootFolder["osCd"] as? String ?? "nil"
+                            if (self.fromOsCd == "G"){
+                                if stringFoldrNm != "Mobile"{
+                                    self.folderIdArray.append(foldrId)
+                                    self.folderNameArray.append(stringFoldrNm)
+                                    self.showInsideList(userId: userId, devUuid: devUuid, foldrId: stringFoldrId, deviceName:deviceName)
+                                }
+                            } else {
                                 self.folderIdArray.append(foldrId)
                                 self.folderNameArray.append(stringFoldrNm)
                                 self.showInsideList(userId: userId, devUuid: devUuid, foldrId: stringFoldrId, deviceName:deviceName)
-//                            }
+                            }
                             
                         }
                     }

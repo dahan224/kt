@@ -92,6 +92,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                                object: nil)
         
         
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(NasSendFolderSelectVCAlert),
+                                               name: NSNotification.Name("NasSendFolderSelectVCAlert"),
+                                               object: nil)
+        
         switch storageState {
         case .nas:
 //            nasDevId = UserDefaults.standard.string(forKey: "nasDevId")!
