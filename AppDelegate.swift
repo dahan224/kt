@@ -25,8 +25,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     var notificationOnGoing = false
     var jsonHeader:[String:String] = [
         "Content-Type": "application/json",
-        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
-        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+        "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     ]
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {

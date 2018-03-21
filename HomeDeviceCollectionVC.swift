@@ -67,6 +67,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var searchStepState: HomeViewController.searchStepEnum = .device
     var id = ""
     let Vc:HomeViewController = HomeViewController()
+    let containerViewController:ContainerViewController = ContainerViewController()
     var accessToken:String = ""
     
     enum contextMenuEnum {
@@ -1000,7 +1001,19 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     MultiCheckFileListController().callDwonLoad(getFolderArray: multiCheckedfolderArray, parent: self, devUuid: selectedDevUuid, deviceName: deviceName)
                 break
             case "nas":
+                
                 print("multi nas")
+                //파일
+//                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
+//                
+//                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+//                //폴더
+//                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
+//                
+//                print("fileDict : \(fileDict)")
+//                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+//                
+                
                 break
             case "gDrive":
                 print(" multi gDrive")
