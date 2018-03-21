@@ -17,7 +17,15 @@ class ToNasFromLocalFolder {
     var oldFoldrWholePathNm = ""
     var newPath = ""
     
+    var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
+    var loginToken = UserDefaults.standard.string(forKey: "token")!
+    var jsonHeader:[String:String] = [
+        "Content-Type": "application/json",
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+    ]
     func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String){
+        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
         let folders:[App.Folders] = FileUtil().getFolderList()
         var foldersToCreate:[String] = []
         toUserId = getToUserId
@@ -120,6 +128,8 @@ class ToNasFromLocalFolder {
             }
         }
         print("upload Files finish")
+        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
+        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCAlert"), object: self, userInfo: nil)
         
     }
     
@@ -185,7 +195,7 @@ class ToNasFromLocalFolder {
                           method: .post,
                           parameters: paramas,
                           encoding : JSONEncoding.default,
-                          headers: App.Headrs.jsonHeader).responseJSON { response in
+                          headers: jsonHeader).responseJSON { response in
                             switch response.result {
                             case .success(let JSON):
                                 print(response.result.value)

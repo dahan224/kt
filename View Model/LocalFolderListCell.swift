@@ -100,7 +100,7 @@ class LocalFolderListCell: UICollectionViewCell {
     
     let btnMultiCheck:UIButton = {
         let button = UIButton(type: .custom)
-        button.setImage(#imageLiteral(resourceName: "multi_check_off").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
