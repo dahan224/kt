@@ -307,6 +307,24 @@ let quickLookController = QLPreviewController()
                             } else {
                                 print("NasFileCellController get cell")
                                 let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                                cell4.resetMultiCheck()
+                                if (multiCheckListState == .active){
+                                    cell4.btnMultiCheck.isHidden = false
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                    cell4.btnMultiCheck.tag = indexPath.row
+                                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                                    cell4.btnOption.isHidden = true
+                                    
+                                } else {
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                    cell4.btnOption.isHidden = false
+                                    cell4.btnMultiCheck.isHidden = true
+                                    cell4.btnMultiChecked = false
+                                }
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
@@ -340,7 +358,24 @@ let quickLookController = QLPreviewController()
                                 }
                             } else {
                                 let cell4 = NasFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
-                                
+                                cell4.resetMultiCheck()
+                                if (multiCheckListState == .active){
+                                    cell4.btnMultiCheck.isHidden = false
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                    cell4.btnMultiCheck.tag = indexPath.row
+                                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                                    cell4.btnOption.isHidden = true
+                                    
+                                } else {
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                    cell4.btnOption.isHidden = false
+                                    cell4.btnMultiCheck.isHidden = true
+                                    cell4.btnMultiChecked = false
+                                }
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
@@ -909,15 +944,34 @@ let quickLookController = QLPreviewController()
     @objc func btnMultiCheckClicked(sender:UIButton){
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
-        print(sender.superview)
-        let cell = deviceCollectionView.cellForItem(at: indexPath) as! FileListCell
-        if(cell.btnMultiChecked){
-            cell.btnMultiChecked = false
-            cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_off").withRenderingMode(.alwaysOriginal), for: .normal)
-        } else {
-            cell.btnMultiChecked = true
-            cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on").withRenderingMode(.alwaysOriginal), for: .normal)
+        print("superview : \(sender.superview?.superview)")
+        if let superView = sender.superview as? NasFileListCell {
+            let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFileListCell
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+        } else if let superView = sender.superview as? NasFolderListCell {
+            let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFolderListCell
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
         }
+//        let cell = deviceCollectionView.cellForItem(at: indexPath) as! FileListCell
+//        if(cell.btnMultiChecked){
+//            cell.btnMultiChecked = false
+//            cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_off").withRenderingMode(.alwaysOriginal), for: .normal)
+//        } else {
+//            cell.btnMultiChecked = true
+//            cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on").withRenderingMode(.alwaysOriginal), for: .normal)
+//        }
         
         
     }

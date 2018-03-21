@@ -201,7 +201,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     let multiButton:UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(#imageLiteral(resourceName: "multi_off").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
         button.addTarget(self, action: #selector(btnMulticlicked), for: .touchUpInside)
         return button
@@ -280,6 +280,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         return view
     }()
+    var multiCheckBottomView:UIView = {
+        let view = UIView()
+        view.backgroundColor = HexStringToUIColor().getUIColor(hex: "F5F5F5")
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
+    
     
     
     var loginCookie = ""
@@ -949,19 +956,53 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         var stringBool = "false"
         if(multiButtonChecked){
             multiButtonChecked = false
-            
-            multiButton.setImage(#imageLiteral(resourceName: "multi_off").withRenderingMode(.alwaysOriginal), for: .normal)
+            multiButton.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            containerViewABottomConstraint.constant = 0
         } else {
             multiButtonChecked = true
-            multiButton.setImage(#imageLiteral(resourceName: "multi_on").withRenderingMode(.alwaysOriginal), for: .normal)
+            multiButton.setImage(#imageLiteral(resourceName: "multi_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            containerViewABottomConstraint.constant = 60
+            
         }
+        setMultiCountLabel(multiButtonChecked:multiButtonChecked)
         stringBool = String(multiButtonChecked)
         print("stringBool :\(stringBool)")
         let fileIdDict = ["multiChecked":stringBool]
         NotificationCenter.default.post(name: Notification.Name("multiSelectActive"), object: self, userInfo: fileIdDict)
-
-        
     }
+    
+    func setMultiCountLabel(multiButtonChecked:Bool){
+        if(multiButtonChecked){
+            self.view.addSubview(multiCheckBottomView)
+            multiCheckBottomView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+            multiCheckBottomView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+            multiCheckBottomView.heightAnchor.constraint(equalToConstant: 60.0).isActive = true
+            multiCheckBottomView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+            
+            let label = UILabel()
+            label.textAlignment = .center
+            label.font = UIFont.systemFont(ofSize: 15)
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.text = "0개 파일 선택 완료"
+            label.textColor = UIColor.gray
+            multiCheckBottomView.addSubview(label)
+            
+            label.widthAnchor.constraint(equalTo: multiCheckBottomView.widthAnchor).isActive = true
+            label.heightAnchor.constraint(equalToConstant: 60.0).isActive = true
+            label.centerXAnchor.constraint(equalTo: multiCheckBottomView.centerXAnchor).isActive = true
+            label.centerYAnchor.constraint(equalTo: multiCheckBottomView.centerYAnchor).isActive = true
+        } else {
+            for views in self.view.subviews {
+                if views.contains(multiCheckBottomView){
+                    multiCheckBottomView.removeFromSuperview()
+                }
+            }
+        }
+        
+      
+    }
+    
+    
     
     @objc func navBarTitleClicked(){
         print("??")
