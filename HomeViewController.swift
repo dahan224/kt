@@ -15,7 +15,6 @@ import GoogleSignIn
 import SQLite
 
 class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource, UIDocumentInteractionControllerDelegate{
-    
     var documentController:UIDocumentInteractionController = UIDocumentInteractionController()
     
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
@@ -58,6 +57,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var bottomMenuOpen = false
     var sideMenuOpen = false
     var tapGesture:UITapGestureRecognizer = UITapGestureRecognizer()
+    var multiCheckTapGesture:UITapGestureRecognizer = UITapGestureRecognizer()
     
     
     enum viewStateEnum{
@@ -79,6 +79,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         case nasFileInfo = "nasFileInfo"
         case localFileInfo = "localFileInfo"
         case remoteFileInfo = "remoteFileInfo"
+        case bottomListMultiCheck = "bottomListMultiCheck"
         case oneView = "oneView"
     }
     
@@ -92,6 +93,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var bottomListLocalFileInfo = ["속성보기", "앱 실행", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomListFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomListRemoteFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기"]
+    var bottomListMultiCheck = ["다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     
     var bottomListOneViewSort = ["기준정렬","이름순-ㄱ우선","이름순-ㅎ우선"]
     var bottomListOneViewSortKey = [DbHelper.sortByEnum.none, DbHelper.sortByEnum.asc, DbHelper.sortByEnum.desc]
@@ -370,6 +372,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                                                selector: #selector(openDocument(urlDict:)),
                                                name: NSNotification.Name("openDocument"),
                                                object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(btnMulticlicked),
+                                               name: NSNotification.Name("btnMulticlicked"),
+                                               object: nil)
         
         setHomeView()
         tableView.delegate = self
@@ -421,6 +427,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         child.flickState = self.flickState
         child.LatelyUpdatedFileArray = self.LatelyUpdatedFileArray
         child.driveFileArray = self.driveFileArray
+        child.homeViewController = self
         
         // 0eun - start
         if self.mainContentState == .googleDriveList {
@@ -964,14 +971,22 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             containerViewABottomConstraint.constant = 60
             
         }
-        setMultiCountLabel(multiButtonChecked:multiButtonChecked)
+        setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
         stringBool = String(multiButtonChecked)
         print("stringBool :\(stringBool)")
         let fileIdDict = ["multiChecked":stringBool]
         NotificationCenter.default.post(name: Notification.Name("multiSelectActive"), object: self, userInfo: fileIdDict)
     }
     
-    func setMultiCountLabel(multiButtonChecked:Bool){
+    func setMultiCountLabel(multiButtonChecked:Bool, count:Int){
+        
+        if self.view.contains(multiCheckBottomView){
+            for view in multiCheckBottomView.subviews {
+                view.removeFromSuperview()
+            }
+            multiCheckBottomView.removeFromSuperview()
+        }
+        
         if(multiButtonChecked){
             self.view.addSubview(multiCheckBottomView)
             multiCheckBottomView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
@@ -981,27 +996,51 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             
             let label = UILabel()
             label.textAlignment = .center
-            label.font = UIFont.systemFont(ofSize: 15)
+            label.font = UIFont.systemFont(ofSize: 18)
             label.translatesAutoresizingMaskIntoConstraints = false
-            label.text = "0개 파일 선택 완료"
+            label.text = "\(count)개 파일 선택 완료"
             label.textColor = UIColor.gray
             multiCheckBottomView.addSubview(label)
             
-            label.widthAnchor.constraint(equalTo: multiCheckBottomView.widthAnchor).isActive = true
+            label.widthAnchor.constraint(equalToConstant: 150).isActive = true
             label.heightAnchor.constraint(equalToConstant: 60.0).isActive = true
             label.centerXAnchor.constraint(equalTo: multiCheckBottomView.centerXAnchor).isActive = true
             label.centerYAnchor.constraint(equalTo: multiCheckBottomView.centerYAnchor).isActive = true
-        } else {
-            for views in self.view.subviews {
-                if views.contains(multiCheckBottomView){
-                    multiCheckBottomView.removeFromSuperview()
-                }
+            multiCheckBottomView.backgroundColor = UIColor.clear
+            multiCheckBottomView.removeGestureRecognizer(multiCheckTapGesture)
+            if(count > 0) {
+                print("called")
+                label.textColor = UIColor.white
+                multiCheckBottomView.backgroundColor = hexStringToUIColor.getUIColor(hex: "4F4F4F")
+                let button = UIButton(type: .system)
+                button.setImage(#imageLiteral(resourceName: "multi_confirm").withRenderingMode(.alwaysOriginal), for: .normal)
+                button.translatesAutoresizingMaskIntoConstraints = false
+                button.isUserInteractionEnabled = false
+                multiCheckBottomView.addSubview(button)
+                
+                button.widthAnchor.constraint(equalToConstant: 36).isActive = true
+                button.heightAnchor.constraint(equalToConstant: 36).isActive = true
+                button.centerYAnchor.constraint(equalTo: multiCheckBottomView.centerYAnchor).isActive = true
+                button.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 0).isActive = true
+                multiCheckTapGesture = UITapGestureRecognizer(target: self, action: #selector(multiCheckBottomViewTapped))
+                multiCheckBottomView.addGestureRecognizer(multiCheckTapGesture)
+                
             }
         }
-        
-      
     }
     
+    
+    @objc func inActiveMultiCheck(){
+        multiButtonChecked = false
+        setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
+    }
+  
+    @objc func multiCheckBottomViewTapped(){
+        let fileIdDict = ["fileId":"0"]
+        bottomListState = .bottomListMultiCheck
+        tableView.reloadData()
+        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+    }
     
     
     @objc func navBarTitleClicked(){
@@ -1137,7 +1176,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             case .oneView:
                 return bottomListOneViewSort.count
                 
+            case .bottomListMultiCheck:
+                return bottomListMultiCheck.count
             }
+            
+            
         }
       
        
@@ -1199,6 +1242,12 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 cell.lblTitle.text = bottomListOneViewSort[indexPath.row]
                 break
                 
+            case .bottomListMultiCheck:
+                cell.ivIcon.isHidden = false
+                let imageString = Util.getContextImageString(context: bottomListMultiCheck[indexPath.row])
+                cell.ivIcon.image = UIImage(named: imageString)
+                cell.lblTitle.text = bottomListMultiCheck[indexPath.row]
+                break
             }
         }
         return cell
@@ -1263,6 +1312,27 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             case .oneView:
                 oneViewSortState = bottomListOneViewSortKey[indexPath.row]
                 setupDeviceListView(container: containerViewA, sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                break
+            case .bottomListMultiCheck:
+                
+                switch indexPath.row {
+                case 0 :
+                    let fileDict = ["action":"download"]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
+                case 1 :
+                    let fileDict = ["action":"nas"]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
+                case 2 :
+                    let fileDict = ["action":"gDrive"]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
+                
+                default :
+                    break
+                }
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 break
             }

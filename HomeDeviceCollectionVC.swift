@@ -17,9 +17,9 @@ protocol PassItemInfo {
     func passDataToHome()
 }
 class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, QLPreviewControllerDataSource, QLPreviewControllerDelegate, UIGestureRecognizerDelegate {
-   
+    var homeViewController: HomeViewController?
     private let service = GTLRDriveService() // 0eun
-let quickLookController = QLPreviewController()
+    let quickLookController = QLPreviewController()
     var loginCookie = ""
     var loginToken = ""
     var userId = ""
@@ -58,6 +58,8 @@ let quickLookController = QLPreviewController()
     var folderIdArray = [Int]()
     var folderNameArray = [String]()
     var folderStep = 0
+    
+    var multiCheckedfolderArray:[App.FolderStruct] = []
     
     var cellStyle = 1
     let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
@@ -147,6 +149,10 @@ let quickLookController = QLPreviewController()
                                                name: NSNotification.Name("showAlert"),
                                                object: nil)
         
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(handleMultiCheckFolderArray(fileDict:)),
+                                               name: NSNotification.Name("handleMultiCheckFolderArray"),
+                                               object: nil)
         
 //        print("mainContentsStyleState : \((flickState))")
 //        print("LatelyUpdatedFileArray: \(LatelyUpdatedFileArray)")
@@ -170,6 +176,7 @@ let quickLookController = QLPreviewController()
     
     @objc func multiSelectActive(multiDict:NSNotification){
         if let getChecked = multiDict.userInfo?["multiChecked"] as? String {
+            self.multiCheckedfolderArray.removeAll()
             print("multiChecked : \(getChecked)")
             if(getChecked == "true"){
                 self.multiCheckListState = .active
@@ -944,7 +951,7 @@ let quickLookController = QLPreviewController()
     @objc func btnMultiCheckClicked(sender:UIButton){
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
-        print("superview : \(sender.superview?.superview)")
+//        print("superview : \(sender.superview?.superview)")
         if let superView = sender.superview as? NasFileListCell {
             let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFileListCell
             if(cell.btnMultiChecked){
@@ -954,6 +961,7 @@ let quickLookController = QLPreviewController()
                 cell.btnMultiChecked = true
                 cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
             }
+            multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
         } else if let superView = sender.superview as? NasFolderListCell {
             let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFolderListCell
             if(cell.btnMultiChecked){
@@ -963,18 +971,51 @@ let quickLookController = QLPreviewController()
                 cell.btnMultiChecked = true
                 cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
             }
+            multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
         }
-//        let cell = deviceCollectionView.cellForItem(at: indexPath) as! FileListCell
-//        if(cell.btnMultiChecked){
-//            cell.btnMultiChecked = false
-//            cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_off").withRenderingMode(.alwaysOriginal), for: .normal)
-//        } else {
-//            cell.btnMultiChecked = true
-//            cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on").withRenderingMode(.alwaysOriginal), for: .normal)
-//        }
-        
-        
     }
+    
+    func multiCheckedFolderArray(indexPath:IndexPath, check:Bool){
+        let getIndex = indexPath.row
+        let checkedFolder = folderArray[getIndex]
+        if(check){
+        self.multiCheckedfolderArray.append(checkedFolder)
+        } else {
+            if let removeIndex = multiCheckedfolderArray.index(where: { $0.fileId == folderArray[getIndex].fileId && $0.foldrId == folderArray[getIndex].foldrId}) {
+            self.multiCheckedfolderArray.remove(at: removeIndex)
+            }
+            
+        }
+        homeViewController?.setMultiCountLabel(multiButtonChecked: true, count: multiCheckedfolderArray.count)
+//        print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
+    }
+    
+    @objc func handleMultiCheckFolderArray(fileDict:NSNotification) {
+        if let getAction = fileDict.userInfo?["action"] as? String {
+            
+            switch getAction {
+            case "download":
+                    print("다운로드 multi")
+                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                    MultiCheckFileListController().callDwonLoad(getFolderArray: multiCheckedfolderArray, parent: self)
+                break
+            case "nas":
+                print("multi nas")
+                break
+            case "gDrive":
+                print(" multi gDrive")
+                break
+            default:
+                
+                break
+            }
+            
+        }
+    }
+    
+    
+    
+    
     
     //리모트 파일 컨텍스트 시작
     
