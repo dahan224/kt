@@ -571,7 +571,6 @@ class ContextMenuWork {
     }
     
     
-    //nas 폴더 다운로드 끝
     
     
     func callDownloadFromNasFolder(name:String, path:String, fileId:String, index:Int){
@@ -596,6 +595,7 @@ class ContextMenuWork {
         NotificationCenter.default.post(name: Notification.Name("showAlert"), object: self, userInfo: messageDict)
     }
     
+    //nas 폴더 다운로드 끝
     
     func removeNasFolder(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         Alamofire.request(App.URL.server+"nasFoldrDel.do"

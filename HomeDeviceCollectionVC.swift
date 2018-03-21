@@ -987,7 +987,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             
         }
         homeViewController?.setMultiCountLabel(multiButtonChecked: true, count: multiCheckedfolderArray.count)
-//        print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
+        print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
     }
     
     @objc func handleMultiCheckFolderArray(fileDict:NSNotification) {
@@ -997,7 +997,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             case "download":
                     print("다운로드 multi")
                     NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                    MultiCheckFileListController().callDwonLoad(getFolderArray: multiCheckedfolderArray, parent: self)
+                    MultiCheckFileListController().callDwonLoad(getFolderArray: multiCheckedfolderArray, parent: self, devUuid: selectedDevUuid, deviceName: deviceName)
                 break
             case "nas":
                 print("multi nas")
