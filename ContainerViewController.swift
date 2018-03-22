@@ -374,6 +374,7 @@ class ContainerViewController: UIViewController {
         self.fromOsCd = fromOsCd
         self.fromUserId = fromUserId
         self.fromDevUuid = fromDevUuid
+        
         performSegue(withIdentifier: "nasFolderSelectSegue", sender: self)
         //파일
       

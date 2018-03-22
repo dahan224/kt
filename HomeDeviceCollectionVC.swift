@@ -1004,7 +1004,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 break
             case "nas":
                 
-                print("multi nas")
+                print("multi nas, fromUserId : \(selectedDevUserId)")
                 containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
 //                let fileDict = ["toStorage":"nas_multi","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd,"fromDevUuid":selectedDevUuid]
 //                print("fileDict : \(fileDict)")
@@ -1302,6 +1302,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         print("contextMenuState nas")
                     }
                     userId = DeviceArray[indexPathRow].userId
+                    selectedDevUserId = DeviceArray[indexPathRow].userId
                     deviceName = DeviceArray[indexPathRow].devNm
                     print("userId:\(userId)")
                     getRootFolder(userId:userId, devUuid: selectedDevUuid, deviceName:deviceName)

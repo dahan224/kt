@@ -486,7 +486,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                         ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm)
                        
                     }
-                } else if (fromOsCd == "S" || fromOsCd == "G"){                    
+                } else if (fromOsCd == "S" || fromOsCd == "G"){
                     var booCheck1 = (fromOsCd != "G")
                     var booCheck2 = (fromOsCd != "S")
                     var booCheck3 = (booCheck1 || booCheck2)
@@ -631,6 +631,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             }
             return
         }
+        print("count : \(multiCheckedfolderArray.count)")
         DispatchQueue.main.async {
             let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
@@ -1046,19 +1047,26 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let message = responseObject?.object(forKey: "message")
             print("\(message), \(String(describing: json["statusCode"].int))")
             if let statusCode = json["statusCode"].int, statusCode == 100 {
-                DispatchQueue.main.async {
-                    let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
-                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                        UIAlertAction in
-                        //Do you Success button Stuff here
-                        self.activityIndicator.stopAnimating()
-                        Util().dismissFromLeft(vc: self)
+                if(self.storageState == .nas){
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            //Do you Success button Stuff here
+                            self.activityIndicator.stopAnimating()
+                            Util().dismissFromLeft(vc: self)
+                            
+                        }
+                        alertController.addAction(yesAction)
+                        self.present(alertController, animated: true)
                         
                     }
-                    alertController.addAction(yesAction)
-                    self.present(alertController, animated: true)
-                    
+                } else if(self.storageState == .nas_multi) {
+                    let lastIndex = self.multiCheckedfolderArray.count - 1
+                    self.multiCheckedfolderArray.remove(at: lastIndex)
+                    self.startMultiFolderNasToNas()
                 }
+               
             } else {
                 print(error?.localizedDescription as Any)
             }
@@ -1074,19 +1082,24 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let message = responseObject?.object(forKey: "message") as? String
             print("\(message), \(String(describing: json["statusCode"].int))")
             if let statusCode = json["statusCode"].int, statusCode == 100 {
-                DispatchQueue.main.async {
-                    let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                        UIAlertAction in
-                        //Do you Success button Stuff here
-                        self.activityIndicator.stopAnimating()
-                        Util().dismissFromLeft(vc: self)
-                        
+                if(self.storageState == .nas){
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            //Do you Success button Stuff here
+                            self.activityIndicator.stopAnimating()
+                            Util().dismissFromLeft(vc: self)
+                        }
+                        alertController.addAction(yesAction)
+                        self.present(alertController, animated: true)
                     }
-                    alertController.addAction(yesAction)
-                    self.present(alertController, animated: true)
-                    
+                } else if(self.storageState == .nas_multi) {
+                    let lastIndex = self.multiCheckedfolderArray.count - 1
+                    self.multiCheckedfolderArray.remove(at: lastIndex)
+                    self.startMultiFolderNasToNas()
                 }
+                
             } else {
                 print(error?.localizedDescription as Any)
             }
@@ -1102,19 +1115,27 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let message = responseObject?.object(forKey: "message") as? String
             print("\(message), \(String(describing: json["statusCode"].int))")
             if let statusCode = json["statusCode"].int, statusCode == 100 {
-                DispatchQueue.main.async {
-                    let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
-                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                        UIAlertAction in
-                        //Do you Success button Stuff here
-                        self.activityIndicator.stopAnimating()
-                        Util().dismissFromLeft(vc: self)
+                
+                if(self.storageState == .nas){
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            //Do you Success button Stuff here
+                            self.activityIndicator.stopAnimating()
+                            Util().dismissFromLeft(vc: self)
+                            
+                        }
+                        alertController.addAction(yesAction)
+                        self.present(alertController, animated: true)
                         
                     }
-                    alertController.addAction(yesAction)
-                    self.present(alertController, animated: true)
-                    
+                } else if(self.storageState == .nas_multi) {
+                    let lastIndex = self.multiCheckedfolderArray.count - 1
+                    self.multiCheckedfolderArray.remove(at: lastIndex)
+                    self.startMultiFolderNasToNas()
                 }
+                
             } else {
                 print(error?.localizedDescription as Any)
             }
