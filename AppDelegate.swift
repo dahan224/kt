@@ -87,18 +87,28 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                         let fromOsCd = json["fromOsCd"].stringValue
                         let queId:String = json["queId"].stringValue
                         print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
-                        if let remoteDownLoadToNas = UserDefaults.standard.bool(forKey: "remoteDownLoadToNas") as? Bool{
-                            if(remoteDownLoadToNas) {
-                                  let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "queId":queId, "fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd]
-//                                self.showFileInfoToNas(fromUserId:fromUserId, fileId:fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid,fromOsCd:fromOsCd)
-                                NotificationCenter.default.post(name: Notification.Name("downloadFromRemoteToNas"), object: self, userInfo: fileDict)
-                                
-                                
-                            } else {
-                               
+                        if let remoteDownLoadStyle = UserDefaults.standard.string(forKey: "remoteDownLoadStyle") {
+                            print("remoteDownLoadStyle : \(remoteDownLoadStyle)")
+                            switch remoteDownLoadStyle {
+                            case "remoteDownLoad":
                                 let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
                                 downloadFromRemote(userId: fromUserId, name: fromFileNm, path: fromFoldr, fileId: fromFileId)
+                                break
+                                
+                            case "remoteDownLoadToNas" :
+                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "queId":queId, "fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd]
+                                //                                self.showFileInfoToNas(fromUserId:fromUserId, fileId:fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid,fromOsCd:fromOsCd)
+                                NotificationCenter.default.post(name: Notification.Name("downloadFromRemoteToNas"), object: self, userInfo: fileDict)
+                            case "remoteDownLoadMulti":
+                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
+                                downloadFromRemoteMulti(userId: fromUserId, name: fromFileNm, path: fromFoldr, fileId: fromFileId)
+                                break
+                                
+                            default:
+                                
+                                break
                             }
+                           
                         }
                         
                         
@@ -172,6 +182,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         }
     }
     
+    func downloadFromRemoteMulti(userId:String, name:String, path:String, fileId:String){
+        ContextMenuWork().downloadFromRemote(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+            if let success = responseObject {
+                print(success)
+                if(success == "success"){
+                    
+                   NotificationCenter.default.post(name: Notification.Name("countRemoteDownloadFinished"), object: self)
+                }
+            }
+            return
+        }
+    }
     
     func showFileInfoToNas(fromUserId:String, fileId:String, fileNm:String, queId:String, fromFoldr:String, fromDevUuid:String, fromOsCd:String){
         ContextMenuWork().getFileDetailInfo(fileId: fileId){ responseObject, error in

@@ -39,6 +39,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var currentFolderId = ""
     var sortBy = ""
     var upFolderId = ""
+    var remoteMultiFileDownloadedCount = 0
     
     
     var listViewStyleState = HomeViewController.listViewStyleEnum.grid
@@ -157,6 +158,11 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(handleMultiCheckFolderArray(fileDict:)),
                                                name: NSNotification.Name("handleMultiCheckFolderArray"),
+                                               object: nil)
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(countRemoteDownloadFinished),
+                                               name: NSNotification.Name("countRemoteDownloadFinished"),
                                                object: nil)
         
 //        print("mainContentsStyleState : \((flickState))")
@@ -302,8 +308,27 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         print("fromOsCd : \(fromOsCd)")
                         if(folderArray[indexPath.row].fileNm != "nil"){
                             if(fromOsCd != "S" && fromOsCd != "G"){
+                                
+                                //리모트 파일 셀 컨트롤
                                 let cell4 = RemoteFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
-                              
+                                cell4.resetMultiCheck()
+                                if (multiCheckListState == .active){
+                                    cell4.btnMultiCheck.isHidden = false
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                    cell4.btnMultiCheck.tag = indexPath.row
+                                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                                    cell4.btnOption.isHidden = true
+                                    
+                                } else {
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                    cell4.btnOption.isHidden = false
+                                    cell4.btnMultiCheck.isHidden = true
+                                    cell4.btnMultiChecked = false
+                                }
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
@@ -319,6 +344,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                 cells.append(cell4)
                             } else {
                                 print("NasFileCellController get cell")
+                                //nas 파일 셀 컨트롤
                                 let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName)
                                 cell4.resetMultiCheck()
                                 if (multiCheckListState == .active){
@@ -383,8 +409,26 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         } else {
                             
                             if(fromOsCd != "S" && fromOsCd != "G"){
-
+                                //리모트 폴더 셀 컨트롤
                                 let cell4 = RemoteFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                                cell4.resetMultiCheck()
+                                if (multiCheckListState == .active){
+                                    cell4.btnMultiCheck.isHidden = true
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                    cell4.btnMultiCheck.tag = indexPath.row
+                                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                                    cell4.btnOption.isHidden = true
+                                    
+                                } else {
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                    cell4.btnOption.isHidden = false
+                                    cell4.btnMultiCheck.isHidden = true
+                                    cell4.btnMultiChecked = false
+                                }
                                 cells.append(cell4)
                                 if(folderArray[indexPath.row].foldrNm == "..."){
                                     cell4.lblSub.isHidden = true
@@ -1023,7 +1067,18 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
             }
             multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let superView = sender.superview as? RemoteFileListCell {
+            let cell = deviceCollectionView.cellForItem(at: indexPath) as! RemoteFileListCell
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
         }
+        
     }
     
     func multiCheckedFolderArray(indexPath:IndexPath, check:Bool){
@@ -1037,43 +1092,88 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             }
             
         }
+       
+        
         homeViewController?.setMultiCountLabel(multiButtonChecked: true, count: multiCheckedfolderArray.count)
         print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
     }
     
     @objc func handleMultiCheckFolderArray(fileDict:NSNotification) {
-        if let getAction = fileDict.userInfo?["action"] as? String {
-            
-            switch getAction {
-            case "download":
+        if let getAction = fileDict.userInfo?["action"] as? String, let getFromOsCd = fileDict.userInfo?["fromOsCd"] as? String {
+            if getFromOsCd == "G" || getFromOsCd == "S" {
+                // NAS 멀티 메뉴 핸들
+                switch getAction {
+                case "download":
                     print("다운로드 multi")
                     NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                     MultiCheckFileListController().callDwonLoad(getFolderArray: multiCheckedfolderArray, parent: self, devUuid: selectedDevUuid, deviceName: deviceName)
-                break
-            case "nas":
-                
-                print("multi nas, fromUserId : \(selectedDevUserId)")
-                containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
+                    break
+                case "nas":
+                    
+                    print("multi nas, fromUserId : \(selectedDevUserId)")
+                    containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
+                    
+                    break
+                case "gDrive":
+                    print(" multi gDrive")
+                    break
+                    
+                case "delete":
+                    print("multi delete, selectedDevFoldrId : \(selectedDevFoldrId)")
+                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                    
+                    MultiCheckFileListController().callMultiDelete(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:selectedDevUserId, devUuid: selectedDevUuid, deviceName: deviceName, devFoldrId:selectedDevFoldrId)
+                    break
+                default:
+                    
+                    break
+                }
+           
+            } else {
+                // 리모트 멀티 메뉴 핸들
+                switch getAction {
+                case "download":
+                    print("다운로드 multi remote")
+                    remoteMultiFileDownloadedCount = multiCheckedfolderArray.count
+                    let remoteDownLoadStyle = "remoteDownLoadMulti"
+                    UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
+                    UserDefaults.standard.synchronize()
 
-                break
-            case "gDrive":
-                print(" multi gDrive")
-                break
+                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                    MultiCheckFileListController().remoteMultiDownloadRequest(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:selectedDevUserId, devUuid: selectedDevUuid, deviceName: deviceName, devFoldrId:selectedDevFoldrId, fromOsCd:fromOsCd)
+                    
+                    break
+                default:
+                    
+                    break
+                }
                 
-            case "delete":
-                print("multi delete, selectedDevFoldrId : \(selectedDevFoldrId)")
-                NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                
-                MultiCheckFileListController().callMultiDelete(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:selectedDevUserId, devUuid: selectedDevUuid, deviceName: deviceName, devFoldrId:selectedDevFoldrId)
-                break
-            default:
-                
-                break
             }
             
         }
     }
     
+    
+    @objc func countRemoteDownloadFinished(){
+        print("countRemoteDownloadFinished")
+        remoteMultiFileDownloadedCount -= 1
+        if(remoteMultiFileDownloadedCount > 0){            
+            print("remoteMultiFileDownloadedCount : \(remoteMultiFileDownloadedCount)")
+            return
+        }
+        SyncLocalFilleToNas().sync()
+        DispatchQueue.main.async {
+            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+            let alertController = UIAlertController(title: nil, message: "멀티 파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+            alertController.addAction(yesAction)
+            self.present(alertController, animated: true)
+            print("download Success")
+            
+            
+        }
+        
+    }
     
     
     

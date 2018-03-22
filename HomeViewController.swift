@@ -79,7 +79,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         case nasFileInfo = "nasFileInfo"
         case localFileInfo = "localFileInfo"
         case remoteFileInfo = "remoteFileInfo"
-        case bottomListMultiCheck = "bottomListMultiCheck"
+        case bottomMultiListNas = "bottomMultiListNas"
+        case bottomMultiListRemote = "bottomMultiListRemote"
         case oneView = "oneView"
     }
     
@@ -93,7 +94,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var bottomListLocalFileInfo = ["속성보기", "앱 실행", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomListFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomListRemoteFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기"]
-    var bottomListMultiCheck = ["다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
+    var bottomMultiListNas = ["다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
+    var bottomMultiListRemote = ["다운로드", "GiGA NAS로 보내기"]
+    
     
     var bottomListOneViewSort = ["기준정렬","이름순-ㄱ우선","이름순-ㅎ우선"]
     var bottomListOneViewSortKey = [DbHelper.sortByEnum.none, DbHelper.sortByEnum.asc, DbHelper.sortByEnum.desc]
@@ -972,9 +975,19 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             containerViewABottomConstraint.constant = 60
             
         }
+        var style = "nas"
+        if fromOsCd == "S" || fromOsCd == "G"{
+            bottomListState = .bottomMultiListNas
+        } else if selectedDevUuid != Util.getUuid() {
+            style = "remote"
+            bottomListState = .bottomMultiListRemote
+        } else {
+            style = "local"
+        }
+        
         setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
         stringBool = String(multiButtonChecked)
-        print("stringBool :\(stringBool)")
+        print("stringBool :\(stringBool), style : \(style)")
         let fileIdDict = ["multiChecked":stringBool]
         NotificationCenter.default.post(name: Notification.Name("multiSelectActive"), object: self, userInfo: fileIdDict)
     }
@@ -1009,6 +1022,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             label.centerYAnchor.constraint(equalTo: multiCheckBottomView.centerYAnchor).isActive = true
             multiCheckBottomView.backgroundColor = UIColor.clear
             multiCheckBottomView.removeGestureRecognizer(multiCheckTapGesture)
+            print("fromOsCd:\(fromOsCd)")
             if(count > 0) {
                 print("called")
                 label.textColor = UIColor.white
@@ -1038,7 +1052,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
   
     @objc func multiCheckBottomViewTapped(){
         let fileIdDict = ["fileId":"0"]
-        bottomListState = .bottomListMultiCheck
+        
+        
         tableView.reloadData()
         NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
     }
@@ -1177,8 +1192,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             case .oneView:
                 return bottomListOneViewSort.count
                 
-            case .bottomListMultiCheck:
-                return bottomListMultiCheck.count
+            case .bottomMultiListNas:
+                return bottomMultiListNas.count
+            case .bottomMultiListRemote:
+                return bottomMultiListRemote.count
             }
             
             
@@ -1243,12 +1260,17 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 cell.lblTitle.text = bottomListOneViewSort[indexPath.row]
                 break
                 
-            case .bottomListMultiCheck:
+            case .bottomMultiListNas:
                 cell.ivIcon.isHidden = false
-                let imageString = Util.getContextImageString(context: bottomListMultiCheck[indexPath.row])
+                let imageString = Util.getContextImageString(context: bottomMultiListNas[indexPath.row])
                 cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomListMultiCheck[indexPath.row]
+                cell.lblTitle.text = bottomMultiListNas[indexPath.row]
                 break
+            case .bottomMultiListRemote:
+                cell.ivIcon.isHidden = false
+                let imageString = Util.getContextImageString(context: bottomMultiListRemote[indexPath.row])
+                cell.ivIcon.image = UIImage(named: imageString)
+                cell.lblTitle.text = bottomMultiListRemote[indexPath.row]
             }
         }
         return cell
@@ -1315,23 +1337,23 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 setupDeviceListView(container: containerViewA, sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 break
-            case .bottomListMultiCheck:
+            case .bottomMultiListNas:
                 
                 switch indexPath.row {
                 case 0 :
-                    let fileDict = ["action":"download"]
+                    let fileDict = ["action":"download","fromOsCd":fromOsCd]
                     NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
                     break
                 case 1 :
-                    let fileDict = ["action":"nas"]
+                    let fileDict = ["action":"nas","fromOsCd":fromOsCd]
                     NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
                     break
                 case 2 :
-                    let fileDict = ["action":"gDrive"]
+                    let fileDict = ["action":"gDrive","fromOsCd":fromOsCd]
                     NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
                     break
                 case 3 :
-                    let fileDict = ["action":"delete"]
+                    let fileDict = ["action":"delete","fromOsCd":fromOsCd]
                     NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
                     break
                 
@@ -1339,6 +1361,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     break
                 }
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                break
+            case .bottomMultiListRemote:
+                let fileDict = ["action":"download","fromOsCd":fromOsCd]
+                NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                
                 break
             }
         }
