@@ -108,6 +108,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         deviceCollectionView.register(LocalFolderListCell.self, forCellWithReuseIdentifier: "LocalFolderListCell")
         deviceCollectionView.register(RemoteFileListCell.self, forCellWithReuseIdentifier: "RemoteFileListCell")
         deviceCollectionView.register(RemoteFolderListCell.self, forCellWithReuseIdentifier: "RemoteFolderListCell")
+        deviceCollectionView.register(CollectionViewGridCell.self, forCellWithReuseIdentifier: "CollectionViewGridCell")
         let lpgr : UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(gestureRecognizer:)))
         lpgr.minimumPressDuration = 0.5
         lpgr.delaysTouchesBegan = true
@@ -251,6 +252,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         let cell1 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell", for: indexPath) as! HomeDeviceCollectionViewCell
         let cell2 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell2", for: indexPath) as! HomeDeviceFolerCollectionViewCell
         let cell3 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell3", for: indexPath) as! DeviceListCell
+        
         var cells = [cell1, cell2, cell3]
         var cell = cells[0]
         print("cellStyle : \(cellStyle)")
@@ -317,7 +319,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                 cells.append(cell4)
                             } else {
                                 print("NasFileCellController get cell")
-                                let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                                let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName)
                                 cell4.resetMultiCheck()
                                 if (multiCheckListState == .active){
                                     cell4.btnMultiCheck.isHidden = false
@@ -356,6 +358,28 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                             cell2.ivMain.image = UIImage(named: imageString)
                             cell2.ivSub.image = UIImage(named: imageString)
                             
+                            let CollectionViewGridCell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewGridCell", for: indexPath) as! CollectionViewGridCell
+                            CollectionViewGridCell.lblMain.text = folderArray[indexPath.row].fileNm
+                            let editedDate = folderArray[indexPath.row].amdDate.components(separatedBy: " ")[0]
+                            CollectionViewGridCell.lblSub.text = "\(editedDate) | \(deviceName)"
+                            CollectionViewGridCell.ivMain.image = UIImage(named: imageString)
+                            CollectionViewGridCell.ivSub.image = UIImage(named: imageString)
+                            if (multiCheckListState == .active){
+                                CollectionViewGridCell.btnMultiCheck.isHidden = false
+                                CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
+                                CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                            } else {
+                                CollectionViewGridCell.btnMultiCheck.isHidden = true
+                            }
+                            cells.append(CollectionViewGridCell)
+                            switch listViewStyleState{
+                            case .grid:
+                                cell = cells[4]
+                                break
+                            case .list:
+                                cell = cells[3]
+                                break
+                            }
                         } else {
                             
                             if(fromOsCd != "S" && fromOsCd != "G"){
@@ -409,16 +433,28 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                             cell2.lblMain.text = folderArray[indexPath.row].foldrNm
                             cell2.ivMain.image = UIImage(named: "ico_folder")
                             cell2.ivSub.image = UIImage(named: "ico_folder")
-                           
-                        }
-                        
-                        switch listViewStyleState{
-                        case .grid:
-                            cell = cells[1]
-                            break
-                        case .list:
-                            cell = cells[3]
-                            break
+                            let CollectionViewGridCell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewGridCell", for: indexPath) as! CollectionViewGridCell
+                            CollectionViewGridCell.lblMain.text = folderArray[indexPath.row].foldrNm
+                            let editedDate = folderArray[indexPath.row].amdDate.components(separatedBy: " ")[0]                            
+                            CollectionViewGridCell.lblSub.text = "\(editedDate) | \(deviceName)"
+                            CollectionViewGridCell.ivMain.image = UIImage(named: "ico_folder")
+                            CollectionViewGridCell.ivSub.image = UIImage(named: "ico_folder")
+                            if (multiCheckListState == .active){
+                                CollectionViewGridCell.btnMultiCheck.isHidden = false
+                                CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
+                                CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                            } else {
+                                CollectionViewGridCell.btnMultiCheck.isHidden = true
+                            }
+                            cells.append(CollectionViewGridCell)
+                            switch listViewStyleState{
+                            case .grid:
+                                cell = cells[4]
+                                break
+                            case .list:
+                                cell = cells[3]
+                                break
+                            }
                         }
                         
                     } else {
@@ -969,6 +1005,16 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
         } else if let superView = sender.superview as? NasFolderListCell {
             let cell = deviceCollectionView.cellForItem(at: indexPath) as! NasFolderListCell
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let superView = sender.superview as? CollectionViewGridCell {
+            let cell = deviceCollectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
             if(cell.btnMultiChecked){
                 cell.btnMultiChecked = false
                 cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)

@@ -44,15 +44,15 @@ class SetupFolderInsideCollectionView {
         sortButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         sortButton.trailingAnchor.constraint(equalTo: searchButton.leadingAnchor, constant: -5.0).isActive = true
         
-        if(listStyle == .list) {
+//        if(listStyle == .list) {
             multiButton.isHidden = false
             multiButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
             multiButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
             multiButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
             multiButton.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -5.0).isActive = true
-        } else {
-            multiButton.isHidden = true
-        }
+//        } else {
+//            multiButton.isHidden = true
+//        }
         
         for view in customNavBar.subviews {
             view.removeFromSuperview()

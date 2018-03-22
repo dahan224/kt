@@ -12,7 +12,7 @@ class NasFileCellController {
     var dv:HomeDeviceCollectionVC?
     var hv:HomeViewController?
     var cv:UICollectionView?
-    func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC) -> NasFileListCell {
+    func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC, deviceName:String) -> NasFileListCell {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NasFileListCell", for: indexPath) as! NasFileListCell
         

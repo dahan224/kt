@@ -103,7 +103,7 @@ class RemoteFileListCell: UICollectionViewCell {
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
-    var btnMultiChecked = true
+    var btnMultiChecked = false
     
     var optionViewTrailingAnchor:NSLayoutConstraint?
     var btnDwnldTrailingAnchor:NSLayoutConstraint?

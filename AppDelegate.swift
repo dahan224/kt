@@ -23,11 +23,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
 
     var serverURL: String?
     var notificationOnGoing = false
-    var jsonHeader:[String:String] = [
-        "Content-Type": "application/json",
-        "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
-        "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
-    ]
+    
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Initialize sign-in
@@ -322,7 +318,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     
     func notifyNasUploadFinishToRemoteDownload(name:String, queId:String){
         let urlString = App.URL.server+"upldCmplt.do"
-        
+        var jsonHeader:[String:String] = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+            "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
+        ]
         let paramas:[String : Any] = ["queId":queId,"nasStatusCode":"100"]
         print("notifyNasUploadFinish param : \(paramas)")
         Alamofire.request(urlString,

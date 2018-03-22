@@ -26,7 +26,7 @@ class CollectionViewGridCell: UICollectionViewCell {
     var bottomView:UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.white
-        view.alpha = 0.5
+//        view.alpha = 0.5
         view.translatesAutoresizingMaskIntoConstraints = false
         return view;
     }()
@@ -55,6 +55,13 @@ class CollectionViewGridCell: UICollectionViewCell {
         
     }()
 
+    let btnMultiCheck:UIButton = {
+        let button = UIButton(type: .custom)
+        button.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.translatesAutoresizingMaskIntoConstraints = false
+        return button
+    }()
+    var btnMultiChecked = false
     
     override init(frame: CGRect) {
         super.init(frame: frame)
@@ -70,6 +77,16 @@ class CollectionViewGridCell: UICollectionViewCell {
         addSubview(ivBackground)
         addSubview(ivMain)
         addSubview(bottomView)
+        addSubview(btnMultiCheck)
+        
+        
+        btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
+        btnMultiCheck.heightAnchor.constraint(equalToConstant:  36).isActive = true
+        btnMultiCheck.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 10).isActive = true
+        btnMultiCheck.topAnchor.constraint(equalTo: topAnchor, constant: 10).isActive = true
+        btnMultiCheck.isHidden = true
+        
+        
         
         ivBackground.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
         ivBackground.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
