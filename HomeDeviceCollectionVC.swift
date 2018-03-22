@@ -35,6 +35,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var test = ""
     var selectedDevUuid = ""
     var selectedDevUserId = ""
+    var selectedDevFoldrId = ""
     var currentFolderId = ""
     var sortBy = ""
     var upFolderId = ""
@@ -561,6 +562,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             print("2")
             let infoldrId = folderArray[indexPath.row].foldrId
             foldrId = String(infoldrId)
+            selectedDevFoldrId = foldrId
             let fileId = folderArray[indexPath.row].fileId
             let folderNm = folderArray[indexPath.row].foldrNm
             fileNm = folderArray[indexPath.row].fileNm
@@ -1006,14 +1008,17 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 
                 print("multi nas, fromUserId : \(selectedDevUserId)")
                 containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
-//                let fileDict = ["toStorage":"nas_multi","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd,"fromDevUuid":selectedDevUuid]
-//                print("fileDict : \(fileDict)")
-                
-                
 
                 break
             case "gDrive":
                 print(" multi gDrive")
+                break
+                
+            case "delete":
+                print("multi delete, selectedDevFoldrId : \(selectedDevFoldrId)")
+                NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                
+                MultiCheckFileListController().callMultiDelete(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:selectedDevUserId, devUuid: selectedDevUuid, deviceName: deviceName, devFoldrId:selectedDevFoldrId)
                 break
             default:
                 
@@ -1303,6 +1308,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     }
                     userId = DeviceArray[indexPathRow].userId
                     selectedDevUserId = DeviceArray[indexPathRow].userId
+                    
                     deviceName = DeviceArray[indexPathRow].devNm
                     print("userId:\(userId)")
                     getRootFolder(userId:userId, devUuid: selectedDevUuid, deviceName:deviceName)
@@ -1348,6 +1354,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                             let foldrNm = rootFolder["foldrNm"] as? String ?? "nil"
                             
                             let stringFoldrNm = String(foldrNm)
+                            self.selectedDevFoldrId = stringFoldrId
                             let childCnt = rootFolder["childCnt"] as? Int ?? 0
                             let osCd = rootFolder["osCd"] as? String ?? "nil"
                             if (self.fromOsCd == "G"){

@@ -1330,6 +1330,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     let fileDict = ["action":"gDrive"]
                     NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
                     break
+                case 3 :
+                    let fileDict = ["action":"delete"]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
                 
                 default :
                     break
