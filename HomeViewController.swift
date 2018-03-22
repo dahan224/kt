@@ -16,7 +16,7 @@ import SQLite
 
 class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource, UIDocumentInteractionControllerDelegate{
     var documentController:UIDocumentInteractionController = UIDocumentInteractionController()
-    
+    var containerViewController:ContainerViewController?
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var indicatorAnimating = false
     
@@ -428,6 +428,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         child.LatelyUpdatedFileArray = self.LatelyUpdatedFileArray
         child.driveFileArray = self.driveFileArray
         child.homeViewController = self
+        child.containerViewController = containerViewController
         
         // 0eun - start
         if self.mainContentState == .googleDriveList {

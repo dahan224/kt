@@ -16,8 +16,10 @@ import QuickLook
 protocol PassItemInfo {
     func passDataToHome()
 }
+
 class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, QLPreviewControllerDataSource, QLPreviewControllerDelegate, UIGestureRecognizerDelegate {
     var homeViewController: HomeViewController?
+    var containerViewController:ContainerViewController?
     private let service = GTLRDriveService() // 0eun
     let quickLookController = QLPreviewController()
     var loginCookie = ""
@@ -67,7 +69,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var searchStepState: HomeViewController.searchStepEnum = .device
     var id = ""
     let Vc:HomeViewController = HomeViewController()
-    let containerViewController:ContainerViewController = ContainerViewController()
+    
     var accessToken:String = ""
     
     enum contextMenuEnum {
@@ -1003,6 +1005,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             case "nas":
                 
                 print("multi nas")
+                containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray)
                 //파일
 //                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
 //                

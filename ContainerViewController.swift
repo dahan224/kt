@@ -12,6 +12,7 @@ import Alamofire
 
 class ContainerViewController: UIViewController {
     
+    var multiCheckedfolderArray:[App.FolderStruct] = []
     let halfBlackView:UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.black
@@ -167,7 +168,8 @@ class ContainerViewController: UIViewController {
     func setupDeviceListView(container: UIView){
       
         let child = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
-       
+        child.containerViewController = self
+        
         child.willMove(toParentViewController: parent)
         self.addChildViewController(child)
         container.addSubview(child.view)
@@ -364,6 +366,10 @@ class ContainerViewController: UIViewController {
         
     }
     
+    func getMultiFolderArray(getArray:[App.FolderStruct]){
+        print("getArray : \(getArray)")
+        multiCheckedfolderArray = getArray
+    }
     
         
 }
