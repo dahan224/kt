@@ -266,6 +266,7 @@ class ContainerViewController: UIViewController {
                 vc.fromDevUuid = fromDevUuid
                 vc.fromFoldr = fromFoldr
                 vc.fromFoldrId = fromFoldrId
+                vc.multiCheckedfolderArray = multiCheckedfolderArray
             }
             
         }
@@ -366,9 +367,23 @@ class ContainerViewController: UIViewController {
         
     }
     
-    func getMultiFolderArray(getArray:[App.FolderStruct]){
+    func getMultiFolderArray(getArray:[App.FolderStruct], toStorage:String, fromUserId:String, fromOsCd:String,fromDevUuid:String){
         print("getArray : \(getArray)")
         multiCheckedfolderArray = getArray
+        storageKind = .nas_multi
+        self.fromOsCd = fromOsCd
+        self.fromUserId = fromUserId
+        self.fromDevUuid = fromDevUuid
+        performSegue(withIdentifier: "nasFolderSelectSegue", sender: self)
+        //파일
+      
+//        let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
+//
+//        NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+//        //폴더
+//        let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
+//
+        
     }
     
         

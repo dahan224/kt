@@ -1005,18 +1005,12 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             case "nas":
                 
                 print("multi nas")
-                containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray)
-                //파일
-//                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
-//                
-//                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-//                //폴더
-//                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
-//                
+                containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
+//                let fileDict = ["toStorage":"nas_multi","fromUserId":selectedDevUserId, "fromOsCd":fromOsCd,"fromDevUuid":selectedDevUuid]
 //                print("fileDict : \(fileDict)")
-//                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-//                
                 
+                
+
                 break
             case "gDrive":
                 print(" multi gDrive")
