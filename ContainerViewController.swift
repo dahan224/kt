@@ -370,7 +370,12 @@ class ContainerViewController: UIViewController {
     func getMultiFolderArray(getArray:[App.FolderStruct], toStorage:String, fromUserId:String, fromOsCd:String,fromDevUuid:String){
         print("getArray : \(getArray)")
         multiCheckedfolderArray = getArray
-        storageKind = .nas_multi
+        if toStorage == "nas_multi" {
+            storageKind = .nas_multi
+        } else {
+            storageKind = .remote_nas_multi
+        }
+        
         self.fromOsCd = fromOsCd
         self.fromUserId = fromUserId
         self.fromDevUuid = fromDevUuid

@@ -91,17 +91,24 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                             print("remoteDownLoadStyle : \(remoteDownLoadStyle)")
                             switch remoteDownLoadStyle {
                             case "remoteDownLoad":
+                                let path = "\(fromDevUuid)\(fromFoldr)"
                                 let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
-                                downloadFromRemote(userId: fromUserId, name: fromFileNm, path: fromFoldr, fileId: fromFileId)
+                                downloadFromRemote(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
                                 break
                                 
                             case "remoteDownLoadToNas" :
                                 let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "queId":queId, "fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd]
-                                //                                self.showFileInfoToNas(fromUserId:fromUserId, fileId:fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid,fromOsCd:fromOsCd)
                                 NotificationCenter.default.post(name: Notification.Name("downloadFromRemoteToNas"), object: self, userInfo: fileDict)
                             case "remoteDownLoadMulti":
-                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
-                                downloadFromRemoteMulti(userId: fromUserId, name: fromFileNm, path: fromFoldr, fileId: fromFileId)
+                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "fromDevUuid":fromDevUuid]
+                                let path = "\(fromDevUuid)\(fromFoldr)"
+                                downloadFromRemoteMulti(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
+                                break
+                            case "remoteDownLoadNasMulti":
+                                
+                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "queId":queId, "fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd]
+                                NotificationCenter.default.post(name: Notification.Name("downloadFromRemoteToNas"), object: self, userInfo: fileDict)
+                                
                                 break
                                 
                             default:
@@ -360,7 +367,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
                                 print("message : \(message)")
-                                self.endBackgroundTask(taskID: self.backgroundTask!)
+                                if let task = self.backgroundTask {
+                                        self.endBackgroundTask(taskID: task)
+                                }
+                                
                                 break
                             case .failure(let error):
                                 

@@ -64,6 +64,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     enum toStorageKind:String {
         case nas = "nas"
         case nas_multi = "nas_multi"
+        case remote_nas_multi = "remote_nas_multi"
         case googleDrive = "googleDrive"
     }
     
@@ -82,7 +83,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var driveFileArray:[App.DriveFileStruct] = []
     var accessToken:String = ""
     var multiCheckedfolderArray:[App.FolderStruct] = []
-    
+    var remoteMultiFileDownloadedCount = 0
     override func viewDidLoad() {
         super.viewDidLoad()
         print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm), originalFileId : \(originalFileId)")
@@ -108,6 +109,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                                name: NSNotification.Name("downloadFromRemoteToNas"),
                                                object: nil)
         
+        
+        remoteMultiFileDownloadedCount = multiCheckedfolderArray.count
         switch storageState {
         case .googleDrive:
             
@@ -176,41 +179,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "SendFolderSelectCell") as! SendFolderSelectCell
         switch storageState {
-        case .nas:
-            switch listState {
-                case .deviceSelect:
-                    let imageString = deviceImageArray[indexPath.row]
-                    cell.ivIcon.image = UIImage(named: imageString)
-                    cell.lblMain.text = nasArray[indexPath.row]
-                    cell.checkButton.isHidden = true
-                    
-                    break
-                case .deviceRoot:
-                    cell.ivIcon.image = UIImage(named: "ico_folder")
-                    cell.lblMain.text = folderNameArray[indexPath.row]
-                    cell.checkButton.isHidden = false
-                    if(indexPath.row == 0){
-                        cell.checkButton.isHidden = false
-                    }
-                    cell.checkButton.isHidden = false
-                    cell.checkButton.tag = indexPath.row
-                    cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                    cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
-                    break
-                case .folder:
-                    cell.ivIcon.image = UIImage(named: "ico_folder")
-                    cell.lblMain.text = folderArray[indexPath.row].foldrNm
-                    cell.checkButton.isHidden = false
-                    if(indexPath.row == 0){
-                        cell.checkButton.isHidden = true
-                    }
-                    cell.checkButton.tag = indexPath.row
-                    cell.btnChecked = 0
-                    cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
-                    cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
-                    break
-            }
-            break
+       
         case .googleDrive:
             switch listState {
                 case .deviceSelect:
@@ -248,7 +217,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     break
             }
             break
-        case .nas_multi:
+        default :
             switch listState {
             case .deviceSelect:
                 let imageString = deviceImageArray[indexPath.row]
@@ -283,6 +252,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 break
             }
             break
+     
         }
         
         
@@ -468,18 +438,22 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
    
     
     @IBAction func selectFinish(_ sender: UIButton) {
+        toOsCd = "G"
+        if(toUserId != App.defaults.userId){
+            toOsCd = "S"
+        }
         if(folderChecked == 1){
             switch storageState {
             case .nas:
                 if(fromDevUuid == Util.getUuid()){
                     // local to Nas
                     if(fromFoldrId.isEmpty){
-                        var toOsCd = "G"
+                        toOsCd = "G"
                         if(toUserId != App.defaults.userId){
-                            toOsCd = "S"
+                        toOsCd = "S"
                         }
                         let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-                        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd, fileId: originalFileId)
                     } else {
                         // local 폴더 업로드 to nas
                         print("upload path : \(newFoldrWholePathNm)")
@@ -520,12 +494,12 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                             }
                         } else {
                             let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-                            sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                            sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd,fileId: originalFileId)
                             
                         }
                     } else {
                         // nas 보내기 폴더
-                        var toOsCd = "G"
+                        toOsCd = "G"
                         if(toUserId != App.defaults.userId){
                             toOsCd = "S"
                         }
@@ -566,6 +540,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
                 startMultiFolderNasToNas()
                 break
+            case .remote_nas_multi:
+                print("multi remote to nas")
+                print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
+//                startMultiFolderNasToNas()
+                MultiCheckFileListController().remoteMultiDownloadRequestToSend(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:fromUserId, devUuid: fromDevUuid, deviceName: deviceName, devFoldrId:fromFoldrId, fromOsCd:fromOsCd)
             }
         }
     }
@@ -609,7 +588,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     }
                 } else {
                     let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-                    sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+                    sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd, fileId: originalFileId)
                     
                 }
             } else {
@@ -646,60 +625,6 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
     }
 
-    func remoteDownloadRequestToSend(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
-        
-        let urlString = App.URL.server+"reqFileDown.do"
-        var comnd = "RALI"
-        switch fromOsCd {
-        case "W":
-            comnd = "RWLI"
-        case "A":
-            comnd = "RALI"
-        default:
-            comnd = "RILI"
-            break
-        }
-        let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
-        print("notifyNasUploadFinish param : \(paramas)")
-        Alamofire.request(urlString,
-                          method: .post,
-                          parameters: paramas,
-                          encoding : JSONEncoding.default,
-                          headers: jsonHeader).responseJSON { response in
-                            switch response.result {
-                            case .success(let JSON):
-                                
-                                print(response.result.value)
-                                let responseData = JSON as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                print("remoteDownloadRequest : \(message)")
-                                if let error = responseData.object(forKey: "error") as? Int, error == 1 {
-                                    print("error : \(error)")
-                                    DispatchQueue.main.async {
-                                        let alertController = UIAlertController(title: nil, message: "\(message!)", preferredStyle: .alert)
-                                        let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                                            UIAlertAction in
-                                            let remoteDownLoadToNas = false
-                                            UserDefaults.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
-                                            
-                                            
-                                        }
-                                        alertController.addAction(yesAction)
-                                        self.present(alertController, animated: true, completion: nil)
-                                    }
-                                }
-                                break
-                            case .failure(let error):
-                                let remoteDownLoadToNas = false
-                                UserDefaults.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
-                                
-                                
-                                print(error.localizedDescription)
-                            }
-        }
-    }
-    
-    
     
     func downloadFromNasToDrive(name:String, path:String, fileId:String){
         ContextMenuWork().downloadFromNasToSend(userId:fromUserId, fileNm:name, path:path){ responseObject, error in
@@ -1148,10 +1073,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     @objc func callSendToNasFromLocal(fileDict:NSNotification){
         print("callSendToNasFromLocal")
         let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd)
+        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd, fileId: originalFileId)
     }
     
-    func sendToNasFromLocal(url:URL, name:String, toOsCd:String){
+    func sendToNasFromLocal(url:URL, name:String, toOsCd:String, fileId:String){
         
         let userId = toUserId
         let password = "1234"
@@ -1183,7 +1108,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         
         
       //되는 거
-        print("fileId : \(originalFileId)")
+        print("fileId : \(fileId)")
         Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
             .uploadProgress { progress in // main queue by default
                 print("Upload Progress: \(progress.fractionCompleted)")
@@ -1200,7 +1125,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     let statusCode = (response.response?.statusCode)!
                 } else { //no errors
                     let statusCode = (response.response?.statusCode)! //example : 200
-                    self.notifyNasUploadFinish(name: name, toOsCd:toOsCd)
+                    
+                    self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, fileId:fileId)
                     
                 }
         }
@@ -1208,11 +1134,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
  
     
-    func notifyNasUploadFinish(name:String, toOsCd:String){
+    func notifyNasUploadFinish(name:String, toOsCd:String, fileId:String){
         let urlString = App.URL.server+"nasUpldCmplt.do"
      
 
-        let paramas:[String : Any] = ["userId":toUserId,"fileId":originalFileId,"toFoldr":newFoldrWholePathNm,"toFileNm":name,"toOsCd":toOsCd]
+        let paramas:[String : Any] = ["userId":toUserId,"fileId":fileId,"toFoldr":newFoldrWholePathNm,"toFileNm":name,"toOsCd":toOsCd]
         print("notifyNasUploadFinish param : \(paramas)")
         Alamofire.request(urlString,
                           method: .post,
@@ -1226,17 +1152,22 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
                                 print("message : \(message)")
-                                DispatchQueue.main.async {
-                                    let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
-                                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                                        UIAlertAction in
-                                        //Do you Success button Stuff here
-                                        Util().dismissFromLeft(vc: self)
+                                if(self.storageState == .remote_nas_multi) {
+                                    self.countRemoteDownloadFinished()
+                                } else{
+                                    DispatchQueue.main.async {
+                                        let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+                                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                                            UIAlertAction in
+                                            //Do you Success button Stuff here
+                                            Util().dismissFromLeft(vc: self)
+                                        }
+                                        alertController.addAction(yesAction)
+                                        self.present(alertController, animated: true)
+                                        
                                     }
-                                    alertController.addAction(yesAction)
-                                    self.present(alertController, animated: true)
-                                    
                                 }
+                                
                                 break
                             case .failure(let error):
                                 
@@ -1269,6 +1200,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 //Do you Success button Stuff here
+                SyncLocalFilleToNas().sync()
+                
                 Util().dismissFromLeft(vc: self)
             }
             alertController.addAction(yesAction)
@@ -1277,6 +1210,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
     }
     
+  
     
     func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
         
@@ -1324,28 +1258,58 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     }
     
     @objc func downloadFromRemoteToNas(fileDict:NSNotification){
-        if let getFromUserId = fileDict.userInfo?["fromUserId"] as? String, let getFromFileId = fileDict.userInfo?["fromFileId"] as? String, let getFromFoldr = fileDict.userInfo?["fromFoldr"] as? String, let getFromFileNm = fileDict.userInfo?["fromFileNm"] as? String {
+        if let getFromUserId = fileDict.userInfo?["fromUserId"] as? String, let getFromFileId = fileDict.userInfo?["fromFileId"] as? String, let getFromFoldr = fileDict.userInfo?["fromFoldr"] as? String, let getFromFileNm = fileDict.userInfo?["fromFileNm"] as? String, let getFromDevUuid = fileDict.userInfo?["fromDevUuid"] as? String{
         
-            self.downloadFromRemoteToSend(userId: getFromUserId, name: getFromFileNm, path: getFromFoldr, fileId: getFromFileId)
+            let path = "\(getFromDevUuid)\(getFromFoldr)"
+            originalFileId = getFromFileId
+            print("getFromFileId : \(getFromFileId)")
+        
+            self.downloadFromRemoteToSend(userId: getFromUserId, name: getFromFileNm, path: path, fileId: getFromFileId)
         }
     }
  
     
     func downloadFromRemoteToSend(userId:String, name:String, path:String, fileId:String){
-        ContextMenuWork().downloadFromRemote(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+        ContextMenuWork().downloadFromRemoteToSend(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
                 if(!success.isEmpty){
-                    SyncLocalFilleToNas().sync()
-                    print("url: \(success)")
                     let fileUrl:URL = URL(string: success)!
-                    self.sendToNasFromLocal(url: fileUrl, name: name, toOsCd:self.toOsCd)
+                    self.sendToNasFromLocal(url: fileUrl, name: name, toOsCd:self.toOsCd, fileId:fileId)
+                
+                   
                 }
             }
             return
         }
     }
     
+   
     
+    func countRemoteDownloadFinished(){
+        
+        remoteMultiFileDownloadedCount -= 1
+        print("remoteMultiFileToNasdCount : \(remoteMultiFileDownloadedCount)")
+        if(remoteMultiFileDownloadedCount > 0){
+            
+            
+            return
+        }
+        print("countRemoteToNasFinished")
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                SyncLocalFilleToNas().sync()
+                
+                //Do you Success button Stuff here
+                Util().dismissFromLeft(vc: self)
+            }
+            alertController.addAction(yesAction)
+            self.present(alertController, animated: true)
+            
+        }
+        
+    }
 
 }

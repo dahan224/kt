@@ -1223,7 +1223,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 if(indexPath.row < DeviceArray.count+1){
                     let imageString = Util.getDeviceImageString(osNm: DeviceArray[indexPath.row-1].osNm, onoff: DeviceArray[indexPath.row-1].onoff)
                     cell.ivIcon.image = UIImage(named: imageString)
-                    print("DeviceArray[indexPath.row-1].osNm : \(DeviceArray[indexPath.row-1].onoff)")
+//                    print("DeviceArray[indexPath.row-1].osNm : \(DeviceArray[indexPath.row-1].onoff)")
                     cell.lblTitle.text = DeviceArray[indexPath.row-1].devNm
                 }
                 
@@ -1285,6 +1285,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         tableView.deselectRow(at: indexPath, animated: true)
         print(indexPath.section)
         print(indexPath.row)
+        print("fromOsCd : \(fromOsCd)")
         if(ifNavBarClicked){
             if(indexPath.row == 0){
                 print("back to main")
@@ -1363,8 +1364,21 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 break
             case .bottomMultiListRemote:
-                let fileDict = ["action":"download","fromOsCd":fromOsCd]
-                NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                switch indexPath.row {
+                case 0 :
+                    let fileDict = ["action":"download","fromOsCd":fromOsCd]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
+                case 1 :
+                    let fileDict = ["action":"nas","fromOsCd":fromOsCd]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
+                default:
+                    
+                    break
+                    
+                }
+                
                 
                 break
             }

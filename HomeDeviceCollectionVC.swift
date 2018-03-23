@@ -620,6 +620,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         if(cellStyle == 1){
             let indexPathRow = ["indexPathRow":"\(indexPath.row)"]
             fromOsCd = DeviceArray[indexPath.row].osCd
+            homeViewController?.fromOsCd = fromOsCd
             selectedDevUuid = DeviceArray[indexPath.row].devUuid
             selectedDevUserId = DeviceArray[indexPath.row].userId
             NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
@@ -1143,6 +1144,16 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     MultiCheckFileListController().remoteMultiDownloadRequest(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:selectedDevUserId, devUuid: selectedDevUuid, deviceName: deviceName, devFoldrId:selectedDevFoldrId, fromOsCd:fromOsCd)
                     
                     break
+                case "nas":
+                    print("nas multi remote")
+                    let remoteDownLoadStyle = "remoteDownLoadNasMulti"
+                    UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
+                    UserDefaults.standard.synchronize()
+
+                    containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"remote_nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
+                    
+                    break
+                    
                 default:
                     
                     break
@@ -1463,6 +1474,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     searchStepState = .device
                     foldrWholePathNm = ""
                     fromOsCd = DeviceArray[indexPathRow].osCd
+                    homeViewController?.fromOsCd = fromOsCd
                     var state = HomeViewController.bottomListEnum.nasFileInfo
                     if(fromOsCd == "G" || fromOsCd == "S"){
                         state = HomeViewController.bottomListEnum.nasFileInfo

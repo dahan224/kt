@@ -14,12 +14,12 @@ class ContextMenuWork {
     var folderIdsToDownLoad:[Int] = []
     var folderPathToDownLoad:[String] = []
     var fileArrayToDownload:[App.FolderStruct] = []
-    var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
-    var loginToken = UserDefaults.standard.string(forKey: "token")!
+    var loginCookie = UserDefaults.standard.string(forKey: "cookie") ?? "nil"
+    var loginToken = UserDefaults.standard.string(forKey: "token") ?? "nil"
     var jsonHeader:[String:String] = [
         "Content-Type": "application/json",
-        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
-        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+        "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     ]
     var userId = UserDefaults.standard.string(forKey: "userId") as? String ?? "nil"
     var uuid = Util.getUuid()
