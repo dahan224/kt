@@ -81,6 +81,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         case remoteFileInfo = "remoteFileInfo"
         case bottomMultiListNas = "bottomMultiListNas"
         case bottomMultiListRemote = "bottomMultiListRemote"
+        case bottomMultiListLocal = "bottomMultiListLocal"
         case oneView = "oneView"
     }
     
@@ -96,7 +97,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var bottomListRemoteFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기"]
     var bottomMultiListNas = ["다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomMultiListRemote = ["다운로드", "GiGA NAS로 보내기"]
-    
+    var bottomMultiListLocal = ["GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     
     var bottomListOneViewSort = ["기준정렬","이름순-ㄱ우선","이름순-ㅎ우선"]
     var bottomListOneViewSortKey = [DbHelper.sortByEnum.none, DbHelper.sortByEnum.asc, DbHelper.sortByEnum.desc]
@@ -982,6 +983,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             style = "remote"
             bottomListState = .bottomMultiListRemote
         } else {
+            bottomListState = .bottomMultiListLocal
             style = "local"
         }
         
@@ -1196,6 +1198,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 return bottomMultiListNas.count
             case .bottomMultiListRemote:
                 return bottomMultiListRemote.count
+            case .bottomMultiListLocal:
+                return bottomMultiListLocal.count
             }
             
             
@@ -1271,6 +1275,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 let imageString = Util.getContextImageString(context: bottomMultiListRemote[indexPath.row])
                 cell.ivIcon.image = UIImage(named: imageString)
                 cell.lblTitle.text = bottomMultiListRemote[indexPath.row]
+            case .bottomMultiListLocal:
+                cell.ivIcon.isHidden = false
+                let imageString = Util.getContextImageString(context: bottomMultiListLocal[indexPath.row])
+                cell.ivIcon.image = UIImage(named: imageString)
+                cell.lblTitle.text = bottomMultiListLocal[indexPath.row]
             }
         }
         return cell
@@ -1378,9 +1387,26 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     break
                     
                 }
-                
-                
                 break
+            case .bottomMultiListLocal:
+                switch indexPath.row {
+                case 0 :
+                    let fileDict = ["action":"nas","fromOsCd":fromOsCd]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
+                case 1 :
+                    let fileDict = ["action":"gDrive","fromOsCd":fromOsCd]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
+                case 2 :
+                    let fileDict = ["action":"delete","fromOsCd":fromOsCd]
+                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                    break
+                    
+                default :
+                    break
+                }
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
             }
         }
        

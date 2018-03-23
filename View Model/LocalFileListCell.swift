@@ -110,6 +110,7 @@ class LocalFileListCell: UICollectionViewCell {
     var btnShowTrailingAnchor:NSLayoutConstraint?
     var btnActionTrailingAnchor:NSLayoutConstraint?
     var btnNasTrailingAnchor:NSLayoutConstraint?
+    var btnMultiCheckLeadingAnchor:NSLayoutConstraint?
     
     
     var optionSHowCheck = 0
@@ -142,16 +143,18 @@ class LocalFileListCell: UICollectionViewCell {
         addSubview(optionView)
         
         
+        btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
+        btnMultiCheck.heightAnchor.constraint(equalToConstant:  36).isActive = true
+        btnMultiCheckLeadingAnchor = btnMultiCheck.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 36)
+        btnMultiCheckLeadingAnchor?.isActive = true
+        
+        btnMultiCheck.isHidden = true
+        
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        ivSub.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 25).isActive = true
+        ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 25).isActive = true
         ivSub.widthAnchor.constraint(equalToConstant: 20).isActive = true
         ivSub.heightAnchor.constraint(equalToConstant: 20).isActive = true
-        
-        btnMultiCheck.centerYAnchor.constraint(equalTo: ivSub.centerYAnchor).isActive = true
-        btnMultiCheck.widthAnchor.constraint(equalToConstant: 48).isActive = true
-        btnMultiCheck.heightAnchor.constraint(equalToConstant:  48).isActive = true
-        btnMultiCheck.centerXAnchor.constraint(equalTo: ivSub.centerXAnchor).isActive = true
-        btnMultiCheck.isHidden = true
         
         
         
@@ -193,8 +196,11 @@ class LocalFileListCell: UICollectionViewCell {
     func multiCheck(){
         
     }
+    func resetMultiCheck(){
+        btnMultiChecked = false
+        btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+    }
     
-  
     @objc func setupLocalView(){
         for view in optionView.subviews {
             view.removeFromSuperview()

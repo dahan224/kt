@@ -65,6 +65,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         case nas = "nas"
         case nas_multi = "nas_multi"
         case remote_nas_multi = "remote_nas_multi"
+        case local_nas_multi = "local_nas_multi"
         case googleDrive = "googleDrive"
     }
     
@@ -457,7 +458,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     } else {
                         // local 폴더 업로드 to nas
                         print("upload path : \(newFoldrWholePathNm)")
-                        ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm)
+                        ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm, getMultiArray:multiCheckedfolderArray, parent:self)
                        
                     }
                 } else if (fromOsCd == "S" || fromOsCd == "G"){
@@ -545,8 +546,50 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
 //                startMultiFolderNasToNas()
                 MultiCheckFileListController().remoteMultiDownloadRequestToSend(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:fromUserId, devUuid: fromDevUuid, deviceName: deviceName, devFoldrId:fromFoldrId, fromOsCd:fromOsCd)
+            case .local_nas_multi:
+                print("multi local to nas")
+                startMultiLocalToNas()
+
+//                print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
+                
             }
         }
+    }
+    
+    func startMultiLocalToNas(){
+        if(multiCheckedfolderArray.count > 0){
+            let index = multiCheckedfolderArray.count - 1
+            let originalFileId = String(multiCheckedfolderArray[index].fileId)
+            let fromFoldrId = String(multiCheckedfolderArray[index].foldrId)
+            let originalFileName = multiCheckedfolderArray[index].fileNm
+            let oldFoldrWholePathNm = multiCheckedfolderArray[index].foldrWholePathNm
+            let etsionNm = multiCheckedfolderArray[index].etsionNm
+            let amdDate = multiCheckedfolderArray[index].amdDate
+            var toOsCd = "G"
+            if(toUserId != App.defaults.userId){
+                toOsCd = "S"
+            }
+            if(originalFileName != "nil"){
+                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+                sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd,fileId: originalFileId)
+            } else {
+                ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm, getMultiArray:multiCheckedfolderArray, parent:self)
+            }
+            
+        }
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                //Do you Success button Stuff here
+                self.activityIndicator.stopAnimating()
+                Util().dismissFromLeft(vc: self)
+            }
+            alertController.addAction(yesAction)
+            self.present(alertController, animated: true)
+            
+        }
+        
     }
     
     func startMultiFolderNasToNas(){
@@ -1154,7 +1197,14 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 print("message : \(message)")
                                 if(self.storageState == .remote_nas_multi) {
                                     self.countRemoteDownloadFinished()
-                                } else{
+                                } else if self.storageState == .local_nas_multi {
+                                    
+                                    let lastIndex = self.multiCheckedfolderArray.count - 1
+                                    self.multiCheckedfolderArray.remove(at: lastIndex)
+                                    self.startMultiLocalToNas()
+                                    
+                                    
+                                } else {
                                     DispatchQueue.main.async {
                                         let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
                                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

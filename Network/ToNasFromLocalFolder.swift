@@ -16,22 +16,25 @@ class ToNasFromLocalFolder {
     var newFoldrWholePathNm = ""
     var oldFoldrWholePathNm = ""
     var newPath = ""
-    
-    var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
-    var loginToken = UserDefaults.standard.string(forKey: "token")!
+    var style = ""
+    var nasSendFolderSelectVC:NasSendFolderSelectVC?
+    var multiCheckedfolderArray:[App.FolderStruct] = []
+    var loginCookie = UserDefaults.standard.string(forKey: "cookie") ?? "nil"
+    var loginToken = UserDefaults.standard.string(forKey: "token") ?? "nil"
     var jsonHeader:[String:String] = [
         "Content-Type": "application/json",
         "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
         "Cookie": UserDefaults.standard.string(forKey: "cookie")!
     ]
-    func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String){
+    func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.FolderStruct], parent:NasSendFolderSelectVC){
         NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
         let folders:[App.Folders] = FileUtil().getFolderList()
         var foldersToCreate:[String] = []
         toUserId = getToUserId
         newFoldrWholePathNm = getNewFoldrWholePathNm
         oldFoldrWholePathNm = getOldFoldrWholePathNm
-        
+        multiCheckedfolderArray = getMultiArray
+        nasSendFolderSelectVC = parent
         for folder in folders{
             if folder.foldrWholePathNm.contains(oldFoldrWholePathNm) {
                 print(folder.foldrWholePathNm)
@@ -128,8 +131,17 @@ class ToNasFromLocalFolder {
             }
         }
         print("upload Files finish")
-        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
-        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCAlert"), object: self, userInfo: nil)
+        if(multiCheckedfolderArray.count > 0){
+            let lastIndex = multiCheckedfolderArray.count - 1
+            multiCheckedfolderArray.remove(at: lastIndex)
+            nasSendFolderSelectVC?.multiCheckedfolderArray = multiCheckedfolderArray
+            nasSendFolderSelectVC?.startMultiLocalToNas()
+            
+        } else {
+            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
+            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCAlert"), object: self, userInfo: nil)
+        }
+        
         
     }
     

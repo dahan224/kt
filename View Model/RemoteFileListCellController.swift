@@ -25,16 +25,6 @@ class RemoteFileListCellController {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "RemoteFileListCell", for: indexPath) as! RemoteFileListCell
         
-        if (multiCheckListState == .active){
-            cell.btnMultiCheck.isHidden = false
-            cell.btnMultiCheck.tag = indexPath.row
-            cell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-            cell.btnOption.isHidden = true
-            
-        } else {
-            cell.btnOption.isHidden = false
-            cell.btnMultiCheck.isHidden = true
-        }
         if(folderArray[indexPath.row].foldrNm == "..."){
             cell.btnOption.isHidden = true
         }
@@ -84,8 +74,8 @@ class RemoteFileListCellController {
             dv?.showRemoteFileOption(tag: sender.tag)
             break
         case cell.btnDwnld:
-            let remoteDownLoadToNas = false
-            UserDefaults.standard.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
+            let remoteDownLoadStyle = "remoteDownLoad"
+            UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
 
             print("folder : \(folderArray[indexPath.row])")
@@ -97,8 +87,8 @@ class RemoteFileListCellController {
         case cell.btnNas:
             
            
-            let remoteDownLoadToNas = true
-            UserDefaults.standard.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
+            let remoteDownLoadStyle = "remoteDownLoadToNas"
+            UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
 
 //            remoteDownloadRequestToNas(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: currentDevUuid, fromFileNm: fileNm, fromFileId: fileId)
@@ -135,9 +125,10 @@ class RemoteFileListCellController {
         case 1:
             
             //다운로드
-            let remoteDownLoadToNas = false
-            UserDefaults.standard.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
+            let remoteDownLoadStyle = "remoteDownLoad"
+            UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
+            print("remoteDownLoad: \(String(describing: UserDefaults.standard.string(forKey: "remoteDownLoadStyle")))")
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
             print("folder : \(folderArray[indexPath.row])")
             print("fileId: \(fileId) , fromUserId : \(userId), fromDevUuid : \(currentDevUuid), fromFoldr : \(foldrWholePathNm)")
@@ -146,8 +137,9 @@ class RemoteFileListCellController {
             
         case 2:
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-            let remoteDownLoadToNas = true
-            UserDefaults.standard.setValue(remoteDownLoadToNas, forKey: "remoteDownLoadToNas")
+//            let remoteDownLoadToNas = true
+            let remoteDownLoadStyle = "remoteDownLoadToNas"
+            UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
             
             //            remoteDownloadRequestToNas(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: currentDevUuid, fromFileNm: fileNm, fromFileId: fileId)

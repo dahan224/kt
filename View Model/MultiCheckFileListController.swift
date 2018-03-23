@@ -14,10 +14,12 @@ class MultiCheckFileListController {
     
     var multiCheckedfolderArray:[App.FolderStruct] = []
     var dv:HomeDeviceCollectionVC?
+    var nasSendFolderSelectVC:NasSendFolderSelectVC?
     var selectedUserId = ""
     var selectedDevUuid = ""
     var selectedDeviceName = ""
     var selectedDevFoldrId = ""
+    var fromOsCd = ""
     var folderIdsToDownLoad:[Int] = []
     var folderPathToDownLoad:[String] = []
     var fileArrayToDownload:[App.FolderStruct] = []
@@ -342,6 +344,175 @@ class MultiCheckFileListController {
             return
         }
     }
+    
+    // 멀티 파일 리모트 다운로드
+    
+    
+    func remoteMultiDownloadRequest(getFolderArray:[App.FolderStruct], parent:HomeDeviceCollectionVC, fromUserId:String, devUuid:String, deviceName:String, devFoldrId:String,fromOsCd:String){
+        
+        dv = parent
+        selectedDevUuid = devUuid
+        selectedDeviceName = deviceName
+        selectedUserId = fromUserId
+        multiCheckedfolderArray = getFolderArray
+        selectedDevFoldrId = devFoldrId
+        self.fromOsCd = fromOsCd
+        
+        if (multiCheckedfolderArray.count > 0){
+            let index = getFolderArray.count - 1
+            let fileNm = getFolderArray[index].fileNm
+            let foldrWholePathNm = getFolderArray[index].foldrWholePathNm
+            let fileId = String(getFolderArray[index].fileId)
+            let foldrId = String(getFolderArray[index].foldrId)
+            let etsionNm = getFolderArray[index].etsionNm
+            
+            remoteDownloadRequest(fromUserId: selectedUserId, fromDevUuid: selectedDevUuid, fromOsCd: fromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+            return
+        }
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: nil, message: "리퀘스트 요청이 완료 되었습니다.", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
+                UIAlertAction in
+                NotificationCenter.default.post(name: Notification.Name("btnMulticlicked"), object: self, userInfo: nil)
+                let fileDict = ["foldrId":self.selectedDevFoldrId]
+                print("delete filedict : \(fileDict)")
+                
+                let fileIdDict = ["fileId":"0"]
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+            }
+            
+            alertController.addAction(yesAction)
+            parent.present(alertController, animated: true)
+        }
+    }
+    
+    
+    func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
+        var jsonHeader:[String:String] = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+            "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        ]
+        
+        let urlString = App.URL.server+"reqFileDown.do"
+        var comnd = "RALI"
+        switch fromOsCd {
+        case "W":
+            comnd = "RWLI"
+        case "A":
+            comnd = "RALI"
+        default:
+            comnd = "RILI"
+            break
+        }
+        let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
+        print("notifyNasUploadFinish param : \(paramas)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: paramas,
+                          encoding : JSONEncoding.default,
+                          headers: jsonHeader).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+                                
+                                print(response.result.value)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("remoteDownloadRequest : \(message)")
+                                
+                                let lastIndex = self.multiCheckedfolderArray.count - 1
+                                self.multiCheckedfolderArray.remove(at: lastIndex)
+                                self.remoteMultiDownloadRequest(getFolderArray: self.multiCheckedfolderArray, parent: self.dv!, fromUserId: self.selectedUserId, devUuid: self.selectedDevUuid, deviceName: self.selectedDeviceName, devFoldrId: self.selectedDevFoldrId, fromOsCd: self.fromOsCd)
+                                break
+                            case .failure(let error):
+                                
+                                print(error.localizedDescription)
+                            }
+        }
+    }
+    
+    func remoteMultiDownloadRequestToSend(getFolderArray:[App.FolderStruct], parent:NasSendFolderSelectVC, fromUserId:String, devUuid:String, deviceName:String, devFoldrId:String,fromOsCd:String){
+        
+        selectedDevUuid = devUuid
+        selectedDeviceName = deviceName
+        selectedUserId = fromUserId
+        multiCheckedfolderArray = getFolderArray
+        selectedDevFoldrId = devFoldrId
+        self.fromOsCd = fromOsCd
+        nasSendFolderSelectVC = parent
+        
+        if (multiCheckedfolderArray.count > 0){
+            let index = getFolderArray.count - 1
+            let fileNm = getFolderArray[index].fileNm
+            let foldrWholePathNm = getFolderArray[index].foldrWholePathNm
+            let fileId = String(getFolderArray[index].fileId)
+            let foldrId = String(getFolderArray[index].foldrId)
+            let etsionNm = getFolderArray[index].etsionNm
+            
+            remoteDownloadRequestToSend(fromUserId: selectedUserId, fromDevUuid: selectedDevUuid, fromOsCd: fromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+            return
+        }
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: nil, message: "리퀘스트 요청이 완료 되었습니다.", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
+                UIAlertAction in
+                NotificationCenter.default.post(name: Notification.Name("btnMulticlicked"), object: self, userInfo: nil)
+                let fileDict = ["foldrId":self.selectedDevFoldrId]
+                print("delete filedict : \(fileDict)")
+                
+                let fileIdDict = ["fileId":"0"]
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+            }
+            
+            alertController.addAction(yesAction)
+            parent.present(alertController, animated: true)
+        }
+    }
+    
+    func remoteDownloadRequestToSend(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
+        var jsonHeader:[String:String] = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+            "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        ]
+        
+        let urlString = App.URL.server+"reqFileDown.do"
+        var comnd = "RALI"
+        switch fromOsCd {
+        case "W":
+            comnd = "RWLI"
+        case "A":
+            comnd = "RALI"
+        default:
+            comnd = "RILI"
+            break
+        }
+        let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
+        print("notifyNasUploadFinish param : \(paramas)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: paramas,
+                          encoding : JSONEncoding.default,
+                          headers: jsonHeader).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+                                
+                                print(response.result.value)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("remoteDownloadRequest : \(message)")
+                                
+                                let lastIndex = self.multiCheckedfolderArray.count - 1
+                                self.multiCheckedfolderArray.remove(at: lastIndex)
+                                self.remoteMultiDownloadRequestToSend(getFolderArray: self.multiCheckedfolderArray, parent: self.nasSendFolderSelectVC!, fromUserId: self.selectedUserId, devUuid: self.selectedDevUuid, deviceName: self.selectedDeviceName, devFoldrId: self.selectedDevFoldrId, fromOsCd: self.fromOsCd)
+                                break
+                            case .failure(let error):
+                                
+                                print(error.localizedDescription)
+                            }
+        }
+    }
+    
 }
     
     

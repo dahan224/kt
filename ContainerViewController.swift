@@ -372,8 +372,10 @@ class ContainerViewController: UIViewController {
         multiCheckedfolderArray = getArray
         if toStorage == "nas_multi" {
             storageKind = .nas_multi
-        } else {
+        } else if toStorage == "remote_nas_multi" {
             storageKind = .remote_nas_multi
+        } else {
+            storageKind = .local_nas_multi
         }
         
         self.fromOsCd = fromOsCd
