@@ -1186,8 +1186,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 
             case .remoteFileInfo:
                 return bottomListRemoteFileInfo.count
-                break
-                
             case .sort:
                 return bottomListSort.count
                 
@@ -1230,7 +1228,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
 //                    print("DeviceArray[indexPath.row-1].osNm : \(DeviceArray[indexPath.row-1].onoff)")
                     cell.lblTitle.text = DeviceArray[indexPath.row-1].devNm
                 }
-                
             }
         } else {
             print("tableview bottomstate : \(bottomListState)")
