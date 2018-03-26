@@ -14,7 +14,7 @@ import GoogleSignIn
 
 import SQLite
 
-class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UICollectionViewDelegate, UICollectionViewDataSource, UIDocumentInteractionControllerDelegate{
+class HomeViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UISearchBarDelegate, UIDocumentInteractionControllerDelegate{
     var documentController:UIDocumentInteractionController = UIDocumentInteractionController()
     var containerViewController:ContainerViewController?
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
@@ -138,6 +138,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     enum mainContentsStyleEnum {
         case oneViewList
         case googleDriveList
+        
     }
     var mainContentState = mainContentsStyleEnum.oneViewList
     var maintainFolder = false
@@ -153,12 +154,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var flickCheck = 1;
     var listStyleCheck = 1;
     
-    @IBOutlet weak var filckView: UIStackView!
-    
-    
-    
-    
-    
+    @IBOutlet weak var flickView: UIStackView!
     
     
     let navBarTitle:UIButton = {
@@ -318,7 +314,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var searchGubun = ""
     var oneViewSortState:DbHelper.sortByEnum = DbHelper.sortByEnum.none
     var containerViewTopAnchor:NSLayoutConstraint?
-    var containerBottomTopAnchor:NSLayoutConstraint?
+    var containerViewBottomAnchor:NSLayoutConstraint?
     
     
     override func viewDidLoad() {
@@ -453,15 +449,24 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             containerSubview.removeFromSuperview()
         }
         containerViewTopAnchor?.isActive = false
-        containerBottomTopAnchor?.isActive = false
+        containerViewBottomAnchor?.isActive = false
         listContainerView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
         listContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
         
-        containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchView.bottomAnchor, constant: 0)
-        containerViewTopAnchor?.isActive = true
+        if(viewState == .search){
+            containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchCountLabel.bottomAnchor, constant: 2)
+            containerViewTopAnchor?.isActive = true
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+            containerViewBottomAnchor?.isActive = true
+        } else {
+            containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchView.bottomAnchor, constant: 0)
+            containerViewTopAnchor?.isActive = true
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40)
+            containerViewBottomAnchor?.isActive = true
+            
+        }
         
-        containerBottomTopAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40)
-        containerBottomTopAnchor?.isActive = true
+        
         
     
         self.willMove(toParentViewController: nil)
@@ -496,23 +501,15 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             setSearchView(title: "GiGA Storage")
             searchbarTextStarted = true
         }
-        if(self.view.contains(listContainerView)){
-            
-        } else {
-            print("called")
-            self.view.addSubview(listContainerView)
-            
-            containerViewTopAnchor?.isActive = false
-            containerBottomTopAnchor?.isActive = false
-            listContainerView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
-            listContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-            containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchView.bottomAnchor, constant: 1)
-            containerViewTopAnchor?.isActive = true
-            containerBottomTopAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-            containerBottomTopAnchor?.isActive = true
-            
-            
-        }
+        
+        print("called")
+        containerViewTopAnchor?.isActive = false
+        containerViewBottomAnchor?.isActive = false
+        
+        containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchCountLabel.bottomAnchor, constant: 2)
+        containerViewTopAnchor?.isActive = true
+        containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
+        containerViewBottomAnchor?.isActive = true
         
         tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
         tapGesture.cancelsTouchesInView = false
@@ -522,7 +519,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
         print("end")
         view.removeGestureRecognizer(tapGesture)
-          sBar.endEditing(true)
+        sBar.endEditing(true)
     }
     
     func setSearchView(title:String){
@@ -542,10 +539,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         
 
     }
-    
-    
     func searchBarSearchButtonClicked(_ searchBar: UISearchBar) {
         print("검색 : \(searchBar.text!)")
+        view.removeGestureRecognizer(tapGesture)
+        sBar.endEditing(true)
         searchedText = searchBar.text!
         searchInAllCategory()
     }
@@ -628,262 +625,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
 
-    
-    func setSearchFileCollectionView(){
-        
-        let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
-        let width = UIScreen.main.bounds.width
-        
-        self.view.addSubview(listContainerView)
-        for containSubview in listContainerView.subviews {
-            containSubview.removeFromSuperview()
-        }
-        containerViewTopAnchor?.isActive = false
-        containerBottomTopAnchor?.isActive = false
-        listContainerView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
-        listContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
-        containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchView.bottomAnchor, constant: 1)
-        containerViewTopAnchor?.isActive = true
-        containerBottomTopAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor)
-        containerBottomTopAnchor?.isActive = true
-        
-        var cellWidth = (width - 35) / 2
-        var height = cellWidth
-        var minimumSpacing:CGFloat = 1
-        switch listViewStyleState {
-        case .grid:
-            
-            break
-        case .list:
-            cellWidth = width
-            height = 80.0
-            cellWidth = width
-            break
-        }
-        layout.sectionInset = UIEdgeInsets(top: 5, left: 15, bottom: 0, right: 15)
-        layout.itemSize = CGSize(width: cellWidth, height: height )
-        layout.minimumInteritemSpacing = 5
-        layout.minimumLineSpacing = minimumSpacing
-        collectionView = UICollectionView(frame: listContainerView.frame, collectionViewLayout: layout)
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        if(self.SearchedFileArray.count > 0){
-        collectionView.backgroundColor = HexStringToUIColor().getUIColor(hex: "F5F5F5")
-        } else{
-            collectionView.backgroundColor = UIColor.white
-        }
-        
-        collectionView.register(CollectionViewGridCell.self, forCellWithReuseIdentifier: "fileCell1")
-        collectionView.register(FileListCell.self, forCellWithReuseIdentifier: "fileCell2")
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        listContainerView.addSubview(collectionView)
-        collectionView.topAnchor.constraint(equalTo: listContainerView.topAnchor).isActive = true
-        collectionView.bottomAnchor.constraint(equalTo: listContainerView.bottomAnchor).isActive = true
-        collectionView.leadingAnchor.constraint(equalTo: listContainerView.leadingAnchor).isActive = true
-        collectionView.trailingAnchor.constraint(equalTo: listContainerView.trailingAnchor).isActive = true
-        collectionView.centerXAnchor.constraint(equalTo: listContainerView.centerXAnchor).isActive = true
-        collectionView.reloadData()
-        
-        self.view.bringSubview(toFront: tableView)
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return SearchedFileArray.count
-    }
-    
-    func fileListCellController(indexPathRow:Int) -> FileListCell {
-        let indexPath = IndexPath(row: indexPathRow, section: 0)
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "fileCell2", for: indexPath) as! FileListCell
-        cell.btnOption.isHidden = false
-        cell.btnMultiCheck.isHidden = true
-      
-        let imageString = Util.getFileImageString(fileExtension: SearchedFileArray[indexPath.row].etsionNm)
-        
-        cell.ivSub.image = UIImage(named: imageString)
-        cell.lblMain.text = SearchedFileArray[indexPath.row].fileNm
-        cell.lblSub.text = SearchedFileArray[indexPath.row].amdDate
-        cell.optionSHowCheck = 0
-        cell.optionHide()
-        let devId = SearchedFileArray[indexPath.row].devUuid
-        if(devId == Util.getUuid()){
-            cell.btnOption.tag = indexPath.row
-            cell.btnOption.addTarget(self, action: #selector(btnOptionLocalClicked(sender:)), for: .touchUpInside)
-            cell.btnOptionRed.tag = indexPath.row
-            cell.btnOptionRed.addTarget(self, action: #selector(btnOptionLocalClicked(sender:)), for: .touchUpInside)
-            
-        } else {
-            cell.btnOption.tag = indexPath.row
-            cell.btnOption.addTarget(self, action: #selector(btnOptionClicked(sender:)), for: .touchUpInside)
-            cell.btnOptionRed.tag = indexPath.row
-            cell.btnOptionRed.addTarget(self, action: #selector(btnOptionClicked(sender:)), for: .touchUpInside)
-            
-        }
-        cell.lblDevice.isHidden = false
-        cell.lblDevice.text = SearchedFileArray[indexPath.row].devNm
-        cell.btnOption.isHidden = false
-        cell.btnShow.tag = indexPath.row
-        cell.btnShow.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnAction.tag = indexPath.row
-        cell.btnAction.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDwnld.tag = indexPath.row
-        cell.btnDwnld.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        return cell
-    }
-    @objc func btnOptionClicked(sender:UIButton){
-        //        print("optionSHow")
-        showOptionMenu(sender: sender, style:0)
-    }
-    @objc func btnOptionLocalClicked(sender:UIButton){
-        //        print("optionSHow")
-        showOptionMenu(sender: sender, style:2)
-    }
-
-    func showOptionMenu(sender:UIButton, style:Int){
-        let buttonRow = sender.tag
-        let indexPath = IndexPath(row: buttonRow, section: 0)
-        let cell = collectionView.cellForItem(at: indexPath) as! FileListCell
-        if(cell.optionSHowCheck == 0){
-            if(style == 0) {
-                let width = App.Size.optionWidth
-                let spacing = (width - 300) / 5
-                cell.spacing = spacing
-                cell.optionShow(spacing: spacing, style: style)
-            } else{
-                let width = App.Size.optionWidth
-                let spacing = (width - 180) / 4
-                cell.optionShow(spacing: spacing, style:style)
-            }
-            cell.optionSHowCheck = 1
-        } else {
-            cell.optionHide()
-            cell.optionSHowCheck = 0
-        }
-        
-        UIView.animate(withDuration: 0.3){
-            self.view.layoutIfNeeded()
-        }
-    }
-    
-    
-    @objc func optionShowClicked(sender:UIButton){
-        let buttonRow = sender.tag
-        let indexPath = IndexPath(row: buttonRow, section: 0)
-        let cell = collectionView.cellForItem(at: indexPath) as! FileListCell
-        let osCd = SearchedFileArray[indexPath.row].osCd
-        print("osCd : \(osCd)", SearchedFileArray[indexPath.row].devNm)
-        let devId = SearchedFileArray[indexPath.row].devUuid
-        if(devId == Util.getUuid()){
-            self.localContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        } else {
-//            self.nasContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        }
-    }
-    func localContextMenuCalled(cell:FileListCell, indexPath:IndexPath, sender:UIButton){
-        let fileNm = SearchedFileArray[indexPath.row].fileNm
-        foldrWholePathNm = SearchedFileArray[indexPath.row].foldrWholePathNm
-        switch sender {
-        case cell.btnShow:
-            let fileId = SearchedFileArray[indexPath.row].fileId
-            print("fileId : \(fileId)")
-            let fileIdDict:[String:Any] = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName, "savedPath":"sdf"]
-            NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
-            
-            break
-        case cell.btnAction:
-            let mailURL = URL(string: "photos-redirect://")!
-            if UIApplication.shared.canOpenURL(mailURL) {
-//                UIApplication.shared.openURL(mailURL)
-                
-                UIApplication.shared.open(mailURL, options: [:], completionHandler: {
-                    (success) in
-                    
-                    
-                })
-                
-            }
-            break
-        case cell.btnNas:
-            print(deviceName)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":userId]
-            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-            showOptionMenu(sender: sender, style: 0)
-
-//            switch(flickState){
-//            case .main :
-//                switch mainContentState {
-//                case .oneViewList:
-//                    let fileSavedPath = "\(SearchedFileArray[indexPath.row].savedPath)"
-//                    let fileId = DbHelper().getLocalFileId(path: fileSavedPath)
-//                    let fileDict = ["fileId":fileId, "fileNm":fileNm, "oldFoldrWholePathNm":foldrWholePathNm,"state":"local","fromUserId":userId]
-//                    print("fileDict : \(fileDict)")
-//                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-//                    showOptionMenu(sender: sender, style: 0)
-//
-//                case .googleDriveList:
-//                    break
-//                }
-//                break
-//            case .lately:
-//                break
-//            }
-            break
-        default:
-            break
-        }
-    }
-    
     func schemeAvailable(scheme: String) -> Bool {
         if let url = URL(string: scheme) {
             return UIApplication.shared.canOpenURL(url)
         }
         return false
     }
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell1 = collectionView.dequeueReusableCell(withReuseIdentifier: "fileCell1", for: indexPath) as! CollectionViewGridCell
-        let cell2 = fileListCellController(indexPathRow: indexPath.row)
-        
-        let cells = [cell1, cell2]
-        var cell = cells[0]
-        let imageString = Util.getFileImageString(fileExtension: SearchedFileArray[indexPath.row].etsionNm)
-        
-        switch listViewStyleState{
-        case .grid:
-            cell1.ivMain.image = UIImage(named: imageString)
-            cell1.ivSub.image = UIImage(named: imageString)
-            cell1.lblMain.text = SearchedFileArray[indexPath.row].fileNm
-            cell1.lblSub.text = SearchedFileArray[indexPath.row].amdDate
-            cell = cells[0]
-            break
-        case .list:
-            cell2.ivSub.image = UIImage(named: imageString)
-            cell2.lblMain.text = SearchedFileArray[indexPath.row].fileNm
-            cell2.lblSub.text = SearchedFileArray[indexPath.row].amdDate
-            cell = cells[1]
-            break
-        }
-        cell.layer.shadowColor = UIColor.lightGray.cgColor
-        cell.layer.shadowOffset = CGSize(width:0,height: 2.0)
-        cell.layer.shadowRadius = 1.0
-        cell.layer.shadowOpacity = 1.0
-        cell.layer.masksToBounds = false;
-        cell.layer.shadowPath = UIBezierPath(roundedRect:cell.bounds, cornerRadius:cell.contentView.layer.cornerRadius).cgPath
-        
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        print("fileId : \(SearchedFileArray[indexPath.row].fileNm)")
-        print("fileId : \(SearchedFileArray[indexPath.row].foldrId)")
-        print("fileId : \(self.SearchedFileArray[indexPath.row].fileId)")
-        
-    }
-    
+   
     
     
     @objc func backToHome(){
@@ -892,6 +640,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         btnArrState = .end
         searchbarTextStarted = false
         showSearchCategory()
+        flickView.isHidden = false
         for view in self.listContainerView.subviews {
             view.removeFromSuperview()
         }
@@ -916,12 +665,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         
 //        tableView.reloadData()
         print("searchStepState : \(searchStepState), id: \(searchId), bottomListyState: \(getBottomListState)")
+        
     }
     
     @objc func bottomStateFromContainer(stateInfo: NSNotification){
         if let bottomState = stateInfo.userInfo?["bottomState"] as? String, let getFileId = stateInfo.userInfo?["fileId"] as? String, let getFoldrWholePathNm = stateInfo.userInfo?["foldrWholePathNm"] as? String, let getDeviceName = stateInfo.userInfo?["deviceName"] as? String, let getDevUuid = stateInfo.userInfo?["selectedDevUuid"] as? String, let getFileNm = stateInfo.userInfo?["fileNm"] as? String, let getUserId = stateInfo.userInfo?["userId"] as? String, let getFoldrId = stateInfo.userInfo?["foldrId"] as? String, let getFomOsCd = stateInfo.userInfo?["fromOsCd"] as? String, let getCurrentFolderId = stateInfo.userInfo?["currentFolderId"] as? String{
             
-            filckView.isHidden = true
+            flickView.isHidden = true
             bottomListState = bottomListEnum(rawValue: bottomState)!
             fileId = getFileId
             foldrWholePathNm = getFoldrWholePathNm
@@ -935,6 +685,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             currentFolderId = getCurrentFolderId
             print("bottomListState: \(bottomListState), foldrWholePathNm : \(foldrWholePathNm)")
             ifNavBarClicked = false
+            containerViewBottomAnchor?.isActive = false
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+            containerViewBottomAnchor?.isActive = true
             
         } else {
             print("not called")
@@ -1352,7 +1105,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         if(ifNavBarClicked){
             if(indexPath.row == 0){
                 print("back to main")
-                self.filckView.isHidden = false
+                self.flickView.isHidden = false
                 self.mainContentState = .oneViewList
                 backToHome()
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)

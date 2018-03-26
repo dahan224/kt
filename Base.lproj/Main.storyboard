@@ -831,7 +831,7 @@
                         <outlet property="btnLIst" destination="fy8-fI-2Fj" id="uvq-Dk-WTy"/>
                         <outlet property="btnSel" destination="2Ho-jI-jm2" id="8Dn-xi-GWY"/>
                         <outlet property="customNavBar" destination="RRC-MR-BKO" id="b2M-ud-bo9"/>
-                        <outlet property="filckView" destination="8Ol-VW-APP" id="gw1-gr-mxD"/>
+                        <outlet property="flickView" destination="8Ol-VW-APP" id="gw1-gr-mxD"/>
                         <outlet property="lblTitle" destination="MgF-tK-g6o" id="esI-NY-gWc"/>
                         <outlet property="searchCategoryHeightConstraint" destination="HZR-ik-fAd" id="3Dx-iU-02d"/>
                         <outlet property="searchCategoryView" destination="e7s-xl-63I" id="5Wq-vD-UOP"/>
@@ -843,7 +843,7 @@
                 </viewController>
                 <placeholder placeholderIdentifier="IBFirstResponder" id="fLG-mS-SOc" userLabel="First Responder" sceneMemberID="firstResponder"/>
             </objects>
-            <point key="canvasLocation" x="790" y="867"/>
+            <point key="canvasLocation" x="790" y="858"/>
         </scene>
         <!--Home Device CollectionVC-->
         <scene sceneID="kRA-4O-f1w">
@@ -1841,10 +1841,6 @@
                                     <constraint firstItem="GD9-Pw-ta1" firstAttribute="leading" secondItem="TPm-7Z-idB" secondAttribute="trailing" constant="2" id="26X-rB-Upf"/>
                                 </constraints>
                             </stackView>
-                            <containerView opaque="NO" contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="7hA-hj-JDk">
-                                <rect key="frame" x="0.0" y="136" width="375" height="491"/>
-                                <color key="backgroundColor" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
-                            </containerView>
                             <tableView clipsSubviews="YES" contentMode="scaleToFill" alwaysBounceVertical="YES" dataMode="prototypes" style="plain" separatorStyle="default" rowHeight="-1" estimatedRowHeight="-1" sectionHeaderHeight="28" sectionFooterHeight="28" translatesAutoresizingMaskIntoConstraints="NO" id="QrZ-fd-Meq">
                                 <rect key="frame" x="10" y="667" width="355" height="240"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
@@ -1946,21 +1942,17 @@
                                 <color key="color" red="1" green="0.0" blue="0.0" alpha="1" colorSpace="calibratedRGB"/>
                             </activityIndicatorView>
                         </subviews>
-                        <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
+                        <color key="backgroundColor" red="0.96078431372549022" green="0.96078431372549022" blue="0.96078431372549022" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
                             <constraint firstItem="OTR-mS-RVt" firstAttribute="trailing" secondItem="Q8o-4k-G8f" secondAttribute="trailing" id="2jF-FY-8dM"/>
-                            <constraint firstItem="7hA-hj-JDk" firstAttribute="trailing" secondItem="Q8o-4k-G8f" secondAttribute="trailing" id="4KK-Ml-v4K"/>
-                            <constraint firstItem="7hA-hj-JDk" firstAttribute="leading" secondItem="Q8o-4k-G8f" secondAttribute="leading" id="4PI-b6-Jcl"/>
                             <constraint firstItem="zBf-iC-4fg" firstAttribute="centerX" secondItem="84w-8I-ujB" secondAttribute="centerX" id="Fza-cx-MJf"/>
                             <constraint firstItem="Q8o-4k-G8f" firstAttribute="bottom" secondItem="zBf-iC-4fg" secondAttribute="bottom" constant="5" id="Gfu-fV-hdu"/>
                             <constraint firstItem="X06-aB-buT" firstAttribute="leading" secondItem="Q8o-4k-G8f" secondAttribute="leading" id="MDQ-Q9-vKr"/>
-                            <constraint firstItem="7hA-hj-JDk" firstAttribute="top" secondItem="X06-aB-buT" secondAttribute="bottom" id="PkC-5c-OYE"/>
                             <constraint firstItem="X06-aB-buT" firstAttribute="centerX" secondItem="84w-8I-ujB" secondAttribute="centerX" id="Vj3-gC-37r"/>
                             <constraint firstItem="QrZ-fd-Meq" firstAttribute="leading" secondItem="Q8o-4k-G8f" secondAttribute="leading" constant="10" id="gL2-XP-GSL"/>
                             <constraint firstItem="QrZ-fd-Meq" firstAttribute="bottom" secondItem="Q8o-4k-G8f" secondAttribute="bottom" constant="240" id="hA2-yK-nl8"/>
                             <constraint firstItem="X06-aB-buT" firstAttribute="top" secondItem="OTR-mS-RVt" secondAttribute="bottom" id="lpb-3M-ebn"/>
                             <constraint firstItem="OTR-mS-RVt" firstAttribute="top" secondItem="Q8o-4k-G8f" secondAttribute="top" id="vfs-xg-Voe"/>
-                            <constraint firstAttribute="bottom" secondItem="7hA-hj-JDk" secondAttribute="bottom" constant="40" id="vhE-9v-218"/>
                             <constraint firstItem="OTR-mS-RVt" firstAttribute="centerX" secondItem="84w-8I-ujB" secondAttribute="centerX" id="wJM-0C-P3q"/>
                             <constraint firstItem="OTR-mS-RVt" firstAttribute="leading" secondItem="Q8o-4k-G8f" secondAttribute="leading" id="wwn-xE-fza"/>
                             <constraint firstItem="Q8o-4k-G8f" firstAttribute="trailing" secondItem="X06-aB-buT" secondAttribute="trailing" id="y8J-HC-ozx"/>
@@ -1976,7 +1968,6 @@
                         <outlet property="btnHamburger" destination="x14-7g-W4K" id="Bnw-in-Xsu"/>
                         <outlet property="btnLIst" destination="apD-Ko-8ty" id="Hab-rV-jpb"/>
                         <outlet property="btnSel" destination="iLy-bN-DDo" id="4yI-Ql-vxj"/>
-                        <outlet property="containerViewA" destination="7hA-hj-JDk" id="gik-SH-T4U"/>
                         <outlet property="customNavBar" destination="OTR-mS-RVt" id="1x7-b1-ZGJ"/>
                         <outlet property="lblTitle" destination="xL3-aH-kWb" id="cUa-9C-ka5"/>
                         <outlet property="searchView" destination="X06-aB-buT" id="NKu-by-SvS"/>

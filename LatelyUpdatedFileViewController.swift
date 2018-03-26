@@ -10,7 +10,8 @@ import UIKit
 import SwiftyJSON
 import Alamofire
 
-class LatelyUpdatedFileViewController: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource {
+class LatelyUpdatedFileViewController: UIViewController {
+    var containerViewController:ContainerViewController?
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     @IBOutlet weak var customNavBar: UIView!
@@ -112,24 +113,17 @@ class LatelyUpdatedFileViewController: UIViewController, UICollectionViewDelegat
     
     var sortBy = ""
     
-    enum listViewStyleEnum {
-        case grid
-        case list
-    }
-    var listViewStyleState = listViewStyleEnum.list
+  
+    var listViewStyleState = HomeViewController.listViewStyleEnum.list
+    var mainContentState = HomeViewController.mainContentsStyleEnum.oneViewList
     
-    enum mainContentsStyleEnum {
-        case oneViewList
-        case googleDriveList
-    }
-    var mainContentsStyleState = mainContentsStyleEnum.oneViewList
     var maintainFolder = false
     
     enum flickEnum {
         case main
         case lately
     }
-    var flickState = flickEnum.main
+    var flickState = HomeViewController.flickEnum.lately
     
     @IBOutlet weak var btnFlick1: UIButton!
     @IBOutlet weak var btnFlick2: UIButton!
@@ -277,12 +271,14 @@ class LatelyUpdatedFileViewController: UIViewController, UICollectionViewDelegat
     var searchbarTextStarted = false
     var DeviceArray:[App.DeviceStruct] = []
     var SearchedFileArray:[App.SearchedFileStruct] = []
-    var LatelyUpdatedFileArray:[App.LatelyUpdatedFileStruct] = []
+    var LatelyUpdatedFileArray:[App.FolderStruct] = []
     var driveFileArray:[App.DriveFileStruct] = []
     var collectionView: UICollectionView!
     
     var searchGubun = ""
     var oneViewSortState:DbHelper.sortByEnum = DbHelper.sortByEnum.none
+    var containerViewTopAnchor:NSLayoutConstraint?
+    var containerViewBottomAnchor:NSLayoutConstraint?
     
 
     override func viewDidLoad() {
@@ -304,7 +300,7 @@ class LatelyUpdatedFileViewController: UIViewController, UICollectionViewDelegat
     
     func setLatelyView(){
         searchStepState = .all
-        mainContentsStyleState = .oneViewList
+        mainContentState = .oneViewList
         for view in self.customNavBar.subviews {
             view.removeFromSuperview()
         }
@@ -334,12 +330,13 @@ class LatelyUpdatedFileViewController: UIViewController, UICollectionViewDelegat
                     if let statusCode = json["statusCode"].int, statusCode == 100 {
                         let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                         for file in serverList {
-                            let fileStruct = App.LatelyUpdatedFileStruct(data: file)
-                            print("fileStruct : \(fileStruct)")
+                            let fileStruct = App.FolderStruct(data: file)
+                            print("file : \(file)")
                             self.LatelyUpdatedFileArray.append(fileStruct)
                         }
                     }
-                    self.setCollectionView()
+                    
+                    self.setupDeviceListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
                     break
                 case .failure(let error):
                     NSLog(error.localizedDescription)
@@ -350,187 +347,61 @@ class LatelyUpdatedFileViewController: UIViewController, UICollectionViewDelegat
         
     }
     
-    func setCollectionView(){
-        print("LatelyUpdatedFileArray : \(LatelyUpdatedFileArray)")
-        let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
-        let width = UIScreen.main.bounds.width
-//        self.view.addSubview(listContainerView)
-//        listContainerView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
-//        listContainerView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-//        listContainerView.topAnchor.constraint(equalTo: containerViewA.bottomAnchor, constant: 10).isActive = true
-//        listContainerView.bottomAnchor.constraint(equalTo: containerViewA.bottomAnchor).isActive = true
-        
-        var cellWidth = (width - 35) / 2
-        var height = cellWidth
-        var minimumSpacing:CGFloat = 5
-        
-        switch listViewStyleState {
-        case .grid:
-            
-            break
-        case .list:
-            cellWidth = width
-            height = 80.0
-            minimumSpacing = 1
-            break
+    func setupDeviceListView(sortBy: DbHelper.sortByEnum, multiCheckd:Bool){
+        let previous = self.childViewControllers.first
+        if let previous = previous {
+            previous.willMove(toParentViewController: nil)
+            previous.view.removeFromSuperview()
+            previous.removeFromParentViewController()
         }
-        layout.sectionInset = UIEdgeInsets(top: 5, left: 15, bottom: 0, right: 15)
-        layout.itemSize = CGSize(width: cellWidth, height: height )
-        layout.minimumInteritemSpacing = 5
-        layout.minimumLineSpacing = minimumSpacing
-        collectionView = UICollectionView(frame: containerViewA.frame, collectionViewLayout: layout)
-        collectionView.delegate = self
-        collectionView.dataSource = self
-        collectionView.backgroundColor = HexStringToUIColor().getUIColor(hex: "F5F5F5")
-//        collectionView.register(CollectionViewGridCell.self, forCellWithReuseIdentifier: "fileCell1")
-        collectionView.register(FileListCell.self, forCellWithReuseIdentifier: "fileCell2")
-        collectionView.translatesAutoresizingMaskIntoConstraints = false
-        containerViewA.addSubview(collectionView)
-        collectionView.topAnchor.constraint(equalTo: containerViewA.topAnchor).isActive = true
-        collectionView.bottomAnchor.constraint(equalTo: containerViewA.bottomAnchor).isActive = true
-        collectionView.leadingAnchor.constraint(equalTo: containerViewA.leadingAnchor).isActive = true
-        collectionView.trailingAnchor.constraint(equalTo: containerViewA.trailingAnchor).isActive = true
-        
-        collectionView.collectionViewLayout.invalidateLayout()
-        collectionView.reloadData()
-        
-        self.view.bringSubview(toFront: containerViewA)
-        
-//        self.view.bringSubview(toFront: tableView)
-    }
-    
-
-    
-    func collectionView(_ collectionView: UICollectionView, numberOfItemsInSection section: Int) -> Int {
-        return LatelyUpdatedFileArray.count
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell {
-        let cell = fileListCellController(indexPathRow: indexPath.row)
-        return cell
-    }
-    
-    func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
-        
-    }
-    
-    
-    func fileListCellController(indexPathRow:Int) -> FileListCell {
-        let indexPath = IndexPath(row: indexPathRow, section: 0)
-        let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "fileCell2", for: indexPath) as! FileListCell
-        cell.btnOption.isHidden = false
-        cell.btnMultiCheck.isHidden = true
-        
-        let imageString = Util.getFileImageString(fileExtension: LatelyUpdatedFileArray[indexPath.row].etsionNm)
-        
-        cell.ivSub.image = UIImage(named: imageString)
-        cell.lblMain.text = LatelyUpdatedFileArray[indexPath.row].fileNm
-        cell.lblSub.text = LatelyUpdatedFileArray[indexPath.row].amdDate
-        cell.optionSHowCheck = 0
-        cell.optionHide()
-        let devId = LatelyUpdatedFileArray[indexPath.row].devUuid
-        let osCd = LatelyUpdatedFileArray[indexPath.row].osCd
+        let child = storyboard!.instantiateViewController(withIdentifier: "HomeDeviceCollectionVC") as! HomeDeviceCollectionVC
+        self.DeviceArray = DbHelper().listSqlite(sortBy: sortBy)
+        self.driveFileArray = DbHelper().googleDrivelistSqlite(sortBy: sortBy)
+        //        print("table deviceList: \(DeviceArray)")
         
         
+        child.DeviceArray = self.DeviceArray
+        child.listViewStyleState = self.listViewStyleState
+        child.mainContentState = self.mainContentState
+        child.flickState = self.flickState
+        child.folderArray = self.LatelyUpdatedFileArray
+        child.driveFileArray = self.driveFileArray
+        child.containerViewController = containerViewController
         
-        if(devId == Util.getUuid()){
-            cell.btnOption.tag = indexPath.row
-            cell.btnOption.addTarget(self, action: #selector(localOptionClicked(sender:)), for: .touchUpInside)
-            cell.btnOptionRed.tag = indexPath.row
-            cell.btnOptionRed.addTarget(self, action: #selector(localOptionClicked(sender:)), for: .touchUpInside)
-        } else {
-            
-            if(osCd == "S" || osCd == "G"){
-                cell.btnOption.tag = indexPath.row
-                cell.btnOption.addTarget(self, action: #selector(nasOptionClicked(sender:)), for: .touchUpInside)
-                cell.btnOptionRed.tag = indexPath.row
-                cell.btnOptionRed.addTarget(self, action: #selector(nasOptionClicked(sender:)), for: .touchUpInside)
-            } else {
-                cell.btnOption.tag = indexPath.row
-                cell.btnOption.addTarget(self, action: #selector(otherOptionClicked(sender:)), for: .touchUpInside)
-                cell.btnOptionRed.tag = indexPath.row
-                cell.btnOptionRed.addTarget(self, action: #selector(otherOptionClicked(sender:)), for: .touchUpInside)
-            }
+        
+        print("called")
+        self.view.addSubview(listContainerView)
+        for containerSubview in listContainerView.subviews {
+            containerSubview.removeFromSuperview()
         }
-        cell.btnOption.isHidden = false
-        cell.btnShow.tag = indexPath.row
-        cell.btnShow.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnAction.tag = indexPath.row
-        cell.btnAction.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDwnld.tag = indexPath.row
-        cell.btnDwnld.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-        return cell
-    }
-    
-    @objc func localOptionClicked(sender:UIButton){
-    showOptionMenu(sender: sender, style:0)
-    }
-    
-    @objc func nasOptionClicked(sender:UIButton){
-    showOptionMenu(sender: sender, style:1)
-    }
-    
-    @objc func otherOptionClicked(sender:UIButton){
-    showOptionMenu(sender: sender, style:2)
-    }
-    
-    @objc func btnOptionClicked(sender:UIButton){
-        //        print("optionSHow")
-        showOptionMenu(sender: sender, style:0)
-    }
-    @objc func btnOptionLocalClicked(sender:UIButton){
-        //        print("optionSHow")
-        showOptionMenu(sender: sender, style:2)
-    }
-    
-    func showOptionMenu(sender:UIButton, style:Int){
-        let buttonRow = sender.tag
-        let indexPath = IndexPath(row: buttonRow, section: 0)
-        let cell = collectionView.cellForItem(at: indexPath) as! FileListCell
-        if(cell.optionSHowCheck == 0){
-            if(style == 0) {
-                let width = App.Size.optionWidth
-                let spacing = (width - 300) / 5
-                cell.spacing = spacing
-                cell.optionShow(spacing: spacing, style: style)
-            } else{
-                let width = App.Size.optionWidth
-                let spacing = (width - 180) / 4
-                cell.optionShow(spacing: spacing, style:style)
-            }
-            cell.optionSHowCheck = 1
-        } else {
-            cell.optionHide()
-            cell.optionSHowCheck = 0
-        }
+        containerViewTopAnchor?.isActive = false
+        containerViewBottomAnchor?.isActive = false
+        listContainerView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+        listContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true      
+        containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchView.bottomAnchor, constant: 0)
+        containerViewTopAnchor?.isActive = true
+        containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40)
+        containerViewBottomAnchor?.isActive = true
         
-        UIView.animate(withDuration: 0.3){
-            self.view.layoutIfNeeded()
-        }
+        
+        
+        
+        self.willMove(toParentViewController: nil)
+        child.willMove(toParentViewController: parent)
+        self.addChildViewController(child)
+        listContainerView.addSubview(child.view)
+        
+        child.didMove(toParentViewController: parent)
+        
+        let w = listContainerView.frame.size.width;
+        let h = listContainerView.frame.size.height;
+        child.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+        
+        print("containerA setting called")
+        
     }
     
-    
-    @objc func optionShowClicked(sender:UIButton){
-        let buttonRow = sender.tag
-        let indexPath = IndexPath(row: buttonRow, section: 0)
-        let cell = collectionView.cellForItem(at: indexPath) as! FileListCell
-        let osCd = SearchedFileArray[indexPath.row].osCd
-        print("osCd : \(osCd)", SearchedFileArray[indexPath.row].devNm)
-        let devId = SearchedFileArray[indexPath.row].devUuid
-        if(devId == Util.getUuid()){
-//            self.localContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        } else {
-            //            self.nasContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        }
-    }
-    
-    
+   
     @IBAction func btnFlick1Clicked(_ sender: UIButton) {
         NotificationCenter.default.post(name: Notification.Name("removeLatelyView"), object: self)
     }

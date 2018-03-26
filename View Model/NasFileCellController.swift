@@ -68,13 +68,13 @@ class NasFileCellController {
         case cell.btnShow:
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
-            
+            dv?.showNasFileOption(tag: sender.tag)
             
             break
         case cell.btnDwnld:
             
             dv?.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
-            
+            dv?.showNasFileOption(tag: sender.tag)
         case cell.btnNas:
                 let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":fromDevUuid]
                 

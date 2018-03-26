@@ -192,7 +192,7 @@ class ContainerViewController: UIViewController {
             previous.removeFromParentViewController()
         
         let child = storyboard!.instantiateViewController(withIdentifier: "LatelyUpdatedFileViewController") as! LatelyUpdatedFileViewController
-        
+        child.containerViewController = self
         self.willMove(toParentViewController: nil)
         child.willMove(toParentViewController: parent)
         self.addChildViewController(child)
@@ -219,7 +219,7 @@ class ContainerViewController: UIViewController {
         previous.removeFromParentViewController()
         
         let child = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
-        
+        child.containerViewController = self
         self.willMove(toParentViewController: nil)
         child.willMove(toParentViewController: parent)
         self.addChildViewController(child)

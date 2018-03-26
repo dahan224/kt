@@ -102,6 +102,9 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             
             cellStyle = 2
         }
+        if(flickState == .lately){
+            cellStyle = 2
+        }
         quickLookController.dataSource = self
         quickLookController.delegate = self
         deviceCollectionView.delegate = self
