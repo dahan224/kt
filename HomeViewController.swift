@@ -407,8 +407,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         print("setHomeView")
         
         oneViewSortState = DbHelper.sortByEnum.none
-        
+     
         self.setupDeviceListView(container: self.containerViewA, sortBy: oneViewSortState,multiCheckd: multiButtonChecked)
+        hideKeyboard()
+        
     }
     
   
@@ -456,14 +458,14 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     
     @objc func hideKeyboard() {
-        view.endEditing(true)
-        
-      
+        sBar.endEditing(true)
+        print("hide keyboard")
     }
     func searchBar(_ searchBar: UISearchBar, textDidChange searchText: String) {
         searchedText = searchText
         print("search text : \(searchText)")
     }
+    
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
         print("begin")
         
@@ -471,18 +473,26 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             setSearchView(title: "GiGA Storage")
             searchbarTextStarted = true
         }
-        
-        
+        if(self.view.contains(listContainerView)){
+            
+        } else {
+            print("called")
+            self.view.addSubview(listContainerView)
+            listContainerView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+            listContainerView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+            listContainerView.topAnchor.constraint(equalTo: searchCountLabel.bottomAnchor, constant: 10).isActive = true
+            listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+        }
         
         tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
         tapGesture.cancelsTouchesInView = false
         view.addGestureRecognizer(tapGesture)
-        sBar.becomeFirstResponder()
+        
     }
     func searchBarTextDidEndEditing(_ searchBar: UISearchBar) {
         print("end")
         view.removeGestureRecognizer(tapGesture)
-        sBar.resignFirstResponder()
+        
     }
     
     func setSearchView(title:String){
@@ -494,9 +504,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         }
         
         SetupSearchView.setupSearchNavbar(View: customNavBar, navBarTitle: navBarTitle, backBUtton: backButton, title:title)
-        for view in self.searchView.subviews {
-            view.removeFromSuperview()
-        }
+       
         SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self)
         
         showSearchCategory()
@@ -585,14 +593,21 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
 
     
     func setSearchFileCollectionView(){
+        
         let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
         let width = UIScreen.main.bounds.width
-        self.view.addSubview(listContainerView)
-        listContainerView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
-        listContainerView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
-        listContainerView.topAnchor.constraint(equalTo: searchCountLabel.bottomAnchor, constant: 10).isActive = true
-        listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
-
+        if(self.view.contains(listContainerView)){
+            
+        } else {
+            self.view.addSubview(listContainerView)
+            listContainerView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+            listContainerView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+            listContainerView.topAnchor.constraint(equalTo: searchCountLabel.bottomAnchor, constant: 10).isActive = true
+            listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+            
+            
+        }
+        
         var cellWidth = (width - 35) / 2
         var height = cellWidth
         var minimumSpacing:CGFloat = 5

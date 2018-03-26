@@ -11,6 +11,7 @@ import UIKit
 class SetupHomeView {
    
     class func setupMainNavbar(View:UIView,navBarTitle:UIButton, hamburgerButton:UIButton, listButton:UIButton,downArrowButton:UIButton){
+        
         View.addSubview(hamburgerButton)
         View.addSubview(navBarTitle)
         View.addSubview(listButton)
@@ -61,7 +62,6 @@ class SetupHomeView {
         
         
         sBar.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        
         sBar.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
         sBar.heightAnchor.constraint(equalTo: View.heightAnchor).isActive = true
         sBar.leadingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: 20.0).isActive = true

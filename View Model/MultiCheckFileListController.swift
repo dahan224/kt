@@ -261,7 +261,7 @@ class MultiCheckFileListController {
     //멀티 다운로드 끝
     //멀티 nas는 NasSendFolderSelectVC에서
     
-    //멀티 삭제 시작
+    //멀티 nas 삭제 시작
     
     func callMultiDelete(getFolderArray:[App.FolderStruct], parent:HomeDeviceCollectionVC, fromUserId:String, devUuid:String, deviceName:String, devFoldrId:String){
         dv = parent
@@ -510,6 +510,72 @@ class MultiCheckFileListController {
                                 
                                 print(error.localizedDescription)
                             }
+        }
+    }
+    
+    // local 삭제 시작
+    func callMultiLocalDelete(getFolderArray:[App.FolderStruct], parent:HomeDeviceCollectionVC, fromUserId:String, devUuid:String, deviceName:String, devFoldrId:String){
+        dv = parent
+        selectedDevUuid = devUuid
+        selectedDeviceName = deviceName
+        selectedUserId = fromUserId
+        multiCheckedfolderArray = getFolderArray
+        selectedDevFoldrId = devFoldrId
+        
+        if (multiCheckedfolderArray.count > 0){
+            let index = getFolderArray.count - 1
+            let fileNm = getFolderArray[index].fileNm
+            let foldrWholePathNm = getFolderArray[index].foldrWholePathNm
+            let fileId = String(getFolderArray[index].fileId)
+            let foldrId = String(getFolderArray[index].foldrId)
+            let etsionNm = getFolderArray[index].etsionNm
+            let amdDate = getFolderArray[index].amdDate
+            
+            if(etsionNm == "nil"){
+                let foldrNmArray = foldrWholePathNm.components(separatedBy: "/")
+                let foldrNm:String = foldrNmArray[foldrNmArray.count - 1]
+                print("foldrWholePathNm, :\(foldrWholePathNm), foldrNm : \(foldrNm), foldrNmArray:\(foldrNmArray)")
+                let pathForRemove:String = FileUtil().getFilePath(fileNm: foldrNm, amdDate: amdDate)
+                print("pathForRemove : \(pathForRemove)")
+                self.removeFile(path: pathForRemove)
+            } else {
+                let pathForRemove:String = FileUtil().getFilePath(fileNm: fileNm, amdDate: amdDate)
+                print("pathForRemove : \(pathForRemove)")
+                self.removeFile(path: pathForRemove)
+                
+                
+            }
+            return
+        }
+        DispatchQueue.main.async {
+            SyncLocalFilleToNas().sync()
+            let alertController = UIAlertController(title: nil, message: "멀티 파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
+                UIAlertAction in
+                NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                NotificationCenter.default.post(name: Notification.Name("btnMulticlicked"), object: self, userInfo: nil)
+                let fileDict = ["foldrId":self.selectedDevFoldrId]
+                print("delete filedict : \(fileDict)")
+                NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo: fileDict)
+                
+            }
+            
+            alertController.addAction(yesAction)
+            parent.present(alertController, animated: true)
+        }
+        
+    }
+    func removeFile(path:String){
+        let fileManager = FileManager.default
+        do {
+            try fileManager.removeItem(atPath: path)
+            let lastIndex = self.multiCheckedfolderArray.count - 1
+            self.multiCheckedfolderArray.remove(at: lastIndex)
+            self.callMultiLocalDelete(getFolderArray: self.multiCheckedfolderArray, parent: self.dv!, fromUserId: self.selectedUserId, devUuid: self.selectedDevUuid, deviceName: self.selectedDeviceName, devFoldrId: self.selectedDevFoldrId)
+            
+        }
+        catch let error as NSError {
+            print("Ooops! Something went wrong: \(error)")
         }
     }
     
