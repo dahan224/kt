@@ -100,8 +100,18 @@ class RemoteFileListCellController {
 
             print("folder : \(folderArray[indexPath.row])")
             print("fileId: \(fileId) , fromUserId : \(fromUserId), fromDevUuid : \(fromDevUuid), fromFoldr : \(foldrWholePathNm)")
-            remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
-            dv?.showRemoteFileOption(tag: sender.tag)
+            let alertController = UIAlertController(title: nil, message: "해당 파일을 다운로드 하시겠습니까?", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                self.remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+                self.dv?.showRemoteFileOption(tag: sender.tag)
+                
+                
+            }
+            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+            alertController.addAction(yesAction)
+            alertController.addAction(noAction)
+            dv?.present(alertController, animated: true)
             break
             
         case cell.btnNas:

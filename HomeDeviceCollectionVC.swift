@@ -313,11 +313,18 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     cell2.lblMain.text = folderArray[indexPath.row].foldrNm
                     cell2.lblSub.text = folderArray[indexPath.row].amdDate
                     cell3.lblSub.text = folderArray[indexPath.row].amdDate
-                    
+                    print("fromOsCd : \(fromOsCd)")
+                    if(folderArray[indexPath.row].osCd != "nil"){
+                        fromOsCd = folderArray[indexPath.row].osCd
+                    }
+                    if(folderArray[indexPath.row].devUuid != "nil"){
+                        selectedDevUuid = folderArray[indexPath.row].devUuid
+                    }
                     if(selectedDevUuid != Util.getUuid()){
                     
-                        print("fromOsCd : \(fromOsCd)")
+                       
                         if(folderArray[indexPath.row].fileNm != "nil"){
+                            
                             if(fromOsCd != "S" && fromOsCd != "G"){
                                 
                                 //리모트 파일 셀 컨트롤
