@@ -919,7 +919,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! LocalFileListCell
 //        self.localContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-        LocalFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, currentFolderId:  currentFolderId)
+        LocalFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: folderArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, currentFolderId:  currentFolderId, viewState:viewState)
     }
     
     //로컬 파일 컨텍스트 종료
@@ -1690,8 +1690,10 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             print("refreshInsideList userId: \(self.userId), devUuid: \(self.selectedDevUuid), foldrId:\(getfolderId), deviceName : \(self.deviceName)")
             self.showInsideList(userId: self.userId, devUuid: selectedDevUuid, foldrId: getfolderId, deviceName:self.deviceName)
         }
-        
-        
+    }
+    
+    func refreshSearchList(){
+        homeViewController?.searchInAllCategory()
     }
     
     // 0eun - start

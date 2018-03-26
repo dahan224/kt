@@ -50,7 +50,7 @@ class LocalFileListCellController{
         cell.btnDelete.addTarget(self, action: #selector(parentView.optionLocalFileShowClicked(sender:)), for: .touchUpInside)
         return cell
     }
-    func localContextMenuCalled(cell:LocalFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String){
+    func localContextMenuCalled(cell:LocalFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, viewState:HomeViewController.viewStateEnum){
         let fileNm = folderArray[indexPath.row].fileNm
 //        let etsionNm = folderArray[indexPath.row].etsionNm
         let amdDate = folderArray[indexPath.row].amdDate
@@ -61,11 +61,17 @@ class LocalFileListCellController{
             print("fileId: \(fileId)")
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
+            if parentView == "device" {
+                deviceView.showLocalFileOption(tag: sender.tag)
+            }
             break
         case cell.btnAction:
             let url:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
             let urlDict = ["url":url]
             NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
+            if parentView == "device" {
+                deviceView.showLocalFileOption(tag: sender.tag)
+            }
             print("btnActino called")
             break
             
@@ -102,9 +108,15 @@ class LocalFileListCellController{
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                         UIAlertAction in
+                        if(viewState == .search){
+                            deviceView.refreshSearchList()
+                        } else {
+                            deviceView.showInsideList(userId: userId, devUuid: currentDevUuid, foldrId: currentFolderId, deviceName: deviceName)
+                        }
                         
-                        deviceView.showInsideList(userId: userId, devUuid: currentDevUuid, foldrId: currentFolderId, deviceName: deviceName)
-                        
+                        if parentView == "device" {
+                            deviceView.showLocalFileOption(tag: sender.tag)
+                        }
                     }
                     alertController.addAction(yesAction)
                     deviceView.present(alertController, animated: true)
