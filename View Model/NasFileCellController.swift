@@ -12,7 +12,7 @@ class NasFileCellController {
     var dv:HomeDeviceCollectionVC?
     var hv:HomeViewController?
     var cv:UICollectionView?
-    func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC, deviceName:String) -> NasFileListCell {
+    func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC, deviceName:String, viewState:HomeViewController.viewStateEnum) -> NasFileListCell {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NasFileListCell", for: indexPath) as! NasFileListCell
         
@@ -26,6 +26,12 @@ class NasFileCellController {
         cell.optionHide()
         cell.lblMain.text = folderArray[indexPath.row].fileNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
+        if(viewState == .search){
+            cell.lblDevice.isHidden = false
+            cell.lblDevice.text = folderArray[indexPath.row].devNm
+        } else {
+            cell.lblDevice.isHidden = true
+        }
         
         
         cell.btnOption.isHidden = false
@@ -47,12 +53,16 @@ class NasFileCellController {
     
     func nasContextMenuCalled(cell:NasFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
         dv = deviceView
+        var fromDevUuid = currentDevUuid
         let fileNm = folderArray[indexPath.row].fileNm
         let etsionNm = folderArray[indexPath.row].etsionNm
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
         let foldrId = String(folderArray[indexPath.row].foldrId)
         let amdDate = folderArray[indexPath.row].amdDate
+        if(folderArray[indexPath.row].devUuid != "nil"){
+            fromDevUuid = folderArray[indexPath.row].devUuid
+        }
         dv?.showNasFileOption(tag: sender.tag)
         switch sender {
         case cell.btnShow:
@@ -66,7 +76,7 @@ class NasFileCellController {
             dv?.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
             
         case cell.btnNas:
-                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":fromDevUuid]
                 
                 NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
                 dv?.showNasFileOption(tag: sender.tag)                    
@@ -83,7 +93,7 @@ class NasFileCellController {
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 //Do you Success button Stuff here
-                let params = ["userId":userId,"devUuid":currentDevUuid,"fileId":fileId,"fileNm":fileNm,"foldrWholePathNm": foldrWholePathNm]
+                let params = ["userId":userId,"devUuid":fromDevUuid,"fileId":fileId,"fileNm":fileNm,"foldrWholePathNm": foldrWholePathNm]
                 self.dv?.deleteNasFile(param: params, foldrId: foldrId)
             }
             let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)

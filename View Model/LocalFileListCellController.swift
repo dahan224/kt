@@ -12,7 +12,7 @@ class LocalFileListCellController{
     var dv:HomeDeviceCollectionVC?
     
     
-    func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC) -> LocalFileListCell {
+    func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC, viewState:HomeViewController.viewStateEnum) -> LocalFileListCell {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "LocalFileListCell", for: indexPath) as! LocalFileListCell
     
@@ -26,6 +26,13 @@ class LocalFileListCellController{
         cell.optionHide()
         cell.lblMain.text = folderArray[indexPath.row].fileNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
+        if(viewState == .search){
+            cell.lblDevice.isHidden = false
+            cell.lblDevice.text = folderArray[indexPath.row].devNm
+        } else {
+            cell.lblDevice.isHidden = true
+        }
+        
 //        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
 //        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
 //        cell.btnOption.addGestureRecognizer(swipeLeft)

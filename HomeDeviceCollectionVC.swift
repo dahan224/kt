@@ -65,6 +65,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
     var multiCheckedfolderArray:[App.FolderStruct] = []
     
+    
     var cellStyle = 1
     let layout: UICollectionViewFlowLayout = UICollectionViewFlowLayout()
     
@@ -91,10 +92,16 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var folderIdsToDownLoad:[Int] = []
     var folderPathToDownLoad:[String] = []
     var getFolderFinish = false
+    var viewState : HomeViewController.viewStateEnum = .home
     
     override func viewDidLoad() {
         super.viewDidLoad()
         print("HomeDeviceCollectionVC did load")
+        
+        if(viewState == .search){
+            
+            cellStyle = 2
+        }
         quickLookController.dataSource = self
         quickLookController.delegate = self
         deviceCollectionView.delegate = self
@@ -114,6 +121,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         lpgr.minimumPressDuration = 0.5
         lpgr.delaysTouchesBegan = true
         lpgr.delegate = self
+        
         
         self.deviceCollectionView?.addGestureRecognizer(lpgr)
         
@@ -167,6 +175,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         
 //        print("mainContentsStyleState : \((flickState))")
 //        print("LatelyUpdatedFileArray: \(LatelyUpdatedFileArray)")
+        
+        
     }
     
     @objc func changeListStyle(fileDict:NSNotification){
@@ -213,7 +223,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             cellWidth = width 
             height = 80.0
             minimumSpacing = 10
-            if(cellStyle == 2 || flickState == .lately){
+            if(cellStyle == 2 || flickState == .lately || viewState == .search){
                 minimumSpacing = 1
                 cellWidth = width 
             }
@@ -244,6 +254,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     count = DeviceArray.count
                 } else {
                     count = folderArray.count
+                    
                     
                 }
             break
@@ -310,7 +321,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                             if(fromOsCd != "S" && fromOsCd != "G"){
                                 
                                 //리모트 파일 셀 컨트롤
-                                let cell4 = RemoteFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                                let cell4 = RemoteFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, viewState:viewState)
                                 cell4.resetMultiCheck()
                                 if (multiCheckListState == .active){
                                     cell4.btnMultiCheck.isHidden = false
@@ -345,7 +356,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                             } else {
                                 print("NasFileCellController get cell")
                                 //nas 파일 셀 컨트롤
-                                let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName)
+                                let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName, viewState:viewState)
                                 cell4.resetMultiCheck()
                                 if (multiCheckListState == .active){
                                     cell4.btnMultiCheck.isHidden = false
@@ -503,7 +514,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     } else {
                         //로컬 파일
                         if(folderArray[indexPath.row].fileNm != "nil"){
-                            let cell4 = LocalFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                            let cell4 = LocalFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, viewState:viewState)
                             cells.append(cell4)
                             cell4.resetMultiCheck()
                             if (multiCheckListState == .active){

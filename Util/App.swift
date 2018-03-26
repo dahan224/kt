@@ -157,6 +157,7 @@ struct App {
         var foldrId:Int
         var fileId:Int
         var userId:String
+        var devNm: String
         var childCnt: Int
         var devUuid:String
         var foldrWholePathNm:String
@@ -167,12 +168,18 @@ struct App {
         var fileShar:String
         var fileSize:Int
         var upFoldrId:Int
-        
+        var osCd: String
         init(data: AnyObject) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
             self.foldrId = data["foldrId"] as? Int ?? 0
 //            if(data.responds(to: "fileId")){
-                self.fileId = data["fileId"] as? Int ?? 0
+            var filnalFileId:Int? = 0
+            if let getFileId = data["fileId"] as? Int {
+                filnalFileId = getFileId
+            } else if let getStringFileId = data["fileId"] as? String {
+                filnalFileId = Int(getStringFileId)
+            }
+            self.fileId = filnalFileId ?? 0
 //            } else {
 //                self.fileId = 0
 //            }
@@ -188,13 +195,14 @@ struct App {
             self.fileShar = data["fileShar"] as? String ?? "nil"
             self.fileSize = data["fileSize"] as? Int ?? 0
             self.upFoldrId = data["upFoldrId"] as? Int ?? 0
+            self.devNm = data["devNm"] as? String ?? "nil"
+            self.osCd = data["osCd"] as? String ?? "nil"
         }
         init(data: [String:Any]) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
             self.foldrId = data["foldrId"] as? Int ?? 0
-            
             self.fileId = data["fileId"] as? Int ?? 0
-            
+            self.devNm = data["devNm"] as? String ?? "nil"
             self.userId = data["userId"] as? String ?? "nil"
             self.childCnt = data["childCnt"] as? Int ?? 0
             self.devUuid = data["devUuid"] as? String ?? "nil"
@@ -206,6 +214,7 @@ struct App {
             self.fileShar = data["fileShar"] as? String ?? "nil"
             self.fileSize = data["fileSize"] as? Int ?? 0
             self.upFoldrId = data["upFoldrId"] as? Int ?? 0
+            self.osCd = data["osCd"] as? String ?? "nil"
         }
     }
     struct SearchedFileStruct {

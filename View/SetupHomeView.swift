@@ -128,9 +128,8 @@ class SetupHomeView {
         
         
         sBar.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        
         sBar.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
-        sBar.heightAnchor.constraint(equalTo: View.heightAnchor).isActive = true
+//        sBar.heightAnchor.constraint(equalTo: View.heightAnchor).isActive = true
         sBar.leadingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: 20.0).isActive = true
         sBar.trailingAnchor.constraint(equalTo: View.trailingAnchor).isActive = true
         

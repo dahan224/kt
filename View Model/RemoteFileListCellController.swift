@@ -21,7 +21,7 @@ class RemoteFileListCellController {
         "Cookie": UserDefaults.standard.string(forKey: "cookie")!
     ]
     
-    func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC) -> RemoteFileListCell {
+    func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC, viewState:HomeViewController.viewStateEnum) -> RemoteFileListCell {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "RemoteFileListCell", for: indexPath) as! RemoteFileListCell
         
@@ -35,6 +35,14 @@ class RemoteFileListCellController {
         cell.optionHide()
         cell.lblMain.text = folderArray[indexPath.row].fileNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
+        
+        if(viewState == .search){
+            cell.lblDevice.isHidden = false
+            cell.lblDevice.text = folderArray[indexPath.row].devNm
+        } else {
+            cell.lblDevice.isHidden = true
+        }
+        
 //        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellSwipeToLeft(sender:)))
 //        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
 //        cell.btnOption.addGestureRecognizer(swipeLeft)
@@ -59,6 +67,18 @@ class RemoteFileListCellController {
     func remoteFileContextMenuCalled(cell:RemoteFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
         dv = deviceView
         viewController = "deviceView"
+        var fromDevUuid = currentDevUuid
+        var finalFromOsCd = fromOsCd
+        var fromUserId = selectedDevUserId
+        if(folderArray[indexPath.row].devUuid != "nil"){
+            fromDevUuid = folderArray[indexPath.row].devUuid
+        }
+        if(folderArray[indexPath.row].userId != "nil"){
+            fromUserId = folderArray[indexPath.row].userId
+        }
+        if(folderArray[indexPath.row].osCd != "nil"){
+            finalFromOsCd = folderArray[indexPath.row].osCd
+        }
         let fileNm = folderArray[indexPath.row].fileNm
         let etsionNm = folderArray[indexPath.row].etsionNm
         let amdDate = folderArray[indexPath.row].amdDate
@@ -79,8 +99,8 @@ class RemoteFileListCellController {
             UserDefaults.standard.synchronize()
 
             print("folder : \(folderArray[indexPath.row])")
-            print("fileId: \(fileId) , fromUserId : \(selectedDevUserId), fromDevUuid : \(currentDevUuid), fromFoldr : \(foldrWholePathNm)")
-            remoteDownloadRequest(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+            print("fileId: \(fileId) , fromUserId : \(fromUserId), fromDevUuid : \(fromDevUuid), fromFoldr : \(foldrWholePathNm)")
+            remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
             dv?.showRemoteFileOption(tag: sender.tag)
             break
             
@@ -92,7 +112,7 @@ class RemoteFileListCellController {
             UserDefaults.standard.synchronize()
 
 //            remoteDownloadRequestToNas(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: currentDevUuid, fromFileNm: fileNm, fromFileId: fileId)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]            
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":fromUserId, "fromOsCd":finalFromOsCd,"fromDevUuid":fromDevUuid]
             print("fileDict : \(fileDict)")
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
             break

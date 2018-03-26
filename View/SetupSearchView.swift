@@ -32,7 +32,7 @@ class SetupSearchView {
         searchCountLabel.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
         searchCountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         searchCountLabel.heightAnchor.constraint(equalToConstant: 60.0).isActive = true
-        searchCountLabel.topAnchor.constraint(equalTo: searchCategoryView.bottomAnchor, constant: 14).isActive = true
+        searchCountLabel.topAnchor.constraint(equalTo: searchCategoryView.bottomAnchor, constant: 7).isActive = true
         searchCountLabel.backgroundColor = UIColor.white
         
         let attrs1 = [NSAttributedStringKey.font : UIFont.systemFont(ofSize: 15), NSAttributedStringKey.foregroundColor : HexStringToUIColor().getUIColor(hex: "4F4F4F")]
