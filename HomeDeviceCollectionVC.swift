@@ -1422,6 +1422,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     let fileId = "\(folderArray[indexPath.row].fileId)"
                     let foldrWholePathNm = "\(folderArray[indexPath.row].foldrWholePathNm)"
                     let amdDate = folderArray[indexPath.row].amdDate
+                    let createdPath:URL = ContextMenuWork().createLocalFolder(folderName: "AppPlay")!
                     self.downloadFromNasToExcute(name: fileNm, path: foldrWholePathNm, fileId:fileId, amdDate:amdDate)
                     print("download and excute")
                 }
@@ -1508,15 +1509,17 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     }
     
     func downloadFromNasToExcute(name:String, path:String, fileId:String, amdDate:String){
-        ContextMenuWork().downloadFromNas(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+        ContextMenuWork().downloadFromNasToExcute(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
-                if(success == "success"){
-                    SyncLocalFilleToNas().sync()
-                    
-                    let url:URL = FileUtil().getFileUrl(fileNm: name, amdDate: amdDate)!
-                    self.documentController = UIDocumentInteractionController(url: url)
-                    self.documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
+                if(success.isEmpty){
+                } else {
+                    print("localUrl : \(success)")
+                    let url:URL = URL(string: success)!
+//                    self.documentController = UIDocumentInteractionController(url: url)
+//                    self.documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
+                    let urlDict = ["url":url]
+                    NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
                     
                 }
                 

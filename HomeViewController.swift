@@ -1382,9 +1382,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         homeViewToggleIndicator()
         let fileIdDict = ["fileId":"0"]
         if (listViewStyleState == .grid) {
-            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+//            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
         }
     
+        //remove appplay file
+        let pathForRemove:String = FileUtil().getFilePath(fileNm: "AppPlay", amdDate: "amdDate")
+        print("pathForRemove : \(pathForRemove)")        
+        FileUtil().removeFile(path: pathForRemove)
     }
 }
 

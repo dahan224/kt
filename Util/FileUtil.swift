@@ -97,8 +97,8 @@ class FileUtil {
     func getFileUrl(fileNm:String, amdDate:String) -> URL?{
         let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
         let fileEnumerator = FileManager.default.enumerator(at: documentsDirectory!, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions())
-        var retrunUrl:URL!
-        while let file = fileEnumerator?.nextObject() as? URL {
+        var retrunUrl:URL?
+        while let file = fileEnumerator?.nextObject() as? URL{
             let fileSavedPath = file.path
             do {
                     let attribute = try FileManager.default.attributesOfItem(atPath: fileSavedPath)
@@ -107,20 +107,17 @@ class FileUtil {
                     let folderCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                     let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
                     let localFilFullName = "\(fileName).\(fileExtension)"
-                    let decodedFileName:String = localFilFullName.removingPercentEncoding!                
+                    let decodedFileName:String = localFilFullName.removingPercentEncoding!
                     print("fileExtension : \(fileExtension)")
                     print("fileSavedPath : \(fileSavedPath)")
                     let stringModifiedDate = Util.date(text: modifiedDate)
                     print("fileNm : \(fileNm), localFilFullName : \(localFilFullName), decodedFileName: \(decodedFileName), amdDate: \(amdDate) , stringModifiedDate : \(stringModifiedDate)")
 //                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
-                    if(fileExtension.isEmpty){
-                        
-                    } else {
-                        if(fileNm == decodedFileName ){
-                            retrunUrl = file
-                        }
+                    if(fileNm == decodedFileName ){
+                        retrunUrl = file
+                        break
                     }
-                    
+                
                 } catch {
                     print("Error: \(error)")
                 }
@@ -175,6 +172,16 @@ class FileUtil {
         return returnPath
     }
     
+    func removeFile(path:String){
+        let fileManager = FileManager.default
+        do {
+            try fileManager.removeItem(atPath: path)
+            
+        }
+        catch let error as NSError {
+            print("Ooops! Something went wrong: \(error)")
+        }
+    }
     
     
 }
