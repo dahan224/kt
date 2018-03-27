@@ -22,7 +22,7 @@ class HomeContainerVCB: UIViewController, UICollectionViewDelegate, UICollection
     var cookie = ""
     var token = ""
     
-    var listViewStyleState = HomeViewController.listViewStyleEnum.grid
+    var listViewStyleState = ContainerViewController.listViewStyleEnum.grid
     
   
     override func viewDidLoad() {

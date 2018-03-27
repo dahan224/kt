@@ -44,7 +44,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var remoteMultiFileDownloadedCount = 0
     
     
-    var listViewStyleState = HomeViewController.listViewStyleEnum.grid
+    var listViewStyleState = ContainerViewController.listViewStyleEnum.list
     var flickState = HomeViewController.flickEnum.main
     var mainContentState = HomeViewController.mainContentsStyleEnum.oneViewList
     var LatelyUpdatedFileArray:[App.LatelyUpdatedFileStruct] = []

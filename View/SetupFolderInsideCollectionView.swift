@@ -10,7 +10,7 @@ import UIKit
 
 class SetupFolderInsideCollectionView {
     
-    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:HomeViewController.listViewStyleEnum){
+    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum){
         
         
         for view in searchView.subviews {

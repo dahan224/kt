@@ -63,6 +63,11 @@ class ContainerViewController: UIViewController {
     
     @IBOutlet weak var containerView: UIView!
     
+    enum listViewStyleEnum {
+        case grid
+        case list
+    }
+    var listViewStyleState = listViewStyleEnum.list
     
     @objc func toggleSideMenu(){
         print("sideMEnuOepn")
@@ -193,6 +198,7 @@ class ContainerViewController: UIViewController {
         
         let child = storyboard!.instantiateViewController(withIdentifier: "LatelyUpdatedFileViewController") as! LatelyUpdatedFileViewController
         child.containerViewController = self
+        child.listViewStyleState = listViewStyleState
         self.willMove(toParentViewController: nil)
         child.willMove(toParentViewController: parent)
         self.addChildViewController(child)
@@ -220,6 +226,7 @@ class ContainerViewController: UIViewController {
         
         let child = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
         child.containerViewController = self
+        child.listViewStyleState = listViewStyleState
         self.willMove(toParentViewController: nil)
         child.willMove(toParentViewController: parent)
         self.addChildViewController(child)

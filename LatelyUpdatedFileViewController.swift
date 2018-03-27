@@ -116,7 +116,7 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     var sortBy = ""
     
   
-    var listViewStyleState = HomeViewController.listViewStyleEnum.list
+    var listViewStyleState = ContainerViewController.listViewStyleEnum.list
     var mainContentState = HomeViewController.mainContentsStyleEnum.oneViewList
     
     var maintainFolder = false
@@ -178,7 +178,7 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "list_view").withRenderingMode(.alwaysOriginal), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
-//        button.addTarget(self, action: #selector(listStyleChange), for: .touchUpInside)
+        button.addTarget(self, action: #selector(listStyleChange), for: .touchUpInside)
         return button
     }()
 
@@ -556,6 +556,40 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         backgroundView.removeGestureRecognizer(tapGesture)
     }
     
+    @objc func listStyleChange() {
+        switch (listViewStyleState) {
+        case .grid:
+            listViewStyleState = .list
+            containerViewController?.listViewStyleState = .list
+            listButton.setImage(#imageLiteral(resourceName: "card_view").withRenderingMode(.alwaysOriginal), for: .normal)
+            if(mainContentState == .oneViewList){
+                if(maintainFolder){
+                    let fileDict = ["style":"list"]
+                    NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
+                    
+                } else {
+                    setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
+                }
+            }
+            break
+        case (.list):
+            listViewStyleState = .grid
+            containerViewController?.listViewStyleState = .grid
+            listButton.setImage(#imageLiteral(resourceName: "list_view").withRenderingMode(.alwaysOriginal), for: .normal)
+            if(mainContentState == .oneViewList){
+                if(maintainFolder){
+                    let fileDict = ["style":"grid"]
+                    NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
+                } else {
+                    setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
+                }
+            }
+            
+            break
+            
+        }
+        
+    }
     
     @IBAction func btnFlick1Clicked(_ sender: UIButton) {
         NotificationCenter.default.post(name: Notification.Name("removeLatelyView"), object: self)

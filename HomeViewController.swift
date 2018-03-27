@@ -129,11 +129,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     var sortBy = ""
     
-    enum listViewStyleEnum {
-        case grid
-        case list
-    }
-    var listViewStyleState = listViewStyleEnum.list
+    
+    var listViewStyleState = ContainerViewController.listViewStyleEnum.list
     
     enum mainContentsStyleEnum {
         case oneViewList
@@ -947,7 +944,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     @IBAction func listStyleChange() {
         switch (listViewStyleState) {
         case .grid:
+            
             listViewStyleState = .list
+            containerViewController?.listViewStyleState = .list
             listButton.setImage(#imageLiteral(resourceName: "card_view").withRenderingMode(.alwaysOriginal), for: .normal)
             if(mainContentState == .oneViewList){
                 if(maintainFolder){
@@ -961,6 +960,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             break
         case (.list):
             listViewStyleState = .grid
+            containerViewController?.listViewStyleState = .grid
             listButton.setImage(#imageLiteral(resourceName: "list_view").withRenderingMode(.alwaysOriginal), for: .normal)
             if(mainContentState == .oneViewList){
                 if(maintainFolder){
