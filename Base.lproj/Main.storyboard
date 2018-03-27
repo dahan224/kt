@@ -603,7 +603,7 @@
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="8Ol-VW-APP">
-                                <rect key="frame" x="156" y="632" width="62" height="30"/>
+                                <rect key="frame" x="156" y="622" width="62" height="30"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="pen-5z-AEw">
                                         <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
@@ -814,7 +814,7 @@
                             <constraint firstItem="bPZ-PX-1ZD" firstAttribute="bottom" secondItem="cvx-WB-ggs" secondAttribute="bottom" constant="260" id="tIF-ti-VPc"/>
                             <constraint firstItem="8Ol-VW-APP" firstAttribute="centerX" secondItem="xQp-ka-J9B" secondAttribute="centerX" id="tyL-4I-y8h"/>
                             <constraint firstItem="G7g-U2-6Pp" firstAttribute="top" secondItem="RRC-MR-BKO" secondAttribute="bottom" id="yub-rH-bic"/>
-                            <constraint firstItem="cvx-WB-ggs" firstAttribute="bottom" secondItem="8Ol-VW-APP" secondAttribute="bottom" constant="5" id="zdl-yd-l9w"/>
+                            <constraint firstItem="cvx-WB-ggs" firstAttribute="bottom" secondItem="8Ol-VW-APP" secondAttribute="bottom" constant="15" id="zdl-yd-l9w"/>
                         </constraints>
                         <viewLayoutGuide key="safeArea" id="cvx-WB-ggs"/>
                     </view>
@@ -1813,7 +1813,7 @@
                                 </constraints>
                             </view>
                             <stackView opaque="NO" contentMode="scaleToFill" spacing="2" translatesAutoresizingMaskIntoConstraints="NO" id="zBf-iC-4fg">
-                                <rect key="frame" x="156" y="632" width="62" height="30"/>
+                                <rect key="frame" x="156" y="622" width="62" height="30"/>
                                 <subviews>
                                     <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="TPm-7Z-idB">
                                         <rect key="frame" x="0.0" y="0.0" width="30" height="30"/>
@@ -1946,7 +1946,7 @@
                         <constraints>
                             <constraint firstItem="OTR-mS-RVt" firstAttribute="trailing" secondItem="Q8o-4k-G8f" secondAttribute="trailing" id="2jF-FY-8dM"/>
                             <constraint firstItem="zBf-iC-4fg" firstAttribute="centerX" secondItem="84w-8I-ujB" secondAttribute="centerX" id="Fza-cx-MJf"/>
-                            <constraint firstItem="Q8o-4k-G8f" firstAttribute="bottom" secondItem="zBf-iC-4fg" secondAttribute="bottom" constant="5" id="Gfu-fV-hdu"/>
+                            <constraint firstItem="Q8o-4k-G8f" firstAttribute="bottom" secondItem="zBf-iC-4fg" secondAttribute="bottom" constant="15" id="Gfu-fV-hdu"/>
                             <constraint firstItem="X06-aB-buT" firstAttribute="leading" secondItem="Q8o-4k-G8f" secondAttribute="leading" id="MDQ-Q9-vKr"/>
                             <constraint firstItem="X06-aB-buT" firstAttribute="centerX" secondItem="84w-8I-ujB" secondAttribute="centerX" id="Vj3-gC-37r"/>
                             <constraint firstItem="QrZ-fd-Meq" firstAttribute="leading" secondItem="Q8o-4k-G8f" secondAttribute="leading" constant="10" id="gL2-XP-GSL"/>
@@ -1969,6 +1969,7 @@
                         <outlet property="btnLIst" destination="apD-Ko-8ty" id="Hab-rV-jpb"/>
                         <outlet property="btnSel" destination="iLy-bN-DDo" id="4yI-Ql-vxj"/>
                         <outlet property="customNavBar" destination="OTR-mS-RVt" id="1x7-b1-ZGJ"/>
+                        <outlet property="flickView" destination="zBf-iC-4fg" id="vgf-Ih-bl8"/>
                         <outlet property="lblTitle" destination="xL3-aH-kWb" id="cUa-9C-ka5"/>
                         <outlet property="searchView" destination="X06-aB-buT" id="NKu-by-SvS"/>
                         <outlet property="searchViewHeightConstraint" destination="M7o-GM-t45" id="9KG-cK-7th"/>

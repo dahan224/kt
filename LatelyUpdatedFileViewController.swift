@@ -10,8 +10,9 @@ import UIKit
 import SwiftyJSON
 import Alamofire
 
-class LatelyUpdatedFileViewController: UIViewController {
+class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UITableViewDataSource {
     var containerViewController:ContainerViewController?
+    var child : HomeDeviceCollectionVC?
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     @IBOutlet weak var customNavBar: UIView!
@@ -55,6 +56,7 @@ class LatelyUpdatedFileViewController: UIViewController {
     var bottomMenuOpen = false
     var sideMenuOpen = false
     var tapGesture:UITapGestureRecognizer = UITapGestureRecognizer()
+    var multiCheckTapGesture:UITapGestureRecognizer = UITapGestureRecognizer()
     
     
     enum viewStateEnum{
@@ -130,8 +132,12 @@ class LatelyUpdatedFileViewController: UIViewController {
     var flickCheck = 1;
     var listStyleCheck = 1;
     
-    @IBOutlet weak var containerViewA: UIView!
-    
+    var multiCheckBottomView:UIView = {
+        let view = UIView()
+        view.backgroundColor = HexStringToUIColor().getUIColor(hex: "F5F5F5")
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
+    }()
     
     
     let navBarTitle:UIButton = {
@@ -178,9 +184,9 @@ class LatelyUpdatedFileViewController: UIViewController {
 
     let multiButton:UIButton = {
         let button = UIButton(type: .system)
-        button.setImage(#imageLiteral(resourceName: "multi_off").withRenderingMode(.alwaysOriginal), for: .normal)
+        button.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
-//        button.addTarget(self, action: #selector(btnMulticlicked), for: .touchUpInside)
+        button.addTarget(self, action: #selector(btnMulticlicked), for: .touchUpInside)
         return button
     }()
 
@@ -280,7 +286,10 @@ class LatelyUpdatedFileViewController: UIViewController {
     var containerViewTopAnchor:NSLayoutConstraint?
     var containerViewBottomAnchor:NSLayoutConstraint?
     
-
+    @IBOutlet weak var flickView: UIStackView!
+    var bottomMultiList = ["GiGA NAS로 보내기"]
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
 
@@ -295,6 +304,9 @@ class LatelyUpdatedFileViewController: UIViewController {
         // Do any additional setup after loading the view.
         
         getLatelyUpdateFileList()
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.reloadData()
         
     }
     
@@ -306,10 +318,12 @@ class LatelyUpdatedFileViewController: UIViewController {
         }
         SetupHomeView.setuplatelyNavbar(View: customNavBar, navBarTitle: navBarTitle, hamburgerButton: hamburgerButton, listButton: listButton, downArrowButton: downArrowButton)
         
+        
+        
         for view in self.searchView.subviews {
             view.removeFromSuperview()
         }
-        SetupHomeView.setupLatelySearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self)
+        SetupHomeView.setupLatelySearchView(searchView:searchView, multiButton: multiButton)
         
         oneViewSortState = DbHelper.sortByEnum.none
         
@@ -354,20 +368,20 @@ class LatelyUpdatedFileViewController: UIViewController {
             previous.view.removeFromSuperview()
             previous.removeFromParentViewController()
         }
-        let child = storyboard!.instantiateViewController(withIdentifier: "HomeDeviceCollectionVC") as! HomeDeviceCollectionVC
+        child = storyboard!.instantiateViewController(withIdentifier: "HomeDeviceCollectionVC") as? HomeDeviceCollectionVC
         self.DeviceArray = DbHelper().listSqlite(sortBy: sortBy)
         self.driveFileArray = DbHelper().googleDrivelistSqlite(sortBy: sortBy)
         //        print("table deviceList: \(DeviceArray)")
         
         
-        child.DeviceArray = self.DeviceArray
-        child.listViewStyleState = self.listViewStyleState
-        child.mainContentState = self.mainContentState
-        child.flickState = self.flickState
-        child.folderArray = self.LatelyUpdatedFileArray
-        child.driveFileArray = self.driveFileArray
-        child.containerViewController = containerViewController
-        
+        child?.DeviceArray = self.DeviceArray
+        child?.listViewStyleState = self.listViewStyleState
+        child?.mainContentState = self.mainContentState
+        child?.flickState = self.flickState
+        child?.folderArray = self.LatelyUpdatedFileArray
+        child?.driveFileArray = self.driveFileArray
+        child?.containerViewController = containerViewController
+        child?.latelyUpdatedFileViewController = self
         
         print("called")
         self.view.addSubview(listContainerView)
@@ -380,28 +394,169 @@ class LatelyUpdatedFileViewController: UIViewController {
         listContainerView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true      
         containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchView.bottomAnchor, constant: 0)
         containerViewTopAnchor?.isActive = true
-        containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40)
+        containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
         containerViewBottomAnchor?.isActive = true
         
         
         
         
         self.willMove(toParentViewController: nil)
-        child.willMove(toParentViewController: parent)
-        self.addChildViewController(child)
-        listContainerView.addSubview(child.view)
+        child?.willMove(toParentViewController: parent)
+        self.addChildViewController(child!)
+        listContainerView.addSubview((child?.view)!)
         
-        child.didMove(toParentViewController: parent)
+        child?.didMove(toParentViewController: parent)
         
         let w = listContainerView.frame.size.width;
         let h = listContainerView.frame.size.height;
-        child.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+        child?.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
         
         print("containerA setting called")
         
     }
     
+    @objc func btnMulticlicked(){
+        ifNavBarClicked = false
+        var stringBool = "false"
+        if(multiButtonChecked){
+            flickView.isHidden = false
+            multiButtonChecked = false
+            multiButton.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            containerViewBottomAnchor?.isActive = false
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+            containerViewBottomAnchor?.isActive = true
+        } else {
+            multiButtonChecked = true
+            flickView.isHidden = true
+            multiButton.setImage(#imageLiteral(resourceName: "multi_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            containerViewBottomAnchor?.isActive = false
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+            containerViewBottomAnchor?.isActive = true
+        }
+        setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
+        stringBool = String(multiButtonChecked)
+        print("stringBool :\(stringBool)")
+        let fileIdDict = ["multiChecked":stringBool]
+        NotificationCenter.default.post(name: Notification.Name("multiSelectActive"), object: self, userInfo: fileIdDict)
+    }
    
+    func setMultiCountLabel(multiButtonChecked:Bool, count:Int){
+        if self.view.contains(multiCheckBottomView){
+            for view in multiCheckBottomView.subviews {
+                view.removeFromSuperview()
+            }
+            multiCheckBottomView.removeFromSuperview()
+        }
+        
+        if(multiButtonChecked){
+            
+            self.view.addSubview(multiCheckBottomView)
+            multiCheckBottomView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
+            multiCheckBottomView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+            multiCheckBottomView.heightAnchor.constraint(equalToConstant: 60.0).isActive = true
+            multiCheckBottomView.bottomAnchor.constraint(equalTo: view.bottomAnchor).isActive = true
+            
+            let label = UILabel()
+            label.textAlignment = .center
+            label.font = UIFont.systemFont(ofSize: 18)
+            label.translatesAutoresizingMaskIntoConstraints = false
+            label.text = "\(count)개 파일 선택 완료"
+            label.textColor = UIColor.gray
+            multiCheckBottomView.addSubview(label)
+            
+            label.widthAnchor.constraint(equalToConstant: 150).isActive = true
+            label.heightAnchor.constraint(equalToConstant: 60.0).isActive = true
+            label.centerXAnchor.constraint(equalTo: multiCheckBottomView.centerXAnchor).isActive = true
+            label.centerYAnchor.constraint(equalTo: multiCheckBottomView.centerYAnchor).isActive = true
+            multiCheckBottomView.backgroundColor = UIColor.clear
+            multiCheckBottomView.removeGestureRecognizer(multiCheckTapGesture)
+            if(count > 0) {
+                print("called")
+                label.textColor = UIColor.white
+                multiCheckBottomView.backgroundColor = hexStringToUIColor.getUIColor(hex: "4F4F4F")
+                let button = UIButton(type: .system)
+                button.setImage(#imageLiteral(resourceName: "multi_confirm").withRenderingMode(.alwaysOriginal), for: .normal)
+                button.translatesAutoresizingMaskIntoConstraints = false
+                button.isUserInteractionEnabled = false
+                multiCheckBottomView.addSubview(button)
+                
+                button.widthAnchor.constraint(equalToConstant: 36).isActive = true
+                button.heightAnchor.constraint(equalToConstant: 36).isActive = true
+                button.centerYAnchor.constraint(equalTo: multiCheckBottomView.centerYAnchor).isActive = true
+                button.leadingAnchor.constraint(equalTo: label.trailingAnchor, constant: 0).isActive = true
+                multiCheckTapGesture = UITapGestureRecognizer(target: self, action: #selector(latelyViewmultiCheckBottomViewTapped))
+                multiCheckBottomView.addGestureRecognizer(multiCheckTapGesture)
+                
+            }
+        }
+    }
+    
+    
+    @objc func inActiveMultiCheck(){
+        multiButtonChecked = false
+        setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
+    }
+    
+    @objc func latelyViewmultiCheckBottomViewTapped(){
+        let fileIdDict = ["fileId":"0"]
+        tableView.reloadData()
+        latelyCloseBottomMenu()
+    }
+
+    
+    
+    func latelyViewToggleBottomMenu() {
+      
+        if bottomMenuOpen {
+            UIView.animate(withDuration: 0.2, animations: {
+                self.tableBottomConstant.constant = 260
+                self.bottomMenuOpen = false
+                self.view.layoutIfNeeded()
+                print("animation duration")
+            }, completion:{
+                (finished: Bool) in
+                print("animation finished")
+                self.backgroundView.removeGestureRecognizer(self.tapGesture)
+                self.backgroundView.removeFromSuperview()
+                
+            })
+            
+        }else{
+            UIView.animate(withDuration: 0.2, animations: {
+                self.tableBottomConstant.constant = 0
+                self.bottomMenuOpen = true
+                self.view.layoutIfNeeded()
+                print("animation duration")
+            }, completion:{
+                (finished: Bool) in
+                print("animation finished")
+                
+            })
+            
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.2, execute: {
+                //                print("backgroundview add")
+                self.view.addSubview(self.backgroundView)
+                self.backgroundView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+                self.backgroundView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+                self.backgroundView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+                self.backgroundView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+                self.view.bringSubview(toFront: self.tableView)
+                
+            })
+            print("bottom state : \(bottomListState)")
+            tapGesture = UITapGestureRecognizer(target: self, action: #selector(latelyCloseBottomMenu))
+            tapGesture.cancelsTouchesInView = false
+            backgroundView.addGestureRecognizer(tapGesture)
+            
+        }
+        
+    }
+    @objc func latelyCloseBottomMenu() {
+        latelyViewToggleBottomMenu()
+        backgroundView.removeGestureRecognizer(tapGesture)
+    }
+    
+    
     @IBAction func btnFlick1Clicked(_ sender: UIButton) {
         NotificationCenter.default.post(name: Notification.Name("removeLatelyView"), object: self)
     }
@@ -417,6 +572,49 @@ class LatelyUpdatedFileViewController: UIViewController {
     }
     
 
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+       return bottomMultiList.count
+        
+    }
+    
+    
+    
+    
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "HomeBottomCell") as! HomeBottomListCell
+        let clearView = UIView()
+        clearView.backgroundColor = UIColor.clear
+        cell.selectedBackgroundView = clearView
+        cell.ivIcon.isHidden = false
+        let imageString = Util.getContextImageString(context: bottomMultiList[indexPath.row])
+        cell.ivIcon.image = UIImage(named: imageString)
+        cell.lblTitle.text = bottomMultiList[indexPath.row]
+        return cell
+    }
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        let height:CGFloat = 80.0
+        
+        return height
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        print(indexPath.section)
+        print(indexPath.row)
+        let fileDict = ["action":"nas","fromOsCd":"multi"]
+        latelyViewToggleBottomMenu()
+//        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+        child?.handleMultiCheckFromLatelyView()
+        
+        
+        
+    }
+    
+    
+    
+    
     /*
     // MARK: - Navigation
 

@@ -84,12 +84,13 @@ class RemoteFileListCellController {
         let amdDate = folderArray[indexPath.row].amdDate
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
+        var devNm = folderArray[indexPath.row].devNm
         var btn = "show"
         switch sender {
         case cell.btnShow:
             btn = "show"
-            print("fileId: \(fileId)")
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
+            print("fileIdDict : \(fileIdDict)")
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             dv?.showRemoteFileOption(tag: sender.tag)
             break

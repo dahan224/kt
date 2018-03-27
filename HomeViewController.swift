@@ -435,6 +435,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         child.homeViewController = self
         child.containerViewController = containerViewController
         child.viewState = viewState
+    
         
         // 0eun - start
         if self.mainContentState == .googleDriveList {
@@ -461,9 +462,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         } else {
             containerViewTopAnchor =  listContainerView.topAnchor.constraint(equalTo: searchView.bottomAnchor, constant: 0)
             containerViewTopAnchor?.isActive = true
-            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -40)
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
             containerViewBottomAnchor?.isActive = true
-            
+        
         }
         
         
@@ -780,11 +781,15 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         if(multiButtonChecked){
             multiButtonChecked = false
             multiButton.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            
+            containerViewBottomAnchor?.isActive = false
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+            containerViewBottomAnchor?.isActive = true
         } else {
             multiButtonChecked = true
             multiButton.setImage(#imageLiteral(resourceName: "multi_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            
+            containerViewBottomAnchor?.isActive = false
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+            containerViewBottomAnchor?.isActive = true
         }
         var style = "nas"
         if fromOsCd == "S" || fromOsCd == "G"{

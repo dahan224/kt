@@ -66,6 +66,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         case nas_multi = "nas_multi"
         case remote_nas_multi = "remote_nas_multi"
         case local_nas_multi = "local_nas_multi"
+        case multi_nas_multi = "multi_nas_multi"
         case googleDrive = "googleDrive"
     }
     
@@ -552,9 +553,80 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
 
 //                print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
                 
+            case .multi_nas_multi:
+                print("multi nas to nas")
+                activityIndicator.startAnimating()
+                startMultiLatelyToNas()
+                
             }
         }
     }
+    func startMultiLatelyToNas(){
+        if(multiCheckedfolderArray.count > 0){
+            let index = multiCheckedfolderArray.count - 1
+            let originalFileId = String(multiCheckedfolderArray[index].fileId)
+            let fromFoldrId = String(multiCheckedfolderArray[index].foldrId)
+            let originalFileName = multiCheckedfolderArray[index].fileNm
+            let oldFoldrWholePathNm = multiCheckedfolderArray[index].foldrWholePathNm
+            let etsionNm = multiCheckedfolderArray[index].etsionNm
+            let amdDate = multiCheckedfolderArray[index].amdDate
+            let fromOsCdFromMultiArray = multiCheckedfolderArray[index].osCd
+            let currentDevUuId = multiCheckedfolderArray[index].devUuid
+            let fromUserId = multiCheckedfolderArray[index].userId
+            var toOsCd = "G"
+            if(toUserId != App.defaults.userId){
+                toOsCd = "S"
+            }
+            
+            if(currentDevUuId == Util.getUuid()){
+                print("local to nas")
+                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+                sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd,fileId: originalFileId)
+            } else if (fromOsCdFromMultiArray == "S" || fromOsCdFromMultiArray == "G") {
+                if(fromOsCdFromMultiArray == "G"){
+                    print("deviceName : \(deviceName)")
+                    if(toUserId != App.defaults.userId){
+                        let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"G","toOsCd":"S"]
+                        print("from g to s param : \(param)")
+                        self.sendNasToShareNas(params: param)
+                    } else {
+                        let param = ["userId":toUserId, "devUuid": currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName,"foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm]
+                        print("from s to s param : \(param), \(deviceName)")
+                        self.sendNasToNas(params: param)
+                    }
+                    
+                } else if (fromOsCdFromMultiArray == "S") {
+                    if(toUserId != App.defaults.userId){
+                        let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"S"]
+                        print("param : \(param)")
+                        //shared to shared
+                        self.sendShareNasToNas(params: param)
+                    } else {
+                        let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"G"]
+                        print("param : \(param) to G")
+                        self.sendShareNasToNas(params: param)
+                    }
+                }
+            } else {
+                remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: currentDevUuId, fromOsCd: fromOsCdFromMultiArray, fromFoldr: oldFoldrWholePathNm, fromFileNm: originalFileName, fromFileId: originalFileId)
+            }
+            return
+        }
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                //Do you Success button Stuff here
+                self.activityIndicator.stopAnimating()
+                Util().dismissFromLeft(vc: self)
+            }
+            alertController.addAction(yesAction)
+            self.present(alertController, animated: true)
+            
+        }
+        
+    }
+    
     
     func startMultiLocalToNas(){
         if(multiCheckedfolderArray.count > 0){
@@ -959,10 +1031,14 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                             alertController.addAction(yesAction)
                             self.present(alertController, animated: true)
                         }
-                    } else if(self.storageState == .nas_multi) {
+                    } else if (self.storageState == .nas_multi) {
                         let lastIndex = self.multiCheckedfolderArray.count - 1
                         self.multiCheckedfolderArray.remove(at: lastIndex)
                         self.startMultiFolderNasToNas()
+                    }  else if (self.storageState == .multi_nas_multi){
+                        let lastIndex = self.multiCheckedfolderArray.count - 1
+                        self.multiCheckedfolderArray.remove(at: lastIndex)
+                        self.startMultiLatelyToNas()
                     }
                     
                 }
@@ -997,6 +1073,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     let lastIndex = self.multiCheckedfolderArray.count - 1
                     self.multiCheckedfolderArray.remove(at: lastIndex)
                     self.startMultiFolderNasToNas()
+                } else if (self.storageState == .multi_nas_multi){
+                    let lastIndex = self.multiCheckedfolderArray.count - 1
+                    self.multiCheckedfolderArray.remove(at: lastIndex)
+                    self.startMultiLatelyToNas()
                 }
                 
             } else {
@@ -1033,6 +1113,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     let lastIndex = self.multiCheckedfolderArray.count - 1
                     self.multiCheckedfolderArray.remove(at: lastIndex)
                     self.startMultiFolderNasToNas()
+                } else if (self.storageState == .multi_nas_multi){
+                    let lastIndex = self.multiCheckedfolderArray.count - 1
+                    self.multiCheckedfolderArray.remove(at: lastIndex)
+                    self.startMultiLatelyToNas()
                 }
                
             } else {
@@ -1198,11 +1282,14 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 if(self.storageState == .remote_nas_multi) {
                                     self.countRemoteDownloadFinished()
                                 } else if self.storageState == .local_nas_multi {
-                                    
                                     let lastIndex = self.multiCheckedfolderArray.count - 1
                                     self.multiCheckedfolderArray.remove(at: lastIndex)
                                     self.startMultiLocalToNas()
                                     
+                                } else if self.storageState == .multi_nas_multi {
+                                    let lastIndex = self.multiCheckedfolderArray.count - 1
+                                    self.multiCheckedfolderArray.remove(at: lastIndex)
+                                    self.startMultiLatelyToNas()
                                     
                                 } else {
                                     DispatchQueue.main.async {
@@ -1289,15 +1376,20 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
                                 print("remoteDownloadRequest : \(message)")
-                                DispatchQueue.main.async {
-                                    let alertController = UIAlertController(title: nil, message: "\(message!)", preferredStyle: .alert)
-                                    let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                                        UIAlertAction in
-                                        
+                                if(self.storageState == .multi_nas_multi){
+                                
+                                } else {
+                                    DispatchQueue.main.async {
+                                        let alertController = UIAlertController(title: nil, message: "\(message!)", preferredStyle: .alert)
+                                        let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                                            UIAlertAction in
+                                            
+                                        }
+                                        alertController.addAction(yesAction)
+                                        self.present(alertController, animated: true, completion: nil)
                                     }
-                                    alertController.addAction(yesAction)
-                                    self.present(alertController, animated: true, completion: nil)
                                 }
+                                
                                 
                                 break
                             case .failure(let error):
@@ -1341,8 +1433,6 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         remoteMultiFileDownloadedCount -= 1
         print("remoteMultiFileToNasdCount : \(remoteMultiFileDownloadedCount)")
         if(remoteMultiFileDownloadedCount > 0){
-            
-            
             return
         }
         print("countRemoteToNasFinished")

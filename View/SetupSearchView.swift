@@ -48,6 +48,8 @@ class SetupSearchView {
         attributedString1.append(attributedString3)
         
         searchCountLabel.attributedText = attributedString1
+        
+        
     }
     
   

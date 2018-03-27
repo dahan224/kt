@@ -374,8 +374,10 @@ class ContainerViewController: UIViewController {
             storageKind = .nas_multi
         } else if toStorage == "remote_nas_multi" {
             storageKind = .remote_nas_multi
-        } else {
+        } else if toStorage == "local_nas_multi" {
             storageKind = .local_nas_multi
+        } else {
+            storageKind = .multi_nas_multi
         }
         
         self.fromOsCd = fromOsCd

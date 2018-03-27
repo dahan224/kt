@@ -60,13 +60,14 @@ class NasFileCellController {
         let fileId = String(folderArray[indexPath.row].fileId)
         let foldrId = String(folderArray[indexPath.row].foldrId)
         let amdDate = folderArray[indexPath.row].amdDate
+        var devNm = folderArray[indexPath.row].devNm
         if(folderArray[indexPath.row].devUuid != "nil"){
             fromDevUuid = folderArray[indexPath.row].devUuid
         }
         dv?.showNasFileOption(tag: sender.tag)
         switch sender {
         case cell.btnShow:
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             dv?.showNasFileOption(tag: sender.tag)
             

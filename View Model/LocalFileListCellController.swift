@@ -56,10 +56,11 @@ class LocalFileListCellController{
         let amdDate = folderArray[indexPath.row].amdDate
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
+        var devNm = folderArray[indexPath.row].devNm
         switch sender {
         case cell.btnShow:
             print("fileId: \(fileId)")
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             if parentView == "device" {
                 deviceView.showLocalFileOption(tag: sender.tag)

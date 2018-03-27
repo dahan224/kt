@@ -93,11 +93,12 @@ class SetupHomeView {
         listButton.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
         listButton.trailingAnchor.constraint(equalTo: View.trailingAnchor, constant: -20.0).isActive = true
         
-        navBarTitle.setTitle("GiGA Stroage", for: .normal)
+        navBarTitle.setTitle("최근 업데이트 파일", for: .normal)
         navBarTitle.widthAnchor.constraint(equalToConstant: 150.0).isActive = true
         navBarTitle.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         navBarTitle.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
         navBarTitle.centerXAnchor.constraint(equalTo: View.centerXAnchor).isActive = true
+        navBarTitle.isEnabled = false
         
         downArrowButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         downArrowButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
@@ -108,38 +109,32 @@ class SetupHomeView {
     
     
     
-    class func setupLatelySearchView(View:UIView, sortButton:UIButton, sBar:UISearchBar, searchDownArrowButton:UIButton, parentViewContoller:UIViewController){
-        var previous = parentViewContoller.childViewControllers.first
-        if let previous = previous {
-            previous.willMove(toParentViewController: nil)
-            previous.view.removeFromSuperview()
-            previous.removeFromParentViewController()
+    class func setupLatelySearchView(searchView:UIView, multiButton:UIButton){
+       
+        
+        for view in searchView.subviews {
+            view.removeFromSuperview()
         }
-        View.addSubview(sortButton)
-        View.addSubview(sBar)
-        View.addSubview(searchDownArrowButton)
         
-        sortButton.translatesAutoresizingMaskIntoConstraints = false
-        sortButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
-        sortButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        sortButton.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
-        sortButton.leadingAnchor.constraint(equalTo: View.leadingAnchor, constant: 10.0).isActive = true
-        
-        
-        
-        sBar.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        sBar.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
-//        sBar.heightAnchor.constraint(equalTo: View.heightAnchor).isActive = true
-        sBar.leadingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: 20.0).isActive = true
-        sBar.trailingAnchor.constraint(equalTo: View.trailingAnchor).isActive = true
+        let label = UILabel()
+        searchView.addSubview(label)
+        searchView.addSubview(multiButton)
+        label.textAlignment = .left
+        label.text = ">최근 업데이트 파일"
+        label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.widthAnchor.constraint(equalToConstant: 200.0).isActive = true
+        label.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        label.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+        label.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
         
         
-        searchDownArrowButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
-        searchDownArrowButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        searchDownArrowButton.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
-        searchDownArrowButton.trailingAnchor.constraint(equalTo: View.trailingAnchor, constant: -15.0).isActive = true
-        searchDownArrowButton.isHidden = true
-        
+        multiButton.isHidden = false
+        multiButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
+        multiButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        multiButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+        multiButton.trailingAnchor.constraint(equalTo: searchView.trailingAnchor, constant: -10.0).isActive = true
+      
         
     }
 }

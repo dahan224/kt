@@ -20,6 +20,8 @@ protocol PassItemInfo {
 class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UICollectionViewDataSource, QLPreviewControllerDataSource, QLPreviewControllerDelegate, UIGestureRecognizerDelegate {
     var homeViewController: HomeViewController?
     var containerViewController:ContainerViewController?
+    var latelyUpdatedFileViewController:LatelyUpdatedFileViewController?
+    var stParentViewController = "home"
     private let service = GTLRDriveService() // 0eun
     let quickLookController = QLPreviewController()
     var loginCookie = ""
@@ -207,6 +209,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             } else {
                 self.multiCheckListState = .inActive
             }
+           
             deviceCollectionView.reloadData()
             
         }
@@ -1204,8 +1207,12 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             
         }
        
+        if(flickState == .main){
+            homeViewController?.setMultiCountLabel(multiButtonChecked: true, count: multiCheckedfolderArray.count)
+        } else {
+            latelyUpdatedFileViewController?.setMultiCountLabel(multiButtonChecked: true, count: multiCheckedfolderArray.count)
+        }
         
-        homeViewController?.setMultiCountLabel(multiButtonChecked: true, count: multiCheckedfolderArray.count)
         print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
     }
     
@@ -1258,7 +1265,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     
                     break
                 }
-           
+            } else if getFromOsCd == "multi"{
+                containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"multi_nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
             } else {
                 // 리모트 멀티 메뉴 핸들
                 switch getAction {
@@ -1292,6 +1300,15 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         }
     }
     
+    
+    func handleMultiCheckFromLatelyView() {
+        print("multi_nas_multi")
+        let remoteDownLoadStyle = "remoteDownLoadNasMulti"
+        UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
+        UserDefaults.standard.synchronize()
+
+        containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"multi_nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
+    }
     
     @objc func countRemoteDownloadFinished(){
         print("countRemoteDownloadFinished")
