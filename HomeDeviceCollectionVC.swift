@@ -50,7 +50,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var LatelyUpdatedFileArray:[App.LatelyUpdatedFileStruct] = []
     var driveFileArray:[App.DriveFileStruct] = []
     var driveFolderIdArray:[String] = ["root"] // 0eun
-    var driveFolderNameArray:[String] = ["root"] // 0eun
+    var driveFolderNameArray:[String] = ["Google"] // 수정
     
     
     
@@ -89,9 +89,6 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     }
     var multiCheckListState = multiCheckListEnum.inActive
     var documentController : UIDocumentInteractionController!
-    
-    
-    var folderIdsToDownLoad:[Int] = []
     var folderPathToDownLoad:[String] = []
     var getFolderFinish = false
     var viewState : HomeViewController.viewStateEnum = .home
@@ -122,6 +119,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         deviceCollectionView.register(RemoteFileListCell.self, forCellWithReuseIdentifier: "RemoteFileListCell")
         deviceCollectionView.register(RemoteFolderListCell.self, forCellWithReuseIdentifier: "RemoteFolderListCell")
         deviceCollectionView.register(CollectionViewGridCell.self, forCellWithReuseIdentifier: "CollectionViewGridCell")
+        deviceCollectionView.register(GDriveFileListCell.self, forCellWithReuseIdentifier: "GDriveFileListCell")
+        deviceCollectionView.register(GDriveFolderListCell.self, forCellWithReuseIdentifier: "GDriveFolderListCell")
         let lpgr : UILongPressGestureRecognizer = UILongPressGestureRecognizer(target: self, action: #selector(handleLongPress(gestureRecognizer:)))
         lpgr.minimumPressDuration = 0.5
         lpgr.delaysTouchesBegan = true
@@ -297,6 +296,10 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     }
                     if(DeviceArray[indexPath.row].devUuid == Util.getUuid()){
                         cell3.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "ff0000")
+                        cell1.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "ff0000")
+                    } else {
+                        cell3.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "4F4F4F")
+                        cell1.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "4F4F4F")
                     }
                     
                     switch listViewStyleState{
@@ -657,49 +660,63 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 }
                 break
             case .googleDriveList :
-                    let imageString = Util.getGoogleImageString(mimeType: driveFileArray[indexPath.row].mimeType)
-                    print("imageString : \(imageString), \(driveFileArray[indexPath.row].mimeType)")
+                // 파일
+                if(!driveFileArray[indexPath.row].mimeType.contains("folder")){
+                    let cell4 = GDriveFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: driveFileArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                    cells.append(cell4)
+                    let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFileSwipeToLeft(sender:)))
+                    swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                    cell4.btnOption.addGestureRecognizer(swipeLeft)
+                    cell4.btnOption.tag = indexPath.row
+                    cell4.btnOption.addTarget(self, action: #selector(btnGDriveFileOptionClicked(sender:)), for: .touchUpInside)
+                    
+                    let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFileSwipeToLeft(sender:)))
+                    rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                    cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                    cell4.btnOptionRed.tag = indexPath.row
+                    cell4.btnOptionRed.addTarget(self, action: #selector(btnGDriveFileOptionClicked(sender:)), for: .touchUpInside)
+                    
                     cell2.lblMain.text = driveFileArray[indexPath.row].name
-                    cell2.lblSub.text = driveFileArray[indexPath.row].name
+                    let imageString = Util.getFileImageString(fileExtension: driveFileArray[indexPath.row].mimeType)
                     cell2.ivMain.image = UIImage(named: imageString)
                     cell2.ivSub.image = UIImage(named: imageString)
-                    let cell4 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell4", for: indexPath) as! FileListCell
-                    cell4.optionSHowCheck = 0
-                    cell4.optionHide()
+                    
+                } else {
+                    // 폴더
+                    let cell4 = GDriveFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: driveFileArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
                     cells.append(cell4)
-                    
-                    cell4.lblMain.text = driveFileArray[indexPath.row].name
-                    cell4.lblSub.text = driveFileArray[indexPath.row].name
-                    cell4.ivSub.image = UIImage(named: imageString)
-                    cell4.btnOption.isHidden = false
+                    let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFolderSwipeToLeft(sender:)))
+                    swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                    cell4.btnOption.addGestureRecognizer(swipeLeft)
                     cell4.btnOption.tag = indexPath.row
-                    cell4.btnOption.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
+                    cell4.btnOption.addTarget(self, action: #selector(btnGDriveFolderOptionClicked(sender:)), for: .touchUpInside)
+                    
+                    let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFolderSwipeToLeft(sender:)))
+                    rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                    cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
                     cell4.btnOptionRed.tag = indexPath.row
-                    cell4.btnOptionRed.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
-                    cell4.btnShow.tag = indexPath.row
-                    cell4.btnShow.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-                    cell4.btnDwnld.tag = indexPath.row
-                    cell4.btnDwnld.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
+                    cell4.btnOptionRed.addTarget(self, action: #selector(btnGDriveFolderOptionClicked(sender:)), for: .touchUpInside)
                     
-                    cell4.btnNas.tag = indexPath.row
-                    cell4.btnNas.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
+                    cell2.lblMain.text = driveFileArray[indexPath.row].name
+                    cell2.ivMain.image = UIImage(named: "ico_folder")
+                    cell2.ivSub.image = UIImage(named: "ico_folder")
                     
-                    cell4.btnGDrive.tag = indexPath.row
-                    cell4.btnGDrive.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-                    
-                    
-                    cell4.btnDelete.tag = indexPath.row
-                    cell4.btnDelete.addTarget(self, action: #selector(optionShowClicked(sender:)), for: .touchUpInside)
-                    
-                    
-                    switch listViewStyleState{
-                    case .grid:
-                        cell = cells[1]
-                        break
-                    case .list:
-                        cell = cells[3]
-                        break
+                    if(driveFileArray[indexPath.row].name == ".."){
+                        cell4.lblSub.isHidden = true
+                        cell4.btnOption.isHidden = true
                     }
+                }
+                
+                switch listViewStyleState{
+                case .grid:
+                    cell = cells[1]
+                    break
+                case .list:
+                    cell = cells[3]
+                    break
+                }
+                
+
                 break
             }
         
@@ -970,7 +987,139 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
     //로컬 폴더 컨텍스트 종료
     
+    /* 0eun */
+    // 구글드라이브 파일 컨텍스트 시작
+    @objc func btnGDriveFileOptionClicked(sender:UIButton){
+        showGDriveFileOption(tag:sender.tag)
+    }
     
+    @objc func cellGDriveFileSwipeToLeft(sender:UIGestureRecognizer){
+        if let button = sender.view as? UIButton {
+            print("tag : \(button.tag)")
+            showGDriveFileOption(tag:button.tag)
+        }
+    }
+    
+    func showGDriveFileOption(tag:Int){
+        let buttonRow = tag
+        let indexPath = IndexPath(row: buttonRow, section: 0)
+        let cell = deviceCollectionView.cellForItem(at: indexPath) as! GDriveFileListCell
+        if(cell.optionSHowCheck == 0){
+            let width = App.Size.optionWidth
+            let spacing = (width - 300) / 6
+            cell.spacing = spacing
+            cell.optionShow(spacing: spacing, style: 0)
+            cell.optionSHowCheck = 1
+        } else {
+            cell.optionHide()
+            cell.optionSHowCheck = 0
+        }
+        
+        UIView.animate(withDuration: 0.3){
+            self.view.layoutIfNeeded()
+        }
+    }
+    
+    @objc func optionGDriveFileShowClicked(sender:UIButton){
+        let buttonRow = sender.tag
+        let indexPath = IndexPath(row: buttonRow, section: 0)
+        let cell = deviceCollectionView.cellForItem(at: indexPath) as! GDriveFileListCell
+        GDriveFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: driveFileArray, deviceName: "Google Drive", parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, currentFolderId:  currentFolderId)
+    }
+    
+    //구글드라이브 파일 컨텍스트 종료
+    // 구글드라이브 폴더 컨텍스트 시작
+    @objc func btnGDriveFolderOptionClicked(sender:UIButton){
+        showGDriveFolderOption(tag:sender.tag)
+    }
+    
+    @objc func cellGDriveFolderSwipeToLeft(sender:UIGestureRecognizer){
+        if let button = sender.view as? UIButton {
+            // use button
+            print("tag : \(button.tag)")
+            showGDriveFolderOption(tag:button.tag)
+        }
+    }
+    
+    func showGDriveFolderOption(tag:Int){
+        let buttonRow = tag
+        let indexPath = IndexPath(row: buttonRow, section: 0)
+        let cell = deviceCollectionView.cellForItem(at: indexPath) as! GDriveFolderListCell
+        if(cell.optionSHowCheck == 0){
+            let width = App.Size.optionWidth
+            let spacing = (width - 240) / 4
+            cell.spacing = spacing
+            cell.optionShow(spacing: spacing, style: 0)
+            cell.optionSHowCheck = 1
+        } else {
+            cell.optionHide()
+            cell.optionSHowCheck = 0
+        }
+        UIView.animate(withDuration: 0.3){
+            self.view.layoutIfNeeded()
+        }
+        
+    }
+    
+    @objc func optionGDriveFolderShowClicked(sender:UIButton){
+        let buttonRow = sender.tag
+        let indexPath = IndexPath(row: buttonRow, section: 0)
+        let cell = deviceCollectionView.cellForItem(at: indexPath) as! GDriveFolderListCell
+        GDriveFolderListCellController().LocalFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: driveFileArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUuid, currentFolderId:  currentFolderId)
+    }
+    //구글드라이브 폴더 컨텍스트 종료
+    
+    // 0eun - start
+    func showInsideListGDrive(userId: String, devUuid: String, foldrId: String, deviceName:String){
+        self.driveFileArray.removeAll()
+        var param = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"sortBy":sortBy]
+        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+        print("showInsideParam : \(param)")
+        
+        if(driveFolderIdArray.count > 1){
+            
+            let upFolder = App.DriveFileStruct(device: ["id":driveFolderIdArray[driveFolderIdArray.count-2],"kind":"drive#file","mimeType":".folder","name":".."] as AnyObject, foldrWholePaths: driveFolderNameArray)
+            self.driveFileArray.append(upFolder)
+            if(driveFolderIdArray.count == 1){
+                param = ["userId": userId, "devUuid":devUuid]
+            }
+        }
+        print("param : \(param)")
+        
+        var url = "https://www.googleapis.com/drive/v3/files?q='\(foldrId)' in parents and trashed=false&access_token=\(accessToken)" + App.URL.gDriveFileOption // 0eun
+        url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+        print(url)
+        Alamofire.request(url,
+                          method: .get,
+                          encoding: JSONEncoding.default,
+                          headers: nil).responseJSON { response in
+                            switch response.result {
+                            case .success(let value):
+                                let json = JSON(value)
+                                print("json : \(json)")
+                                let responseData = value as! NSDictionary
+                                let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject]
+                                for file in serverList {
+                                    print("file : \(file)")
+                                    let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: self.driveFolderNameArray)
+                                    self.driveFileArray.append(fileStruct)
+                                }
+                                DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
+                                
+                                self.cellStyle = 3
+                                self.currentFolderId = foldrId
+                                
+                                self.collectionviewCellSpcing()
+                                self.deviceCollectionView.reloadData()
+                                self.deviceCollectionView.collectionViewLayout.invalidateLayout()
+                            case .failure(let error):
+                                NSLog(error.localizedDescription)
+                            }
+        }
+    }
+    // 0eun - end
+    
+
     @objc func optionShowClicked(sender:UIButton){
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
@@ -1719,55 +1868,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         homeViewController?.searchInAllCategory()
     }
     
-    // 0eun - start
-    func showInsideListGDrive(userId: String, devUuid: String, foldrId: String, deviceName:String){
-        self.driveFileArray.removeAll()
-        var param = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"sortBy":sortBy]
-        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
-        print("showInsideParam : \(param)")
-        
-        if(driveFolderIdArray.count > 1){
-            
-            let upFolder = App.DriveFileStruct(device: ["id":driveFolderIdArray[driveFolderIdArray.count-2],"kind":"drive#file","mimeType":".folder","name":".."] as AnyObject)
-            self.driveFileArray.append(upFolder)
-            if(driveFolderIdArray.count == 1){
-                param = ["userId": userId, "devUuid":devUuid]
-            }
-        }
-        print("param : \(param)")
-        
-        var url = "https://www.googleapis.com/drive/v3/files?q='\(foldrId)' in parents and trashed=false&access_token=\(accessToken)&orderBy=folder,createdTime desc"
-        url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        print(url)
-        Alamofire.request(url,
-                          method: .get,
-                          encoding: JSONEncoding.default,
-                          headers: nil).responseJSON { response in
-                            switch response.result {
-                            case .success(let value):
-                                let json = JSON(value)
-                                print("json : \(json)")
-                                let responseData = value as! NSDictionary
-                                let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject]
-                                for file in serverList {
-                                    print("file : \(file)")
-                                    let fileStruct = App.DriveFileStruct(device: file)
-                                    self.driveFileArray.append(fileStruct)
-                                }
-                                DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
-                                
-                                self.cellStyle = 3
-                                self.currentFolderId = foldrId
-                                
-                                self.collectionviewCellSpcing()
-                                self.deviceCollectionView.reloadData()
-                                self.deviceCollectionView.collectionViewLayout.invalidateLayout()
-                            case .failure(let error):
-                                NSLog(error.localizedDescription)
-                            }
-        }
-    }
-    // 0eun - end
+  
     
     func showInsideList(userId: String, devUuid: String, foldrId: String, deviceName:String){
         self.folderArray.removeAll()

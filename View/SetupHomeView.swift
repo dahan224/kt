@@ -35,8 +35,8 @@ class SetupHomeView {
         
         downArrowButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         downArrowButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        downArrowButton.topAnchor.constraint(equalTo: View.topAnchor).isActive = true
-        downArrowButton.leadingAnchor.constraint(equalTo: View.trailingAnchor).isActive = true
+        downArrowButton.topAnchor.constraint(equalTo: navBarTitle.topAnchor).isActive = true
+        downArrowButton.leadingAnchor.constraint(equalTo: navBarTitle.trailingAnchor).isActive = true
         
     }
     

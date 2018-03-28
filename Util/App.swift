@@ -22,6 +22,7 @@ struct App {
         static let google: String = ""
         static let server: String = "https://araise.iptime.org/GIGA_Storage/webservice/rest/"
         static let NAS:String = "https://araise.iptime.org/namespace/ifs/home/gs-araise3/araise3-gs/GIGA_NAS/"
+        static let gDriveFileOption:String = ""
     }
     
     struct API {
@@ -549,23 +550,45 @@ struct App {
         var fileId:String
         var kind:String
         var mimeType:String
-        var name:String        
-      
-        init(device: AnyObject) {
+        var name:String
+        var createdTime:String
+        var modifiedTime:String
+        var parents:String
+        
+        var fileExtension:String
+        var foldrWholePath:String
+        var size:String
+        
+        init(device: AnyObject, foldrWholePaths: [String]) {
             self.fileId = device["id"] as? String ?? "nil"
             self.kind = device["kind"] as? String ?? "nil"
             self.mimeType = device["mimeType"] as? String ?? "nil"
             self.name = device["name"] as? String ?? "nil"
-           
+            self.createdTime = device["createdTime"] as? String ?? "nil"
+            self.modifiedTime = device["modifiedTime"] as? String ?? "nil"
+            let parentArry:[String] = device["parents"] as? [String] ?? ["nil"]
+            self.parents = parentArry[0]
+            self.fileExtension = device["fileExtension"] as? String ?? "nil"
+            self.foldrWholePath = ""
+            for foldr in foldrWholePaths {
+                self.foldrWholePath += "/" + foldr
+            }
+            self.size = device["size"] as? String ?? "0"
         }
-        init(fileId : String, kind : String, mimeType : String, name : String) {
-        self.fileId   = fileId
-        self.kind   = kind
-        self.mimeType   = mimeType
-        self.name   = name
+        init(fileId : String, kind : String, mimeType : String, name : String, createdTime:String, modifiedTime:String, parents:String, fileExtension:String, size:String, foldrWholePath:String) {
+            self.fileId   = fileId
+            self.kind   = kind
+            self.mimeType   = mimeType
+            self.name   = name
+            self.createdTime = createdTime
+            self.modifiedTime = modifiedTime
+            self.parents = parents
+            self.fileExtension = fileExtension
+            self.size = size
+            self.foldrWholePath = foldrWholePath
         }
     }
-    
+
     struct FileTagStruct {
         var fileId:String
         var fileTag:String

@@ -11,6 +11,10 @@ import Alamofire
 import SwiftyJSON
 
 class FileInfoViewController: UIViewController {
+    var fileExtension = ""
+    var size = ""
+    var createdTime = ""
+    var modifiedTime = ""
 
     @IBOutlet weak var btnBack: UIButton!
     @IBOutlet weak var customNavBar: UIView!
@@ -64,7 +68,18 @@ class FileInfoViewController: UIViewController {
         print("FileInfoViewController called: \(deviceName), \(fileId)")
         // Do any additional setup after loading the view.
         if(!fileId.isEmpty){
+            /* 이부분 수정 start */
+            if deviceName == "Google Drive" {
+                self.lblEtsion.text = fileExtension
+                self.lblSize.text = self.covertFileSize(getSize: size)
+                self.lblPath.text = self.foldrWholePathNm
+                self.lblCret.text = createdTime
+                self.lblAmd.text = modifiedTime
+                self.lblDevice.text = self.deviceName
+            } else {
                 showFileInfo()
+            }
+            /* 이부분 수정 end */
             
         }
     }

@@ -44,7 +44,11 @@ class ContainerViewController: UIViewController {
     var fileSavedPath = ""
     var fromOsCd = ""
     var fromFoldrId = ""
-    
+    var fileExtension = ""
+    var size = ""
+    var createdTime = ""
+    var modifiedTime = ""
+
     enum googleSignInSegueEnum: String {
         case loginForList = "loginForList"
         case loginForSend = "loginForSend"
@@ -255,6 +259,11 @@ class ContainerViewController: UIViewController {
                 vc.foldrWholePathNm = self.foldrWholePathNm
                 vc.deviceName = self.deviceName
                 vc.fileSavedPath = self.savedPath
+                vc.fileExtension = self.fileExtension
+                vc.size = self.size
+                vc.createdTime = self.createdTime
+                vc.modifiedTime = self.modifiedTime
+
             }
         } else if segue.identifier == "googleSignInSegue" {
             if let vc = segue.destination as? GoogleSignInViewController {
@@ -290,6 +299,13 @@ class ContainerViewController: UIViewController {
             if let getSavedPath = fileInfo.userInfo?["savedPath"] as? String {
                 savedPath = getSavedPath
             }
+            /* 이부분 추가 start */
+            fileExtension = fileInfo.userInfo?["fileExtension"] as? String ?? ""
+            size = fileInfo.userInfo?["size"] as? String ?? ""
+            createdTime = fileInfo.userInfo?["createdTime"] as? String ?? ""
+            modifiedTime = fileInfo.userInfo?["modifiedTime"] as? String ?? ""
+            /* 이부분 추가 end */
+            
             print("getFileId: \(fileId), \(deviceName)")
             performSegue(withIdentifier: "showFileInfoSegue", sender: self)
         }

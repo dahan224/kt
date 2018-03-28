@@ -898,7 +898,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     func getFilesFromGoogleDrive(accessToken:String, root:String){
         self.driveFileArray.removeAll()
-        var upFolder = App.DriveFileStruct(fileId: "root", kind: "d", mimeType: "d", name: "...")
+//        var upFolder = App.DriveFileStruct(fileId: "root", kind: "d", mimeType: "d", name: "...")
+        var upFolder = App.DriveFileStruct(fileId : "root", kind : "d", mimeType : "d", name : "String", createdTime:"String", modifiedTime:"String", parents:"String", fileExtension:"String", size:"String", foldrWholePath:"String")
         self.driveFileArray.append(upFolder)
         
         var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false and mimeType='application/vnd.google-apps.folder'&access_token=\(accessToken)"
@@ -917,7 +918,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                         if (serverList.count > 0) {
                             for file in serverList {
                                 print("file : \(file)")
-                                let fileStruct = App.DriveFileStruct(device: file)
+                                let fileStruct = App.DriveFileStruct(device:file, foldrWholePaths:["sd"])
                                 self.driveFileArray.append(fileStruct)
                             }
                             self.tableView.reloadData()

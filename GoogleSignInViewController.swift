@@ -279,43 +279,37 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
     
     func getFiles(accessToken:String, root:String){
         self.driveFileArray.removeAll()
-        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false&access_token=\(accessToken)&orderBy=folder,createdTime desc" // 0eun
+        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false&access_token=\(accessToken)" + App.URL.gDriveFileOption // 0eun
         url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let headers: HTTPHeaders = [
-            "q": "'root' in parents",
-            "trahsed": "false",
-            "Authorization": "Bearer " + accessToken
-            
-        ]
-        print("'root'in parents")
         Alamofire.request(url,
                           method: .get,
-//                          parameters: parameters,
                           encoding: JSONEncoding.default,
                           headers: nil).responseJSON { response in
                             switch response.result {
                             case .success(let value):
                                 let json = JSON(value)
                                 print("json : \(json)")
-                                let responseData = value as! NSDictionary
-                                let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject]
-                                for file in serverList {
-                                    print("file : \(file)")
-                                    let fileStruct = App.DriveFileStruct(device: file)
-                                    self.driveFileArray.append(fileStruct)
+                                if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
+                                    for file in serverList {
+                                        print("file : \(file)")
+                                        if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 {
+                                            let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
+                                            self.driveFileArray.append(fileStruct)
+                                        }
+                                    }
+                                    DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
+                                    self.syncCloudEmailToServer(cloudId: self.googleEmail)
+                                } else {
+                                    print("error: \(json["errors"])")
                                 }
-                                DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
-                                self.syncCloudEmailToServer(cloudId: self.googleEmail)
-                            
-                                break
+                                
                             case .failure(let error):
                                 NSLog(error.localizedDescription)
-                                
-                                break
                             }
                             
         }
     }
+
     
     // List up to 10 files in Drive
     func listFiles() {

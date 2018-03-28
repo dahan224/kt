@@ -33,6 +33,14 @@ class DbHelper{
     let kind = Expression<String>("kind")
     let mimeType = Expression<String>("mimeType")
     let name = Expression<String>("name")
+    
+    let createdTime = Expression<String>("createdTime")
+    let modifiedTime = Expression<String>("modifiedTime")
+    let parents = Expression<String>("parents")
+    let fileExtension = Expression<String>("fileExtension")
+    let foldrWholePath = Expression<String>("foldrWholePath")
+    let size = Expression<String>("size")
+    
     var DriveFileArray = [App.DriveFileStruct]()
     
     let filePath = Expression<String>("filePath")
@@ -169,6 +177,12 @@ class DbHelper{
             table.column(kind)
             table.column(mimeType)
             table.column(name)
+            table.column(createdTime)
+            table.column(modifiedTime)
+            table.column(parents)
+            table.column(fileExtension)
+            table.column(foldrWholePath)
+            table.column(size)
             
         }
         do {
@@ -274,7 +288,7 @@ class DbHelper{
        
     }
     
-    
+   
     func googleDriveToSqlite(getArray: [App.DriveFileStruct]){
         do {
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
@@ -293,7 +307,7 @@ class DbHelper{
         do {
             try self.database.transaction {
                 for (index,device) in getArray.enumerated() {
-                    try self.database.run(self.googleDriveFileListTable.insert(fileId <- getArray[index].fileId, kind <- getArray[index].kind, mimeType <- getArray[index].mimeType, name <- getArray[index].name))
+                    try self.database.run(self.googleDriveFileListTable.insert(fileId <- getArray[index].fileId, kind <- getArray[index].kind, mimeType <- getArray[index].mimeType, name <- getArray[index].name, createdTime <- getArray[index].createdTime, modifiedTime <- getArray[index].modifiedTime, parents <- getArray[index].parents, fileExtension <- getArray[index].fileExtension, foldrWholePath <- getArray[index].foldrWholePath, size <- getArray[index].size))
                 }
             }
         } catch {
@@ -301,6 +315,7 @@ class DbHelper{
         }
         
     }
+    
     func googleDrivelistSqlite(sortBy:sortByEnum) -> [App.DriveFileStruct] {
         do {
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
@@ -331,8 +346,14 @@ class DbHelper{
                 let kind = "\(device[self.kind])"
                 let mimeType = "\(device[self.mimeType])"
                 let name = "\(device[self.name])"
+                let createdTime = "\(device[self.createdTime])"
+                let modifiedTime = "\(device[self.modifiedTime])"
+                let parents = "\(device[self.parents])"
+                let fileExtension = "\(device[self.fileExtension])"
+                let foldrWholePath = "\(device[self.foldrWholePath])"
+                let size = device[self.size]
                 
-                let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name)
+                let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath)
                 
                 DriveFileArray.append(deviceStruct)
             }
@@ -344,5 +365,7 @@ class DbHelper{
             
         }
     }
+    
+ 
 }
 
