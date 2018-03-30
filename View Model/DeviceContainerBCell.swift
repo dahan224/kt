@@ -11,6 +11,7 @@ import UIKit
 class DeviceContainerBCell: UITableViewCell {
     
 
+  
     var ivIcon:UIImageView = {
         let imageView = UIImageView()
         imageView.translatesAutoresizingMaskIntoConstraints = false
@@ -34,20 +35,29 @@ class DeviceContainerBCell: UITableViewCell {
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
     }()
-
+    let lblMain2:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.font = UIFont.boldSystemFont(ofSize: 18)
+        label.textColor = HexStringToUIColor().getUIColor(hex: "3f3f3f")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
     override func awakeFromNib() {
         super.awakeFromNib()
         // Initialization code
         
         
     }
-
+    
     override init(style: UITableViewCellStyle, reuseIdentifier: String?) {
         super.init(style: style, reuseIdentifier: reuseIdentifier)
         self.backgroundColor = UIColor.white
         self.addSubview(ivIcon)
         self.addSubview(lblMain)
         self.addSubview(lblSub)
+        self.addSubview(lblMain2)
         ivIcon.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         ivIcon.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 25).isActive = true
         ivIcon.widthAnchor.constraint(equalToConstant: 40).isActive = true
@@ -56,6 +66,10 @@ class DeviceContainerBCell: UITableViewCell {
         lblMain.topAnchor.constraint(equalTo: ivIcon.topAnchor).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivIcon.trailingAnchor, constant: 15).isActive = true
         lblMain.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        
+        lblMain2.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        lblMain2.leadingAnchor.constraint(equalTo: ivIcon.trailingAnchor, constant: 15).isActive = true
+        lblMain2.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         
         lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
         lblSub.leadingAnchor.constraint(equalTo: ivIcon.trailingAnchor, constant: 15).isActive = true
@@ -68,7 +82,7 @@ class DeviceContainerBCell: UITableViewCell {
     
     override func setSelected(_ selected: Bool, animated: Bool) {
         super.setSelected(selected, animated: animated)
-
+        
         // Configure the view for the selected state
     }
 

@@ -86,6 +86,9 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var accessToken:String = ""
     var multiCheckedfolderArray:[App.FolderStruct] = []
     var remoteMultiFileDownloadedCount = 0
+    var driveFolderIdArray:[String] = ["root"] // 0eun
+    
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm), originalFileId : \(originalFileId)")
@@ -117,8 +120,13 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         case .googleDrive:
             
             nasArray = ["내 드라이브"]
-            accessToken = GIDSignIn.sharedInstance().currentUser.authentication.accessToken
-            self.getFilesFromGoogleDrive(accessToken: accessToken, root: "root")
+            if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+                
+                accessToken = DbHelper().getAccessToken(email: googleEmail)
+                let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
+                //accessToken = GIDSignIn.sharedInstance().currentUser.authentication.accessToken
+                self.getFilesFromGoogleDrive(accessToken: accessToken, root: "root", parent: "root")
+            }
             
             break
         default:
@@ -194,6 +202,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
                     break
                 case .deviceRoot:
+                   
                     cell.ivIcon.image = UIImage(named: "ico_folder")
                     cell.lblMain.text = driveFileArray[indexPath.row].name
                     cell.checkButton.isHidden = false
@@ -366,19 +375,31 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         case .googleDrive:
             switch listState {
             case .deviceSelect:
+                self.driveFolderIdArray.removeAll()
+                self.driveFolderIdArray.append("root") // 0eun
                 self.listState = .deviceRoot
                 self.deviceName = nasArray[indexPath.row]
-                self.getFilesFromGoogleDrive(accessToken: accessToken, root: "root")
+                self.getFilesFromGoogleDrive(accessToken: accessToken, root: "root", parent: "root")
                 break
             default:
-                 var root = "root"
-                if(indexPath.row == 0){
-                    root = "root"
-                    self.listState = .deviceSelect
+                var root = driveFileArray[indexPath.row].fileId
+                var parent = "root"
+                if driveFileArray[indexPath.row].name == ".." {
+                    if(driveFolderIdArray[driveFolderIdArray.count - 1] == "root") {
+                        self.listState = .deviceSelect
+                        root = "root"
+                        parent = "root"
+                    } else {
+                        root = driveFolderIdArray[driveFolderIdArray.count - 2]
+                        parent = driveFileArray[indexPath.row].parents
+                        driveFolderIdArray.remove(at: driveFolderIdArray.count-1)
+                    }
                 } else {
-                    root = driveFileArray[indexPath.row].fileId
+                    self.driveFolderIdArray.append(root)
                 }
-                self.getFilesFromGoogleDrive(accessToken: accessToken, root: root)
+                
+                print("root : \(root), idArray : \(driveFolderIdArray)")
+                self.getFilesFromGoogleDrive(accessToken: accessToken, root: root, parent: parent)
                 break
             }
 
@@ -403,7 +424,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 let folderNm = folderArray[indexPath.row].foldrNm
                 let stringFoldrId = String(foldrId)
                 //                print("foldrId : \(stringFoldrId)")
-                if(folderArray[indexPath.row].foldrNm == "..."){
+                if(folderArray[indexPath.row].foldrNm == ".."){
                     if(folderArray[indexPath.row].foldrId == 0){
                         self.listState = .deviceRoot
                         self.getRootFolder(userId: toUserId, devUuid: currentDevUuId, deviceName: deviceName)
@@ -896,13 +917,9 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         
     }
     
-    func getFilesFromGoogleDrive(accessToken:String, root:String){
-        self.driveFileArray.removeAll()
-//        var upFolder = App.DriveFileStruct(fileId: "root", kind: "d", mimeType: "d", name: "...")
-        var upFolder = App.DriveFileStruct(fileId : "root", kind : "d", mimeType : "d", name : "String", createdTime:"String", modifiedTime:"String", parents:"String", fileExtension:"String", size:"String", foldrWholePath:"String")
-        self.driveFileArray.append(upFolder)
+    func getFilesFromGoogleDrive(accessToken:String, root:String, parent:String){
         
-        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false and mimeType='application/vnd.google-apps.folder'&access_token=\(accessToken)"
+        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false and mimeType='application/vnd.google-apps.folder'&access_token=\(accessToken)" + App.URL.gDriveFileOption
         url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         Alamofire.request(url,
                           method: .get,
@@ -911,27 +928,33 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 switch response.result {
                 case .success(let value):
                     let json = JSON(value)
-                    print("json : \(json)")
+//                    print("json : \(json)")
                     let responseData = value as! NSDictionary
                     if(json["files"].exists()){
                         let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject]
                         if (serverList.count > 0) {
+                            self.driveFileArray.removeAll()
+                            //        var upFolder = App.DriveFileStruct(fileId: "root", kind: "d", mimeType: "d", name: "..")
+                            var upFolder = App.DriveFileStruct(fileId : root, kind : "d", mimeType : "d", name : "..", createdTime:"String", modifiedTime:"String", parents:parent, fileExtension:"String", size:"String", foldrWholePath:"String")
+                            self.driveFileArray.append(upFolder)
+                            
                             for file in serverList {
-                                print("file : \(file)")
+//                                print("file : \(file)")
                                 let fileStruct = App.DriveFileStruct(device:file, foldrWholePaths:["sd"])
                                 self.driveFileArray.append(fileStruct)
                             }
                             self.tableView.reloadData()
                         } else {
                             DispatchQueue.main.async {
+                                self.driveFolderIdArray.remove(at: self.driveFolderIdArray.count - 1)
                                 let alertController = UIAlertController(title: nil, message: "더 이상 하위폴더가 없습니다.", preferredStyle: .alert)
                                 let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                                 alertController.addAction(yesAction)
+                                
                                 self.present(alertController, animated: true)
                             }
                         }
                     }
-                    
                     break
                 case .failure(let error):
                     NSLog(error.localizedDescription)
@@ -984,13 +1007,13 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         self.folderArray.removeAll()
         var param = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"sortBy":sortBy]
         if(folderIdArray.count > 1){
-            let upFolder = App.FolderStruct(data: ["foldrNm":"...","foldrId":folderIdArray[folderIdArray.count-2],"userId":userId,"childCnt":0,"devUuid":devUuid,"foldrWholePathNm":"up","cretDate":"cretDate"] as [String : Any])
+            let upFolder = App.FolderStruct(data: ["foldrNm":"..","foldrId":folderIdArray[folderIdArray.count-2],"userId":userId,"childCnt":0,"devUuid":devUuid,"foldrWholePathNm":"up","cretDate":"cretDate"] as [String : Any])
             self.folderArray.append(upFolder)
             if(folderIdArray.count == 1){
                 param = ["userId": userId, "devUuid":devUuid]
             }
         } else {
-            let upFolder = App.FolderStruct(data: ["foldrNm":"...","foldrId":0,"userId":userId,"childCnt":0,"devUuid":devUuid,"foldrWholePathNm":"up","cretDate":"cretDate"] as [String : Any])
+            let upFolder = App.FolderStruct(data: ["foldrNm":"..","foldrId":0,"userId":userId,"childCnt":0,"devUuid":devUuid,"foldrWholePathNm":"up","cretDate":"cretDate"] as [String : Any])
             self.folderArray.append(upFolder)
         }
         
@@ -1338,7 +1361,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 //Do you Success button Stuff here
-                SyncLocalFilleToNas().sync()
+                SyncLocalFilleToNas().sync(view: "")
                 
                 Util().dismissFromLeft(vc: self)
             }
@@ -1441,7 +1464,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
-                SyncLocalFilleToNas().sync()
+                SyncLocalFilleToNas().sync(view: "")
                 
                 //Do you Success button Stuff here
                 Util().dismissFromLeft(vc: self)

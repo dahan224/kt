@@ -14,6 +14,7 @@ class DbHelper{
     let oneViewListTable = Table("oneViewList")
     let googleDriveFileListTable = Table("googleDriveFileList")
     let localFileListTable = Table("localFileListTable")
+    let googleEmailListTable = Table("googleEmailListTable")
     
     let id = Expression<Int>("id")
     let devNm = Expression<String>("devNm")
@@ -41,13 +42,17 @@ class DbHelper{
     let foldrWholePath = Expression<String>("foldrWholePath")
     let size = Expression<String>("size")
     
+    let googleEmail = Expression<String>("googleEmail")
+    let accessToken = Expression<String>("accessToken")
+    let getTokenTime = Expression<String>("getTokenTime")
+    
     var DriveFileArray = [App.DriveFileStruct]()
     
     let filePath = Expression<String>("filePath")
     var jsonHeader:[String:String] = [
         "Content-Type": "application/json",
-        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
-        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+        "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     ]
     
     enum sortByEnum{
@@ -366,6 +371,189 @@ class DbHelper{
         }
     }
     
- 
+    
+    func googleEmailToSqlite(getEmail: String, getAccessToken:String, getTime:String){
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        
+        if(tableExists(tableName: "googleEmailListTable")){
+            
+        } else {
+            createGoogleEmailListTable()
+        }
+        
+        do {
+            try self.database.run(self.googleEmailListTable.insert(googleEmail <- getEmail, accessToken <- getAccessToken, getTokenTime <- getTime))
+        } catch {
+            print(error)
+        }
+    }
+    func googleAccessTokenUpdate(getEmail: String, getAccessToken:String, getTime:String){
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        if(tableExists(tableName: "googleEmailListTable")){
+            
+        } else {
+            createGoogleEmailListTable()
+        }
+        let alice = googleEmailListTable.filter(googleEmail == getEmail)
+
+        do {
+            try self.database.run(alice.update(accessToken <- getAccessToken, getTokenTime <- getTime))
+            print("access token updated")
+        } catch {
+            print(error)
+        }
+    }
+    
+    
+    func createGoogleEmailListTable(){
+        let createTable = self.googleEmailListTable.create { (table) in
+            table.column(id, primaryKey: true)
+            table.column(googleEmail)
+            table.column(accessToken)
+            table.column(getTokenTime)
+            
+        }
+        do {
+            try self.database.run(createTable)
+            print("Created createGoogleEmailListTable")
+            
+        }catch{
+            print("Created createGoogleEmailListTable error : \(error)")
+            print(error)
+        }
+    }
+    
+    func googleEmailExistenceCheck(email:String) -> Bool {
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        
+        var check = false
+        let tableOrder = self.googleEmailListTable.order()
+        do {
+            let devices = try database.prepare(tableOrder)
+            for device in devices {
+                let sliteEmail = "\(device[self.googleEmail])"
+                print("sliteEmail : \(sliteEmail)")
+                if(sliteEmail == email){
+                    check = true
+                }
+            }
+            return check
+        }catch{
+            print(error)
+            return false
+        }
+    }
+    
+    
+    func getAccessToken(email:String) -> String {
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        
+        var token = ""
+        let tableOrder = self.googleEmailListTable.order()
+        do {
+            let devices = try database.prepare(tableOrder)
+            for device in devices {
+                let sliteEmail = "\(device[self.googleEmail])"
+                print("sliteEmail : \(sliteEmail)")
+                if(sliteEmail == email){
+                    token = device[accessToken]
+                }
+            }
+            return token
+        }catch{
+            print(error)
+            return token
+        }
+    }
+    
+    func getTokenTime(email:String) -> String {
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        
+        var token = ""
+        let tableOrder = self.googleEmailListTable.order()
+        do {
+            let devices = try database.prepare(tableOrder)
+            for device in devices {
+                let sliteEmail = "\(device[self.googleEmail])"
+                print("sliteEmail : \(sliteEmail)")
+                if(sliteEmail == email){
+                    token = device[getTokenTime]
+                }
+            }
+            return token
+        }catch{
+            print(error)
+            return token
+        }
+    }
+    
+    func googleEmailListArray() -> [String] {
+        var emailArray = [String]()
+        emailArray.removeAll()
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        
+        var tableOrder = self.googleEmailListTable.order()
+        do {
+            let devices = try database.prepare(tableOrder)
+            for device in devices {
+                print("table data: googleEmail : \(device[googleEmail])")
+                let email = "\(device[self.googleEmail])"
+                if(email.isEmpty){
+                    
+                } else {
+                    emailArray.append(email)
+                }
+                
+            }
+            
+            return emailArray
+        }catch{
+            print(error)
+            return emailArray
+        }
+    }
+    
 }
 

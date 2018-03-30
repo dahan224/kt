@@ -25,7 +25,7 @@ class RemoteFileListCellController {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "RemoteFileListCell", for: indexPath) as! RemoteFileListCell
         
-        if(folderArray[indexPath.row].foldrNm == "..."){
+        if(folderArray[indexPath.row].foldrNm == ".."){
             cell.btnOption.isHidden = true
         }
         let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
@@ -89,12 +89,14 @@ class RemoteFileListCellController {
         switch sender {
         case cell.btnShow:
             btn = "show"
+            dv?.showRemoteFileOption(tag: sender.tag)
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             print("fileIdDict : \(fileIdDict)")
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
-            dv?.showRemoteFileOption(tag: sender.tag)
+            
             break
         case cell.btnDwnld:
+            self.dv?.showRemoteFileOption(tag: sender.tag)
             let remoteDownLoadStyle = "remoteDownLoad"
             UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
@@ -105,7 +107,7 @@ class RemoteFileListCellController {
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 self.remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
-                self.dv?.showRemoteFileOption(tag: sender.tag)
+                
                 
                 
             }
@@ -117,7 +119,7 @@ class RemoteFileListCellController {
             
         case cell.btnNas:
             
-           
+            self.dv?.showRemoteFileOption(tag: sender.tag)
             let remoteDownLoadStyle = "remoteDownLoadToNas"
             UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
@@ -148,6 +150,7 @@ class RemoteFileListCellController {
         switch indexPath.row {
         case 0 :
             //파일 상세보기
+            
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
@@ -167,6 +170,7 @@ class RemoteFileListCellController {
             break
             
         case 2:
+            
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
 //            let remoteDownLoadToNas = true
             let remoteDownLoadStyle = "remoteDownLoadToNas"

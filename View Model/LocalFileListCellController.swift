@@ -16,7 +16,7 @@ class LocalFileListCellController{
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "LocalFileListCell", for: indexPath) as! LocalFileListCell
     
-        if(folderArray[indexPath.row].foldrNm == "..."){
+        if(folderArray[indexPath.row].foldrNm == ".."){
             cell.btnOption.isHidden = true
         }
         
@@ -50,7 +50,7 @@ class LocalFileListCellController{
         cell.btnDelete.addTarget(self, action: #selector(parentView.optionLocalFileShowClicked(sender:)), for: .touchUpInside)
         return cell
     }
-    func localContextMenuCalled(cell:LocalFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, viewState:HomeViewController.viewStateEnum){
+    func localContextMenuCalled(cell:LocalFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, viewState:HomeViewController.viewStateEnum, containerView:ContainerViewController){
         let fileNm = folderArray[indexPath.row].fileNm
 //        let etsionNm = folderArray[indexPath.row].etsionNm
         let amdDate = folderArray[indexPath.row].amdDate
@@ -60,51 +60,59 @@ class LocalFileListCellController{
         switch sender {
         case cell.btnShow:
             print("fileId: \(fileId)")
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
-            NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             if parentView == "device" {
                 deviceView.showLocalFileOption(tag: sender.tag)
             }
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
+            NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
+            
             break
         case cell.btnAction:
+            if parentView == "device" {
+                deviceView.showLocalFileOption(tag: sender.tag)
+            }
             let url:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
             let urlDict = ["url":url]
             NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
-            if parentView == "device" {
-                deviceView.showLocalFileOption(tag: sender.tag)
-            }
+            
             print("btnActino called")
             break
             
         case cell.btnNas:
-            
+            if parentView == "device" {
+                deviceView.showLocalFileOption(tag: sender.tag)
+            }
             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
             print("fileDict : \(fileDict)")
             
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-            if parentView == "device" {
-                deviceView.showLocalFileOption(tag: sender.tag)
-            }
+           
             
             break
             
         case cell.btnGDrive:
             if parentView == "device" {
-
+                deviceView.showLocalFileOption(tag: sender.tag)
+                
+                
                 let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
                 print("fileDict : \(fileDict)")
-                deviceView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
-                deviceView.showLocalFileOption(tag: sender.tag)
+                
+//                deviceView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
+                containerView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
             }
             break
         case cell.btnDelete:
+            if parentView == "device" {
+                deviceView.showLocalFileOption(tag: sender.tag)
+            }
             let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 let pathForRemove:String = FileUtil().getFilePath(fileNm: fileNm, amdDate: amdDate)
                 print("pathForRemove : \(pathForRemove)")
                 self.removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync()
+                SyncLocalFilleToNas().sync(view: "")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
@@ -115,9 +123,7 @@ class LocalFileListCellController{
                             deviceView.showInsideList(userId: userId, devUuid: currentDevUuid, foldrId: currentFolderId, deviceName: deviceName)
                         }
                         
-                        if parentView == "device" {
-                            deviceView.showLocalFileOption(tag: sender.tag)
-                        }
+                        
                     }
                     alertController.addAction(yesAction)
                     deviceView.present(alertController, animated: true)
@@ -179,7 +185,7 @@ class LocalFileListCellController{
                 let pathForRemove:String = FileUtil().getFilePath(fileNm: fileNm, amdDate: amdDate)
 //                print("pathForRemove : \(pathForRemove)")
                 self.removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync()
+                SyncLocalFilleToNas().sync(view: "")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

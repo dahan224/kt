@@ -81,6 +81,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     @IBOutlet weak var textFieldPw: UITextField!{
         didSet{
             textFieldPw.placeholder = "비밀번호"
+            textFieldPw.isSecureTextEntry = true
             textFieldPw.addBorderBottom(height: 1.0, color: hexToUIColor.getUIColor(hex: "D1D2D4"))
             textFieldPw.addTarget(self,
                                   action: #selector(LoginViewController.textFieldDidChange),
@@ -90,6 +91,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                   for: .editingDidEnd)
             textFieldPw.delegate = self
         }
+
     }
     @objc func textFieldDidChange(textField: UITextField) {
         //your code
@@ -120,7 +122,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
-        
+        textFieldId.text = ""
+        textFieldPw.text = ""
         UserDefaults.standard.removeObject(forKey: "cookie")
         UserDefaults.standard.removeObject(forKey: "token")
         
@@ -151,10 +154,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         autoLoginCheck = UserDefaults.standard.bool(forKey: "autoLoginCheck")
         print("autoLoginCheck : \(autoLoginCheck)")
         if(autoLoginCheck){
+            textFieldId.text = UserDefaults.standard.string(forKey: "userId")
+            textFieldPw.text = UserDefaults.standard.string(forKey: "userPassword")
             checkBox.setOn(true, animated: false)
             login()
         }
     }
+    
     
     @IBAction func btnLoginClicked(_ sender: UIButton) {
         
@@ -396,7 +402,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     func sysncFileInfo() {
         print("syncFileInfo called")
-        SyncLocalFilleToNas().sync()
+        SyncLocalFilleToNas().sync(view: "")
         getDeviceList(sortBy: DbHelper.sortByEnum.none)
         
         

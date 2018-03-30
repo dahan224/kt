@@ -22,7 +22,7 @@ struct App {
         static let google: String = ""
         static let server: String = "https://araise.iptime.org/GIGA_Storage/webservice/rest/"
         static let NAS:String = "https://araise.iptime.org/namespace/ifs/home/gs-araise3/araise3-gs/GIGA_NAS/"
-        static let gDriveFileOption:String = ""
+        static let gDriveFileOption:String = "&orderBy=folder,createdTime desc&fields=nextPageToken,files(id, name, mimeType,size,createdTime,modifiedTime,parents,properties,fileExtension,fullFileExtension,trashed,shared,starred,thumbnailLink)"
     }
     
     struct API {
@@ -498,6 +498,7 @@ struct App {
     }
     struct FilesToEdit {
         var cmd : String
+        var fileId : Int
         var userId : String
         var devUuid : String
         var fileNm : String
@@ -512,6 +513,7 @@ struct App {
             self.userId   = file.userId
             self.devUuid   = file.devUuid
             self.fileNm   = file.fileNm
+            self.fileId = file.fileId
             self.etsionNm   = file.etsionNm
             self.fileSize   = file.fileSize
             self.cretDate   = file.cretDate
@@ -526,6 +528,7 @@ struct App {
                 "userId" : userId,
                 "devUuid" : devUuid,
                 "fileNm" : fileNm,
+                "fileId" : fileId,
                 "etsionNm" : etsionNm,
                 "fileSize" : fileSize,
                 "cretDate" : cretDate,
@@ -538,6 +541,7 @@ struct App {
                 "cmd" : "D",
                 "userId" : userId,
                 "devUuid" : devUuid,
+                "fileId" : fileId,
                 "fileNm" : fileNm,
                 "foldrWholePathNm":foldrWholePathNm
             ]

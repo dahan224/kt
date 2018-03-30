@@ -24,13 +24,10 @@ class FileUtil {
                 let fileExtension = file.pathExtension
                 let folderCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                 let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
-                let decodedFileName:String = fileName.removingPercentEncoding!
                 
-                let fileCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
-                
-                if(fileExtension.isEmpty){
+                if(fileExtension.isEmpty && !fileName.contains("Trash")){
                     var foldrWholePathNm = "/Mobile"
-                    if let folderNmArray = URLComponents(string: fileSavedPath.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!)?.path.components(separatedBy: "/") {
+                    if let folderNmArray = URLComponents(url: file, resolvingAgainstBaseURL: true)?.path.components(separatedBy: "/") {
                         let documentIndex = folderNmArray.index(of: "Documents")
                         for (index, path) in folderNmArray.enumerated() {
                             if(documentIndex! < index && index < folderNmArray.count){
@@ -57,18 +54,15 @@ class FileUtil {
                 let attribute = try FileManager.default.attributesOfItem(atPath: fileSavedPath)
                 let fileName:String = (NSURL(fileURLWithPath: file.lastPathComponent).deletingPathExtension?.lastPathComponent)!
                 let fileExtension = file.pathExtension
-                let folderCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                 let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
                 let decodedFileName:String = fileName.removingPercentEncoding!
                 
                 let fileCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                 
-                if(fileExtension.isEmpty){
-                } else {
+                if(!fileExtension.isEmpty && !fileName.contains("Trash")){
                     var foldrWholePathNm = "/Mobile"
-                    if let folderNmArray = URLComponents(string: fileSavedPath)?.path.components(separatedBy: "/") {
+                    if let folderNmArray = URLComponents(url: file, resolvingAgainstBaseURL: true)?.path.components(separatedBy: "/") {
                         let documentIndex = folderNmArray.index(of: "Documents")
-                        let folderNm = folderNmArray[(folderNmArray.count) - 2]
                         let pathLastIndex = (folderNmArray.count) - 1
                         for (index, path) in folderNmArray.enumerated() {
                             if(documentIndex! < index && index < pathLastIndex){
@@ -76,7 +70,7 @@ class FileUtil {
                             }
                         }
                         if let size = attribute[FileAttributeKey.size] as? NSNumber {
-                            if(!fileExtension.isEmpty){
+                            if(!fileExtension.isEmpty && !foldrWholePathNm.contains("Trash")){
                                 let files = App.LocalFiles(cmd:"C",userId:App.defaults.userId,devUuid:Util.getUuid(),fileNm:decodedFileName,etsionNm:fileExtension,fileSize:size.stringValue,cretDate:Util.date(text: fileCreateDate),amdDate:Util.date(text: modifiedDate), foldrWholePathNm: foldrWholePathNm, savedPath: fileSavedPath)
                                 localFileArray.append(files)
                             }
@@ -90,9 +84,6 @@ class FileUtil {
         }
         return localFileArray
     }
-    
-    
-   
    
     func getFileUrl(fileNm:String, amdDate:String) -> URL?{
         let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)

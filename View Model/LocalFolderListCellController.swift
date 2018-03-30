@@ -17,7 +17,7 @@ class LocalFolderListCellController {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "LocalFolderListCell", for: indexPath) as! LocalFolderListCell
     
-        if(folderArray[indexPath.row].foldrNm == "..."){
+        if(folderArray[indexPath.row].foldrNm == ".."){
             cell.btnOption.isHidden = true
         }
         
@@ -51,20 +51,22 @@ class LocalFolderListCellController {
         switch sender {
         case cell.btnNas:
             print(deviceName)
+            dv?.showLocalFolderOption(tag: sender.tag)
             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
             
             print("fileDict : \(fileDict)")
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-            dv?.showLocalFolderOption(tag: sender.tag)
+            
             
             
             
         case cell.btnGDrive:
-            
+            dv?.showLocalFolderOption(tag: sender.tag)
             //            self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
             //            showOptionMenu(sender: sender, style: 0)
             break
         case cell.btnDelete:
+            dv?.showLocalFolderOption(tag: sender.tag)
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 삭제 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
@@ -74,7 +76,7 @@ class LocalFolderListCellController {
                 let pathForRemove:String = FileUtil().getFilePath(fileNm: foldrNm, amdDate: amdDate)
                     print("pathForRemove : \(pathForRemove)")
                 FileUtil().removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync()
+                SyncLocalFilleToNas().sync(view: "")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

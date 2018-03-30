@@ -11,17 +11,15 @@ import Alamofire
 import SwiftyJSON
 
 class GetListFromServer {
-    var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
-    var loginToken = UserDefaults.standard.string(forKey: "token")!
     var uuid = Util.getUuid()
-    var userId = UserDefaults.standard.string(forKey: "userId")!
+    var userId = UserDefaults.standard.string(forKey: "userId") ?? "nil"
     var SearchedFileArray:[App.SearchedFileStruct] = []
     
     
     var jsonHeader:[String:String] = [
         "Content-Type": "application/json",
-        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
-        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+        "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     ]
     func getDevice(completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         var params:[String:Any] = [String:Any]()

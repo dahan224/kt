@@ -17,7 +17,6 @@ import BEMCheckBox
 
 class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate  {
     private let scopes = [kGTLRAuthScopeDriveFile, kGTLRAuthScopeDrive, kGTLRAuthScopeDriveReadonly ]
-    
     private let service = GTLRDriveService()
     let signInButton = GIDSignInButton()
     var loginCookie = ""
@@ -263,7 +262,7 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
                 let defaults = UserDefaults.standard
                 defaults.set(self.googleEmail, forKey: "googleEmail")
                 defaults.set("login", forKey: "googleDriveLoginState")
-                NotificationCenter.default.post(name: Notification.Name("loginStateUpdate"), object: self)
+                
             }
             print("logedIn")
 //            self.listFiles()
@@ -397,7 +396,6 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
 //                                let responseData = value as! NSDictionary
 //                                let message = responseData.object(forKey: "message")
 //                                print("mesage : \(message)")
-                                NotificationCenter.default.post(name: Notification.Name("loginStateUpdate"), object: self)
                                 if(self.segueCheck == 1){
                                     
                                 }

@@ -7,10 +7,42 @@
 //
 
 import UIKit
-import SwiftyJSON
+import GoogleAPIClientForREST
+import GoogleSignIn
 import Alamofire
+import SwiftyJSON
+import BEMCheckBox
 
-class ContainerViewController: UIViewController {
+class ContainerViewController: UIViewController,UITableViewDelegate, UITableViewDataSource, GIDSignInDelegate, GIDSignInUIDelegate {
+    
+    var homeViewController:HomeViewController?
+    var latelyUpdatedFileViewController:LatelyUpdatedFileViewController?
+    let g = DispatchGroup()
+    let q1 = DispatchQueue(label: "queue1")
+    let q2 = DispatchQueue(label: "queue2")
+    
+    
+    private let scopes = [kGTLRAuthScopeDriveFile, kGTLRAuthScopeDrive, kGTLRAuthScopeDriveReadonly ]
+    private let service = GTLRDriveService()
+    let signInButton = GIDSignInButton()
+    var googleEmailArray = [String]()
+    var googleEmail = ""
+    enum emailSelectionEnum {
+        case previous
+        case add
+    }
+    var emailSelectState = emailSelectionEnum.previous
+    
+    enum googleDriveLoginEnum {
+        case login
+        case logout
+    }
+    var googleDriveLoginState = googleDriveLoginEnum.logout
+    let checkButton = BEMCheckBox()
+    let checkButton2 = BEMCheckBox()
+    var segueCheck = 0
+    var driveFileArray:[App.DriveFileStruct] = []
+    
     
     var multiCheckedfolderArray:[App.FolderStruct] = []
     let halfBlackView:UIView = {
@@ -64,7 +96,7 @@ class ContainerViewController: UIViewController {
     
     var fromDevUuid = ""
     var fromFoldr = ""
-    
+    var getFileDict:[String:String] = [:]
     @IBOutlet weak var containerView: UIView!
     
     enum listViewStyleEnum {
@@ -72,6 +104,7 @@ class ContainerViewController: UIViewController {
         case list
     }
     var listViewStyleState = listViewStyleEnum.list
+    var emailCheckViews:[UIView] = [UIView]()
     
     @objc func toggleSideMenu(){
         print("sideMEnuOepn")
@@ -127,6 +160,11 @@ class ContainerViewController: UIViewController {
         
         setupDeviceListView(container: containerView)
         NotificationCenter.default.addObserver(self,
+                                               selector: #selector(openLicenseSegue),
+                                               name: NSNotification.Name("openLicenseSegue"),
+                                               object: nil)
+        
+        NotificationCenter.default.addObserver(self,
                                                selector: #selector(toggleSideMenu),
                                                name: NSNotification.Name("toggleSideMenu"),
                                                object: nil)
@@ -172,21 +210,25 @@ class ContainerViewController: UIViewController {
                                                selector: #selector(removeLatelyView),
                                                name: NSNotification.Name("removeLatelyView"),
                                                object: nil)
+        GIDSignIn.sharedInstance().delegate = self
+        GIDSignIn.sharedInstance().uiDelegate = self
+        GIDSignIn.sharedInstance().scopes = scopes
+        
     }
     
     func setupDeviceListView(container: UIView){
       
-        let child = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
-        child.containerViewController = self
+        homeViewController = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
+        homeViewController?.containerViewController = self
         
-        child.willMove(toParentViewController: parent)
-        self.addChildViewController(child)
-        container.addSubview(child.view)
-        child.didMove(toParentViewController: parent)
+        homeViewController?.willMove(toParentViewController: parent)
+        self.addChildViewController(homeViewController!)
+        container.addSubview(homeViewController!.view)
+        homeViewController?.didMove(toParentViewController: parent)
         
         let w = container.frame.size.width;
         let h = container.frame.size.height;
-        child.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+        homeViewController?.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
         
         print("containerA setting called")
         
@@ -228,24 +270,24 @@ class ContainerViewController: UIViewController {
         previous.view.removeFromSuperview()
         previous.removeFromParentViewController()
         
-        let child = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
-        child.containerViewController = self
-        child.listViewStyleState = listViewStyleState
+        homeViewController = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
+        homeViewController?.containerViewController = self
+        homeViewController?.listViewStyleState = listViewStyleState
         self.willMove(toParentViewController: nil)
-        child.willMove(toParentViewController: parent)
-        self.addChildViewController(child)
+        homeViewController?.willMove(toParentViewController: parent)
+        self.addChildViewController(homeViewController!)
         
         let transition = CATransition()
         transition.type = kCATransitionPush
         transition.subtype = kCATransitionFromLeft
         transition.speed = 1.8
         containerView.layer.add(transition, forKey: nil)
-        containerView.addSubview(child.view)
-        child.didMove(toParentViewController: parent)
+        containerView.addSubview(homeViewController!.view)
+        homeViewController?.didMove(toParentViewController: parent)
         
         let w = containerView.frame.size.width;
         let h = containerView.frame.size.height;
-        child.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+        homeViewController?.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
         
         print("containerA setting called")
     
@@ -315,6 +357,9 @@ class ContainerViewController: UIViewController {
     @objc func showSettingSegue(){
         performSegue(withIdentifier: "showSettingSegue", sender: self)
     }
+    @objc func openLicenseSegue(){
+        performSegue(withIdentifier: "openLicenseSegue", sender: self)
+    }
 
     @objc func deviceManageSegue(){
         performSegue(withIdentifier: "deviceManageSegue", sender: self)
@@ -337,9 +382,10 @@ class ContainerViewController: UIViewController {
         
         let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
             //                self.getPreviousSyncEmail()
-            self.googleSignInSegueState = .loginForSend
-            self.performSegue(withIdentifier: "googleSignInSegue", sender: self)
-            self.halfBlackView.removeFromSuperview()
+          
+            self.getPreviousSyncEmail()
+//            self.performSegue(withIdentifier: "googleSignInSegue", sender: self)
+//            self.halfBlackView.removeFromSuperview()
         }
         let cancelButton = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
             self.halfBlackView.removeFromSuperview()
@@ -347,6 +393,446 @@ class ContainerViewController: UIViewController {
         alertController.addAction(okAction)
         alertController.addAction(cancelButton)
         self.present(alertController,animated: true,completion: nil)
+    }
+    func getPreviousSyncEmail(){
+        let headers = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+            "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
+        ]
+        
+        print("headers : \(headers)")
+        Alamofire.request(App.URL.server+"selectCloudId.json"
+            , method: .post
+            , parameters:["userId":App.defaults.userId,"cloudKind":"D"]
+            , encoding : JSONEncoding.default
+            , headers: headers
+            ).responseJSON { response in
+                
+                switch response.result {
+                case .success(let value):
+                    let responseData = value as! NSDictionary
+                    let message = responseData.object(forKey: "message")
+                    print("message : \(message)")
+                    if let listData = responseData.object(forKey: "data") {
+                        let data = listData as! NSDictionary
+                        let cloudId = data.object(forKey: "cloudId") as! String
+                        print("cloudId : \(cloudId)")
+                        
+                        self.showPreviousSyncEmail(email:cloudId)
+                        
+                    }
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    
+                    break
+                }
+        }
+    }
+    func showPreviousSyncEmail(email:String){
+        let alertController = UIAlertController(title: "동기화 ID는\n\(email)\n입니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+            self.showRadioAlert()
+        }
+        
+        alertController.addAction(okAction)
+        
+        self.present(alertController, animated: true,completion: nil)
+    }
+    
+    
+    func showRadioAlert(){
+        googleEmailArray = DbHelper().googleEmailListArray()
+        googleEmailArray.append("계정 추가")
+        var checkButtons:[BEMCheckBox] = [BEMCheckBox]()
+        checkButtons.removeAll()
+        
+        let alertController = UIAlertController(title: "계정 선택",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        var alertHeight:CGFloat = 40
+        if(googleEmailArray.count > 0) {
+            alertHeight = CGFloat(40 * (googleEmailArray.count + 1))
+        }
+        
+        let customView = UIView()
+        customView.isUserInteractionEnabled = true
+        customView.translatesAutoresizingMaskIntoConstraints = false
+        alertController.view.addSubview(customView)
+        customView.centerYAnchor.constraint(equalTo: alertController.view.centerYAnchor).isActive = true
+        customView.leadingAnchor.constraint(equalTo: alertController.view.leadingAnchor).isActive = true
+        customView.trailingAnchor.constraint(equalTo: alertController.view.trailingAnchor).isActive = true
+        var customViewHeightAnchor:NSLayoutConstraint?
+        customViewHeightAnchor = customView.heightAnchor.constraint(equalToConstant: alertHeight)
+        customViewHeightAnchor?.isActive = true
+        
+        
+        let tableView = UITableView()
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.register(GoogleEmailTableViewCell.self, forCellReuseIdentifier: "GoogleEmailTableViewCell")
+        customView.addSubview(tableView)
+        
+        tableView.topAnchor.constraint(equalTo: customView.topAnchor).isActive = true
+        tableView.leadingAnchor.constraint(equalTo: customView.leadingAnchor).isActive = true
+        tableView.trailingAnchor.constraint(equalTo: customView.trailingAnchor).isActive = true
+        tableView.bottomAnchor.constraint(equalTo: customView.bottomAnchor).isActive = true
+        tableView.backgroundColor = UIColor.clear
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.isScrollEnabled = false
+        tableView.separatorStyle = .none
+        
+        tableView.reloadData()
+        
+        let height:NSLayoutConstraint = NSLayoutConstraint(item: alertController.view, attribute: NSLayoutAttribute.height, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: alertHeight + 100)
+        alertController.view.addConstraint(height);
+        
+        
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+            self.halfBlackView.removeFromSuperview()
+            print("emailSelectState : \(self.emailSelectState)")
+            if(self.emailSelectState == .add) {
+               
+                self.googleSignIn()
+                
+            } else {
+//                self.googleSignInSilently()
+                self.loginWBySelectedEmail()
+            }
+            
+        }
+        let cancelAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
+            self.halfBlackView.removeFromSuperview()
+        }
+        
+        alertController.addAction(okAction)
+        alertController.addAction(cancelAction)
+        self.present(alertController,animated: true,completion: nil)
+    }
+  
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+      return googleEmailArray.count
+    }
+    
+    
+    
+    
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "GoogleEmailTableViewCell") as! GoogleEmailTableViewCell
+        cell.lblMain.text = googleEmailArray[indexPath.row]
+        cell.btnCheck.setOn(false, animated: false)
+      
+        return cell
+    }
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        let height:CGFloat = 50.0
+        
+        return height
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        print(indexPath.section)
+        print(indexPath.row)
+        for (index, string) in googleEmailArray.enumerated() {
+            let otherIndexPath = IndexPath(row: index, section: 0)
+            if (otherIndexPath != indexPath){
+                if let otherCell = tableView.cellForRow(at: otherIndexPath) as? GoogleEmailTableViewCell{
+                    otherCell.btnCheck.setOn(false, animated: true)
+                }
+            } else {
+                
+                let clickedCell = tableView.cellForRow(at: indexPath) as? GoogleEmailTableViewCell
+                clickedCell?.btnCheck.setOn(true, animated: true)
+            }
+            
+        }
+        googleEmail = googleEmailArray[indexPath.row]
+        print("googleEmailArray.count : \(googleEmailArray.count)")
+        if(indexPath.row == googleEmailArray.count - 1){
+            emailSelectState = .add
+            print("emailSelectState : \(emailSelectState)")
+        } else {
+            emailSelectState = .previous
+            print("emailSelectState : \(emailSelectState)")
+        }
+        
+    }
+    
+    
+    
+    func googleSignIn(){
+        print("googleSignIn")
+        GIDSignIn.sharedInstance().signOut()
+        let userDefaults = UserDefaults.standard
+        let dict = UserDefaults.standard.dictionaryRepresentation()
+        for key in dict.keys {
+            if key == "GID_AppHasRunBefore" || key == "token" || key == "cookie" || key == "userId" || key == "autoLoginCheck" || key == "userId" || key == "userPassword" || key == "googleDriveLoginState" {
+                continue
+            }
+            userDefaults.removeObject(forKey: key);
+        }
+        UserDefaults.standard.synchronize()
+        GIDSignIn.sharedInstance().delegate = self
+        GIDSignIn.sharedInstance().uiDelegate = self
+        GIDSignIn.sharedInstance().scopes = scopes
+        GIDSignIn.sharedInstance().signIn()
+        
+    }
+    
+    func loginWBySelectedEmail(){
+        print("loginWBySelectedEmail called")
+        let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
+        print("loginState : \(loginState)")
+        if(loginState != "login") {
+            googleSignIn()
+        }  else {
+            GIDSignIn.sharedInstance().signInSilently()
+        }
+    }
+    
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!,
+              withError error: Error!) {
+        if let error = error {
+            print("error: \(error)")
+            DispatchQueue.main.async {
+                self.service.authorizer = nil
+                self.showAlert(title: "Authentication Error", message: error.localizedDescription)
+            }
+            
+        } else {
+            var accessToken:String = ""
+            q1.async(group:g) {
+                print("whatethe")
+                
+            }
+            q2.async(group:g) {
+                let today = Date()
+                let stToday = Util.date(text: today)
+                
+                print("stToday : \(stToday)")
+                let check = DbHelper().googleEmailExistenceCheck(email: user.profile.email)
+                if(check){                    
+                    accessToken = GIDSignIn.sharedInstance().currentUser.authentication.accessToken
+                    DbHelper().googleAccessTokenUpdate(getEmail: user.profile.email, getAccessToken: accessToken, getTime:stToday)
+                } else {
+                    accessToken = GIDSignIn.sharedInstance().currentUser.authentication.accessToken
+                    DbHelper().googleEmailToSqlite(getEmail: user.profile.email, getAccessToken : accessToken, getTime:stToday)
+                    
+                }
+                print("logedIn")
+            }
+            g.notify(queue: DispatchQueue.main){
+                print("final")
+                self.signInButton.isHidden = true
+                self.service.authorizer = user.authentication.fetcherAuthorizer()
+                self.googleEmail = user.profile.email
+                self.googleDriveLoginState = .login
+                let defaults = UserDefaults.standard
+                defaults.set(self.googleEmail, forKey: "googleEmail")
+                defaults.set("login", forKey: "googleDriveLoginState")
+                defaults.synchronize()
+                print("googleEmail : \(self.googleEmail)")
+                print("sigin in purpose : \(self.googleSignInSegueState)")
+                if(self.googleSignInSegueState == .loginForList) {
+                    self.getFiles(accessToken: accessToken, root: "root")
+                } else {
+                    
+                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
+                }
+                
+            }
+            
+            
+            
+            
+            
+        }
+    }
+    
+    func getFiles(accessToken:String, root:String){
+        homeViewController?.homeViewToggleIndicator()
+        print("getFiles token : \(accessToken)")
+        self.driveFileArray.removeAll()
+        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false&access_token=\(accessToken)" + App.URL.gDriveFileOption // 0eun
+        url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+        Alamofire.request(url,
+                          method: .get,
+                          encoding: JSONEncoding.default,
+                          headers: nil).responseJSON { response in
+                            switch response.result {
+                            case .success(let value):
+                                let json = JSON(value)
+                                print("json : \(json)")
+                                if(json["error"].exists()){
+                                    print("error: \(json["error"])")
+                                    self.googleSignIn()
+                                    self.homeViewController?.homeViewToggleIndicator()
+                                } else {
+                                    if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
+                                        for file in serverList {
+//                                            print("file : \(file)")
+                                            if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 {
+                                                let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
+                                                self.driveFileArray.append(fileStruct)
+                                            }
+                                        }
+                                        DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
+                                        self.syncCloudEmailToServer(cloudId: self.googleEmail)
+                                        self.homeViewController?.homeViewToggleIndicator()
+                                    } else {
+                                        print("error: \(json["errors"])")
+                                        self.googleSignIn()
+                                        self.homeViewController?.homeViewToggleIndicator()
+                                    }
+                                }
+                                
+                            case .failure(let error):
+                                NSLog(error.localizedDescription)
+                                self.homeViewController?.homeViewToggleIndicator()
+                            }
+                            
+        }
+    }
+    
+    
+    // List up to 10 files in Drive
+    func listFiles() {
+        let query = GTLRDriveQuery_FilesList.query()
+        //        query.pageSize = 10
+        //        query.q = "'root' in parents"
+        print("user : \(GIDSignIn.sharedInstance().currentUser)")
+        self.service.executeQuery(query,
+                                  delegate: self,
+                                  didFinish: #selector(displayResultWithTicket(ticket:finishedWithObject:error:))
+        )
+    }
+    
+    // Process the response and display output
+    @objc func displayResultWithTicket(ticket: GTLRServiceTicket,
+                                       finishedWithObject result : GTLRDrive_FileList,
+                                       error : NSError?) {
+        
+        if let error = error {
+            showAlert(title: "Error", message: error.localizedDescription)
+            print("error :\(error)" )
+            return
+        }
+        
+        var text = "";
+        if let files = result.files, !files.isEmpty {
+            text += "Files:\n"
+            for file in files {
+                text += "\(file.name!) (\(file.identifier!))\n"
+            }
+        } else {
+            text += "No files found."
+        }
+        print("list : \(text)")
+    }
+    
+    
+    // Helper for showing an alert
+    func showAlert(title : String, message: String) {
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: UIAlertControllerStyle.alert
+        )
+        let ok = UIAlertAction(
+            title: "OK",
+            style: UIAlertActionStyle.default,
+            handler: nil
+        )
+        alert.addAction(ok)
+        present(alert, animated: true, completion: nil)
+    }
+
+    
+    func syncCloudEmailToServer(cloudId: String){
+        
+        let urlString = App.URL.server+"registCloudId.do"
+        let headers = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+            "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        ]
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: ["userId":App.defaults.userId,"cloudKind":"D","cloudId":cloudId],
+                          encoding : JSONEncoding.default,
+                          headers: headers).responseJSON{ (response) in
+                            switch response.result {
+                            case .success(let value):
+                                //                                let json = JSON(value)
+                                //                                let responseData = value as! NSDictionary
+                                //                                let message = responseData.object(forKey: "message")
+                                //                                print("mesage : \(message)")
+                                if(self.segueCheck == 1){
+                                    
+                                }
+                                // 0eun - start
+                                print("googleSignInSegueState : \(self.googleSignInSegueState)")
+                                if (self.googleSignInSegueState == .loginForList){
+                                    
+                                    let cellStyle = ["cellStyle":3]
+                                    NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self, userInfo: cellStyle)
+//                                     0eun - end
+                                    
+                                    
+                                } else {
+                                    
+                                }
+//                                Util().dismissFromLeft(vc:self)
+                                break
+                            case .failure(let error):
+                                NSLog(error.localizedDescription)
+                                break
+                            }
+        }
+    }
+    
+    
+    func googleSignInCheck(name:String, path:String, fileDict:[String:String]){
+        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+            
+            var accessToken = DbHelper().getAccessToken(email: googleEmail)
+            let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
+            print("accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
+            let now = Date()
+            let dateGetTokenTime = Util.stringToDate(text: getTokenTime)
+            var userCalendar = Calendar.current
+            userCalendar.timeZone = TimeZone.current
+            let requestedComponent: Set<Calendar.Component> = [.hour,.minute,.second]
+            //        let requestedComponent: Set<Calendar.Component> = [.hour]
+            let timeDifference = userCalendar.dateComponents(requestedComponent, from: dateGetTokenTime, to: now)
+            //                        print(timeDifference.hour)
+            let hour = timeDifference.hour
+            if(hour! < 1){
+                //                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
+                let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
+                if(loginState == "login"){
+                    print("get file")
+                    googleSignInSegueState = .loginForSend
+                    GIDSignIn.sharedInstance().signInSilently()
+                    getFileDict = fileDict
+                    
+                } else {
+                    
+                    print("login called")
+                    googleSignInSegueState = .loginForSend
+                    googleSignInAlertShow()
+                }
+                
+            }
+        } else {
+            print("google email")
+            googleSignInSegueState = .loginForSend
+            googleSignInAlertShow()
+        }
+   
     }
     
     @objc func nasFolderSelectSegue(fileDict:NSNotification){
@@ -378,7 +864,7 @@ class ContainerViewController: UIViewController {
             }
             
             fromUserId = getUserId
-            print("fromUserId : \(fromUserId)")
+            print("nasFolderSelectSegue called fromUserId : \(fromUserId)")
             performSegue(withIdentifier: "nasFolderSelectSegue", sender: self)
         }
         

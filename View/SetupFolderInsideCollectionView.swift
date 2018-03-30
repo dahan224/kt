@@ -10,7 +10,7 @@ import UIKit
 
 class SetupFolderInsideCollectionView {
     
-    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum){
+    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton){
         
         
         for view in searchView.subviews {
@@ -22,6 +22,9 @@ class SetupFolderInsideCollectionView {
         searchView.addSubview(sortButton)
         searchView.addSubview(searchButton)
         searchView.addSubview(multiButton)
+        searchView.addSubview(localRefreshButton)
+        
+        
         label.textAlignment = .left
         label.text = ">GiGA NAS"
         label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
@@ -53,6 +56,18 @@ class SetupFolderInsideCollectionView {
 //        } else {
 //            multiButton.isHidden = true
 //        }
+        
+        localRefreshButton.translatesAutoresizingMaskIntoConstraints = false
+        localRefreshButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
+        localRefreshButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        localRefreshButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+        localRefreshButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: -5.0).isActive = true
+        
+        if(getDevUuid == Util.getUuid()){
+            localRefreshButton.isHidden = false
+        } else {
+            localRefreshButton.isHidden = true
+        }
         
         for view in customNavBar.subviews {
             view.removeFromSuperview()

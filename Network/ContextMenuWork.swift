@@ -630,7 +630,7 @@ class ContextMenuWork {
     }
     
     func finishDownload(){
-        SyncLocalFilleToNas().sync()
+        SyncLocalFilleToNas().sync(view: "ContextMenuWork")
          
         print("download finish")
         NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)

@@ -382,6 +382,7 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         child?.driveFileArray = self.driveFileArray
         child?.containerViewController = containerViewController
         child?.latelyUpdatedFileViewController = self
+         
         
         print("called")
         self.view.addSubview(listContainerView)
@@ -417,6 +418,7 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     
     @objc func btnMulticlicked(){
         ifNavBarClicked = false
+        print("lately btnMulticlicked called, multiButtonChecked : \(multiButtonChecked)")
         var stringBool = "false"
         if(multiButtonChecked){
             flickView.isHidden = false
@@ -436,8 +438,10 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
         stringBool = String(multiButtonChecked)
         print("stringBool :\(stringBool)")
-        let fileIdDict = ["multiChecked":stringBool]
-        NotificationCenter.default.post(name: Notification.Name("multiSelectActive"), object: self, userInfo: fileIdDict)
+//        let fileIdDict = ["multiChecked":stringBool]
+//        NotificationCenter.default.post(name: Notification.Name("multiSelectActive"), object: self, userInfo: fileIdDict)
+        print("lately btnMulticlicked called, multiButtonChecked : \(multiButtonChecked)")
+        child?.multiSelectActive(multiButtonActive: multiButtonChecked)
     }
    
     func setMultiCountLabel(multiButtonChecked:Bool, count:Int){
@@ -492,9 +496,20 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     }
     
     
-    @objc func inActiveMultiCheck(){
+    func inActiveMultiCheck(){
         multiButtonChecked = false
-        setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
+        flickView.isHidden = false
+        multiButton.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
+        containerViewBottomAnchor?.isActive = false
+        containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+        containerViewBottomAnchor?.isActive = true
+        if self.view.contains(multiCheckBottomView){
+            for view in multiCheckBottomView.subviews {
+                view.removeFromSuperview()
+            }
+            multiCheckBottomView.removeFromSuperview()
+        }
+        child?.multiSelectActive(multiButtonActive: multiButtonChecked)
     }
     
     @objc func latelyViewmultiCheckBottomViewTapped(){
@@ -563,13 +578,8 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
             containerViewController?.listViewStyleState = .list
             listButton.setImage(#imageLiteral(resourceName: "card_view").withRenderingMode(.alwaysOriginal), for: .normal)
             if(mainContentState == .oneViewList){
-                if(maintainFolder){
-                    let fileDict = ["style":"list"]
-                    NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
-                    
-                } else {
-                    setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
-                }
+                let fileDict = ["style":"list"]
+                NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
             }
             break
         case (.list):
@@ -577,12 +587,9 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
             containerViewController?.listViewStyleState = .grid
             listButton.setImage(#imageLiteral(resourceName: "list_view").withRenderingMode(.alwaysOriginal), for: .normal)
             if(mainContentState == .oneViewList){
-                if(maintainFolder){
-                    let fileDict = ["style":"grid"]
-                    NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
-                } else {
-                    setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
-                }
+                let fileDict = ["style":"grid"]
+                NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
+                
             }
             
             break
@@ -637,6 +644,7 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         tableView.deselectRow(at: indexPath, animated: true)
         print(indexPath.section)
         print(indexPath.row)
+        inActiveMultiCheck()
         let fileDict = ["action":"nas","fromOsCd":"multi"]
         latelyViewToggleBottomMenu()
 //        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)

@@ -49,7 +49,7 @@ class MultiCheckFileListController {
             return
         }
         
-        SyncLocalFilleToNas().sync()
+        SyncLocalFilleToNas().sync(view: "")
         DispatchQueue.main.async {
             let alertController = UIAlertController(title: nil, message: "다운로드를 성공하였습니다.", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
@@ -548,7 +548,7 @@ class MultiCheckFileListController {
             return
         }
         DispatchQueue.main.async {
-            SyncLocalFilleToNas().sync()
+            SyncLocalFilleToNas().sync(view: "")
             let alertController = UIAlertController(title: nil, message: "멀티 파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
                 UIAlertAction in

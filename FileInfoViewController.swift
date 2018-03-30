@@ -46,6 +46,7 @@ class FileInfoViewController: UIViewController {
     var tagAddedWidth:CGFloat = 0
     var tagAddedHeight:CGFloat = 10
     var fileSavedPath = ""
+    
     override func viewDidLoad() {
         super.viewDidLoad()
         customNavBar.layer.shadowColor = UIColor.lightGray.cgColor

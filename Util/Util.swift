@@ -9,12 +9,30 @@
 import UIKit
 
 class Util{
+    class func checkSpace(_ str:String) -> Bool {
+        var check:Bool = false
+        
+        for char in str {
+            if char == " " || char == "\n" {
+                check = true
+                break
+            }
+        }
+        
+        return check
+    }
     class func date(text: Date) -> String {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
         let stringDate = dateFormatter.string(from: text)
         
         return stringDate
+    }
+    class func stringToDate(text: String) -> Date {
+        let dateFormatter = DateFormatter()
+        dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
+        let date = dateFormatter.date(from: text)        
+        return date!
     }
     
     class  func getUuid() -> String {

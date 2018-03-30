@@ -46,7 +46,8 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
         tableView.delegate = self
         tableView.dataSource = self
         tableView.register(DeviceContainerBCell.self, forCellReuseIdentifier: "DeviceContainerBCell")
-        getDeviceList()
+        
+        reloadDeviceList()
         
         print(infoTitle[menuNum])
         lblInfo.text = infoTitle[menuNum]
@@ -58,11 +59,7 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    func getDeviceList(){        
-        DeviceArray.removeAll()
-        self.DeviceArray = DbHelper().listSqlite(sortBy: DbHelper.sortByEnum.none)
-        self.tableView.reloadData()
-    }
+    
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         return DeviceArray.count
     }
@@ -73,17 +70,44 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
         let imageString = Util.getDeviceImageString(osNm: DeviceArray[indexPath.row].osNm, onoff: DeviceArray[indexPath.row].onoff)
         cell.ivIcon.image = UIImage(named: imageString)
         cell.lblMain.text = DeviceArray[indexPath.row].devNm
+        cell.lblMain2.text = DeviceArray[indexPath.row].devNm
         cell.lblSub.text = DeviceArray[indexPath.row].devNm
+        if menuNum == 2 {
+            cell.lblSub.isHidden = true
+            cell.lblMain.isHidden = true
+            cell.lblMain2.isHidden = false
+        } else {
+            cell.lblSub.isHidden = false
+            cell.lblMain.isHidden = false
+            cell.lblMain2.isHidden = true
+        }
         /*cell.layer.shadowColor = UIColor.lightGray.cgColor
-        cell.layer.shadowOffset = CGSize(width:0,height: 2.0)
-        cell.layer.shadowRadius = 1.0
-        cell.layer.shadowOpacity = 1.0
-        cell.layer.masksToBounds = false;
-        cell.layer.shadowPath = UIBezierPath(roundedRect:cell.bounds, cornerRadius:cell.contentView.layer.cornerRadius).cgPath*/
+         cell.layer.shadowOffset = CGSize(width:0,height: 2.0)
+         cell.layer.shadowRadius = 1.0
+         cell.layer.shadowOpacity = 1.0
+         cell.layer.masksToBounds = false;
+         cell.layer.shadowPath = UIBezierPath(roundedRect:cell.bounds, cornerRadius:cell.contentView.layer.cornerRadius).cgPath*/
         
         return cell
     }
-
+    
+    // refresh table
+    func reloadDeviceList() {
+        DeviceArray.removeAll()
+        GetListFromServer().getDevice() { responseObj, error in
+            let json = JSON(responseObj as Any)
+            if let statusCode = json["statusCode"].int, statusCode == 100 {
+                
+                let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
+                for device in serverList {
+                    let deviceStruct = App.DeviceStruct(device: device)
+                    self.DeviceArray.append(deviceStruct)
+                }
+                self.tableView.reloadData()
+            }
+        }
+    }
+    
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
         print("item : \(indexPath.row)")
         
@@ -92,7 +116,7 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
             let alertController = UIAlertController(title: nil, message: "", preferredStyle: .alert)
             
             alertController.addTextField { (textField) in
-                textField.placeholder = self.DeviceArray[indexPath.row].devNm
+                textField.text = self.DeviceArray[indexPath.row].devNm
                 textField.keyboardType = .emailAddress
             }
             
@@ -160,12 +184,24 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
                 case .success(let value):
                     let json = JSON(value)
                     if json["statusCode"].int == 100 {
-                        print(json["message"].string)
-                        self.getDeviceList()
+                        let alertController = UIAlertController(title: nil, message: "수정되었습니다.", preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel) {
+                            UIAlertAction in
+                            self.reloadDeviceList()
+                        }
+                        alertController.addAction(yesAction)
+                        self.present(alertController, animated: true)
                     } else {
-                        
+                        let alertController = UIAlertController(title: nil, message: "요청처리를 실패하였습니다.", preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel, handler:nil)
+                        alertController.addAction(yesAction)
+                        self.present(alertController, animated: true)
                     }
                 case .failure(let error):
+                    let alertController = UIAlertController(title: nil, message: "요청처리를 실패하였습니다.", preferredStyle: .alert)
+                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel, handler:nil)
+                    alertController.addAction(yesAction)
+                    self.present(alertController, animated: true)
                     print(error)
                 }
         }
@@ -191,12 +227,24 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
                     let json = JSON(value)
                     if json["statusCode"].int == 100 {
                         if(uuid == Util.getUuid()) {
-                            print("본인 디바이스가 삭제되어 앱이 종료됩니다.")
-                            exit(0)
+                            let alertController = UIAlertController(title: nil, message: "본인 디바이스가 삭제되어 앱이 종료됩니다.", preferredStyle: .alert)
+                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel) {
+                                UIAlertAction in
+                                
+                                exit(0)
+                            }
+                            alertController.addAction(yesAction)
+                            self.present(alertController, animated: true)
+                            
                         } else {
-                            self.getDeviceList()
+                            let alertController = UIAlertController(title: nil, message: "삭제되었습니다.", preferredStyle: .alert)
+                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel) {
+                                UIAlertAction in
+                                self.reloadDeviceList()
+                            }
+                            alertController.addAction(yesAction)
+                            self.present(alertController, animated: true)
                         }
-                        print(json["message"].string)
                     } else {
                         
                     }
@@ -210,3 +258,4 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
         dismiss(animated: false, completion: nil)
     }
 }
+

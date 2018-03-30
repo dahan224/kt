@@ -16,7 +16,7 @@ class NasFileCellController {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NasFileListCell", for: indexPath) as! NasFileListCell
         
-        if(folderArray[indexPath.row].foldrNm == "..."){
+        if(folderArray[indexPath.row].foldrNm == ".."){
             cell.btnOption.isHidden = true
         }
         let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
@@ -64,32 +64,36 @@ class NasFileCellController {
         if(folderArray[indexPath.row].devUuid != "nil"){
             fromDevUuid = folderArray[indexPath.row].devUuid
         }
-        dv?.showNasFileOption(tag: sender.tag)
+        
         switch sender {
         case cell.btnShow:
+            dv?.showNasFileOption(tag: sender.tag)
+            print("nas btnShow clicked")
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
-            dv?.showNasFileOption(tag: sender.tag)
+            
             
             break
         case cell.btnDwnld:
-            
-            dv?.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
             dv?.showNasFileOption(tag: sender.tag)
+            dv?.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
+            
         case cell.btnNas:
+            dv?.showNasFileOption(tag: sender.tag)
                 let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":fromDevUuid]
                 
                 NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                dv?.showNasFileOption(tag: sender.tag)                    
+                
             break
             
         case cell.btnGDrive:
-            
+            dv?.showNasFileOption(tag: sender.tag)
 //            dv?.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
             
             break
             
         case cell.btnDelete:
+            dv?.showNasFileOption(tag: sender.tag)
             let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in

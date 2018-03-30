@@ -15,7 +15,7 @@ class NasFolderListCellController {
     func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC) -> NasFolderListCell {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "NasFolderListCell", for: indexPath) as! NasFolderListCell        
-        if(folderArray[indexPath.row].foldrNm == "..."){
+        if(folderArray[indexPath.row].foldrNm == ".."){
             cell.btnOption.isHidden = true
         }
         
@@ -49,9 +49,10 @@ class NasFolderListCellController {
         let foldrId = folderArray[indexPath.row].foldrId
         let upFoldrId = folderArray[indexPath.row].upFoldrId
         print("foldrId : \(foldrId)")
-        self.dv?.showNasFolderOption(tag: sender.tag)
+        
         switch sender {
         case cell.btnDwnld:
+            self.dv?.showNasFolderOption(tag: sender.tag)
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 다운로드 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
@@ -64,6 +65,7 @@ class NasFolderListCellController {
             dv?.present(alertController, animated: true)
             break
         case cell.btnNas:
+            self.dv?.showNasFolderOption(tag: sender.tag)
             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
             
             print("fileDict : \(fileDict)")
@@ -72,11 +74,12 @@ class NasFolderListCellController {
             
             
         case cell.btnGDrive:
-            
+            self.dv?.showNasFolderOption(tag: sender.tag)
 //            self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
 //            showOptionMenu(sender: sender, style: 0)
             break
         case cell.btnDelete:
+            self.dv?.showNasFolderOption(tag: sender.tag)
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 삭제 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in

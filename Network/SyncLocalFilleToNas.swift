@@ -35,8 +35,12 @@ class SyncLocalFilleToNas {
     var loginToken = UserDefaults.standard.string(forKey: "token")!
     var userId = App.defaults.userId
     var uuId = Util.getUuid()
-    
-    func sync(){
+    var requestView = ""
+    func sync(view:String){
+        requestView = view
+        if(requestView == "home"){
+            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+        }
         getFileList()
     }
     
@@ -178,7 +182,7 @@ class SyncLocalFilleToNas {
                     if(!serverFilePathArray.contains(localFilePath)){
                         self.fileArrayToCreate.append(localFile.getParameter)
                     } else {
-                        
+                       
                     }
                 }
                 
@@ -191,10 +195,16 @@ class SyncLocalFilleToNas {
                         self.createFileListToServer(parameters: self.fileArrayToCreate)
                     }
                 }
+                if(self.requestView == "home"){
+                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                }
             } else {
                 if(self.fileArrayToCreate.count>0){
                     print("create filelist : \(self.fileArrayToCreate)")
                     self.createFileListToServer(parameters: self.fileArrayToCreate)
+                }
+                if(self.requestView == "home"){
+                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                 }
             }
     

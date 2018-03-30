@@ -81,7 +81,7 @@ class GDriveFolderListCellController {
                 let pathForRemove:String = FileUtil().getFilePath(fileNm: foldrNm, amdDate: amdDate)
                 print("pathForRemove : \(pathForRemove)")
                 self.removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync()
+                SyncLocalFilleToNas().sync(view: "")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

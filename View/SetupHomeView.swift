@@ -10,7 +10,7 @@ import UIKit
 
 class SetupHomeView {
    
-    class func setupMainNavbar(View:UIView,navBarTitle:UIButton, hamburgerButton:UIButton, listButton:UIButton,downArrowButton:UIButton){
+    class func setupMainNavbar(View:UIView,navBarTitle:UIButton, hamburgerButton:UIButton, listButton:UIButton,downArrowButton:UIButton, title:String){
         
         View.addSubview(hamburgerButton)
         View.addSubview(navBarTitle)
@@ -27,7 +27,8 @@ class SetupHomeView {
         listButton.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
         listButton.trailingAnchor.constraint(equalTo: View.trailingAnchor, constant: -20.0).isActive = true
         
-        navBarTitle.setTitle("GiGA Stroage", for: .normal)
+//        navBarTitle.setTitle("GiGA Stroage", for: .normal)
+        navBarTitle.setTitle(title, for: .normal)
         navBarTitle.widthAnchor.constraint(equalToConstant: 150.0).isActive = true
         navBarTitle.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         navBarTitle.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true

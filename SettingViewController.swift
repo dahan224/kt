@@ -10,9 +10,15 @@ import UIKit
 import Alamofire
 import SwiftyJSON
 import BEMCheckBox
+import GoogleAPIClientForREST
+import GoogleSignIn
+import Alamofire
+import SwiftyJSON
 
 
-class SettingViewController: UIViewController, BEMCheckBoxDelegate{
+
+class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDelegate, GIDSignInUIDelegate {
+   
    
   
 
@@ -160,6 +166,10 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate{
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        GIDSignIn.sharedInstance().delegate = self
+        GIDSignIn.sharedInstance().uiDelegate = self
+        
+        
         
         loginCookie = UserDefaults.standard.string(forKey: "cookie")!
         loginToken = UserDefaults.standard.string(forKey: "token")!
@@ -170,8 +180,6 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate{
                                                selector: #selector(loginStateUpdate),
                                                name: NSNotification.Name("loginStateUpdate"),
                                                object: nil)
-        
-        
         self.view.addSubview(loginView)
         self.view.addSubview(passwordView)
         self.view.addSubview(autoLoginView)
@@ -312,18 +320,102 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate{
         }
         
         // 3. Grab the value from the text field, and print it when the user clicks OK.
-        alert.addAction(UIAlertAction(title: "OK", style: .default, handler: { [weak alert] (_) in
+        alert.addAction(UIAlertAction(title: "OK", style: .destructive, handler: { [weak alert] (_) in
             let textField = alert?.textFields![0] // Force unwrapping because we know it exists.
             let textField1 = alert?.textFields![1] // Force unwrapping because we know it exists.
-            print("Text field: \(textField?.text)")
-            print("Text field1: \(textField1?.text)")
+            self.checkPassword(pwd: (textField?.text)!, pwd2: (textField1?.text)!)
         }))
         let cancelButton = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel, handler: nil)
         alert.addAction(cancelButton)
         
         // 4. Present the alert.
         self.present(alert, animated: true, completion: nil)
-
+        
+    }
+    
+    func checkPassword(pwd:String, pwd2:String) {
+        var check:Bool = true
+        var title = ""
+        let orgPwd = UserDefaults.standard.string(forKey: "userPassword")
+        
+        if pwd.count < 4 {
+            title = "4자 이상의 비밀번호를 입력해주세요."
+            check = false
+        } else if Util.checkSpace(pwd) {
+            title = "비밀번호에 공백을 제거해 주세요."
+            check = false
+        } else if pwd2 == "" {
+            title = "비밀번호를 확인해 주세요."
+            check = false
+        } else if pwd != pwd2 {
+            title = "비밀번호가 동일하지 않습니다."
+            check = false
+        } else if pwd == orgPwd {
+            title = "현재 비밀번호와 동일합니다."
+            check = false
+        }
+        
+        if check {
+            
+            let jsonHeader:[String:String] = [
+                "Content-Type": "application/json",
+                "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+                "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+            ]
+            
+            let url = App.URL.server + "modifyPassword.do"
+            
+            Alamofire.request(url, method:.post,parameters:["userId":userId, "password":pwd],encoding:JSONEncoding.default, headers:jsonHeader).responseJSON { response in
+                
+                switch response.result {
+                case .success(let value):
+                    let json = JSON(value)
+                    let statusCode = json["statusCode"].int
+                    /*
+                     if let headerFields = response.response?.allHeaderFields as? [String:String] {
+                     
+                     if Int(headerFields["code"]!)! == 400 {
+                     let alertController = UIAlertController(title: "세션 정보가 만료 되었습니다. 다시 로그인 해주세요.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+                     let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel) { UIAlertAction in
+                     UserDefaults.standard.removeObject(forKey: "token")
+                     UserDefaults.standard.removeObject(forKey: "cookie")
+                     
+                     // 로그인화면으로~
+                     self.dismiss(animated: false, completion: nil)
+                     }
+                     alertController.addAction(okAction)
+                     self.present(alertController,animated: true,completion: nil)
+                     }
+                     }*/
+                    if statusCode == 100 {
+                        let alertController = UIAlertController(title: "비밀번호가 변경 되었습니다. 다시 로그인 해주세요.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+                        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel) { UIAlertAction in
+                            UserDefaults.standard.removeObject(forKey: "token")
+                            UserDefaults.standard.removeObject(forKey: "cookie")
+                            
+                            // 로그인화면으로~
+                            self.presentingViewController?.presentingViewController?.dismiss(animated: true, completion: nil)
+                        }
+                        alertController.addAction(okAction)
+                        self.present(alertController,animated: true,completion: nil)
+                    }
+                case .failure(let error):
+                    print(error)
+                    let alertController = UIAlertController(title: "요청처리를 실패했습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+                    let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel, handler:nil)
+                    alertController.addAction(okAction)
+                    self.present(alertController,animated: true,completion: nil)
+                }
+            }
+            
+        } else {
+            let alertController = UIAlertController(title: title,message: "", preferredStyle: UIAlertControllerStyle.alert)
+            let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel) { UIAlertAction in
+                self.changePasswordButton()
+            }
+            alertController.addAction(okAction)
+            self.present(alertController,animated: true,completion: nil)
+        }
     }
     
     @objc func googleDriveLoginAlert(){
@@ -366,13 +458,16 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate{
     }
     
     @objc func loginStateUpdate(){
+        print("loginStateUpdate called")
         let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
-        
+//        if GIDSignIn.sharedInstance().hasAuthInKeychain() == true {
+        print("loginState \(loginState)")
         if(loginState == "login"){
             googleDriveLoginState = .login
             googleDriveLogInLabel.text = "Google Drive 로그아웃"
             if let googleEmail:String = UserDefaults.standard.string(forKey: "googleEmail") {
                 googleDriveLoginEmail.text = googleEmail
+                print("googleEmail : \(googleEmail)")
             }
         } else {
             googleDriveLoginState = .logout
@@ -389,10 +484,14 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate{
         googleDriveLoginState = .logout
         googleDriveLogInLabel.text = "Google Drive 로그인"
         googleDriveLoginEmail.text = ""
+        GIDSignIn.sharedInstance().signOut()
+        let defaults = UserDefaults.standard
+        defaults.set("logout", forKey: "googleDriveLoginState")
         let alertController = UIAlertController(title: "로그아웃 되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
         
         let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
-        
+            
+            
             self.halfBlackView.removeFromSuperview()
         }
         
@@ -413,7 +512,16 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate{
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!,
+              withError error: Error!) {
+       
+    }
+    override func viewWillAppear(_ animated: Bool) {
+         loginStateUpdate()
+        
+        
+    }
+   
 
     /*
     // MARK: - Navigation

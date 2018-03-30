@@ -252,7 +252,9 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
             NotificationCenter.default.post(name: NSNotification.Name("showSettingSegue"), object: nil)
         }
         
-        
+        if(indexPath.section == 2 && indexPath.row == 2) {
+            NotificationCenter.default.post(name: NSNotification.Name("openLicenseSegue"), object: nil)
+        }
     }
     func showVersionInfo(){
         let alertController = UIAlertController(title: "App Version : 5.7 v",message: "", preferredStyle: UIAlertControllerStyle.alert)
@@ -301,7 +303,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         
     }
 
-    
+  
 
   
 }

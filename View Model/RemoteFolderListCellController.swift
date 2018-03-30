@@ -27,7 +27,7 @@ class RemoteFolderListCellController {
             cell.btnOption.isHidden = false
             cell.btnMultiCheck.isHidden = true
         }
-        if(folderArray[indexPath.row].foldrNm == "..."){
+        if(folderArray[indexPath.row].foldrNm == ".."){
             cell.btnOption.isHidden = true
         }
         cell.btnOption.isHidden = true

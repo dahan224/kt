@@ -171,7 +171,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
-                    SyncLocalFilleToNas().sync()
+                    SyncLocalFilleToNas().sync(view: "")
                     DispatchQueue.main.async {
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
@@ -226,7 +226,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     DispatchQueue.main.async {
                         let fileDict = ["fileId":fileId, "fileNm":name,"amdDate":amdDate, "oldFoldrWholePathNm":path,"state":"remote","fromUserId":fromUserId, "fromOsCd":fromOsCd, "fromDevUuid" : fromDevUuid, "fromFoldr" : fromFoldr]
                         print("fileDict : \(fileDict)")
-                        SyncLocalFilleToNas().sync()
+                        SyncLocalFilleToNas().sync(view: "")
                         
                         NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
                     }
@@ -408,6 +408,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         let starttime = Date()
         UserDefaults.standard.set(starttime, forKey: "backgroundtime")
+        
+        
+        
 
     }
 
@@ -497,7 +500,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         let defaults = UserDefaults.standard
         defaults.set("no", forKey: "googleDriveLoginState")
-        
+        GIDSignIn.sharedInstance().signOut()
+        print("applicationWillTerminate")
         
     }
   
