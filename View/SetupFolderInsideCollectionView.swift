@@ -10,7 +10,7 @@ import UIKit
 
 class SetupFolderInsideCollectionView {
     
-    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton){
+    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton){
         
         
         for view in searchView.subviews {
@@ -23,6 +23,7 @@ class SetupFolderInsideCollectionView {
         searchView.addSubview(searchButton)
         searchView.addSubview(multiButton)
         searchView.addSubview(localRefreshButton)
+        searchView.addSubview(selectAllButton)
         
         
         label.textAlignment = .left
@@ -57,17 +58,32 @@ class SetupFolderInsideCollectionView {
 //            multiButton.isHidden = true
 //        }
         
+        
         localRefreshButton.translatesAutoresizingMaskIntoConstraints = false
         localRefreshButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         localRefreshButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         localRefreshButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         localRefreshButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: -5.0).isActive = true
         
+        selectAllButton.translatesAutoresizingMaskIntoConstraints = false
+        selectAllButton.widthAnchor.constraint(equalToConstant: 80.0).isActive = true
+        selectAllButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        selectAllButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+        selectAllButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: -5.0).isActive = true
+        
         if(getDevUuid == Util.getUuid()){
-            localRefreshButton.isHidden = false
+            if(multiButtonChecked){
+                localRefreshButton.isHidden = true
+                selectAllButton.isHidden = false
+            } else {
+                localRefreshButton.isHidden = false
+                selectAllButton.isHidden = true
+            }
         } else {
             localRefreshButton.isHidden = true
+            selectAllButton.isHidden = true
         }
+       
         
         for view in customNavBar.subviews {
             view.removeFromSuperview()

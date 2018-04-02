@@ -36,7 +36,9 @@ class SyncLocalFilleToNas {
     var userId = App.defaults.userId
     var uuId = Util.getUuid()
     var requestView = ""
-    func sync(view:String){
+    var currentFolderId = ""
+    func sync(view:String, getFoldrId:String){
+        currentFolderId = getFoldrId
         requestView = view
         if(requestView == "home"){
             NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
@@ -181,8 +183,6 @@ class SyncLocalFilleToNas {
                     let localFilePath = "\(localFile.foldrWholePathNm)/\(localFile.fileNm).\(localFile.etsionNm)"
                     if(!serverFilePathArray.contains(localFilePath)){
                         self.fileArrayToCreate.append(localFile.getParameter)
-                    } else {
-                       
                     }
                 }
                 
@@ -193,19 +193,27 @@ class SyncLocalFilleToNas {
                     if(self.fileArrayToCreate.count>0){
                         print("create filelist : \(self.fileArrayToCreate)")
                         self.createFileListToServer(parameters: self.fileArrayToCreate)
+                    } else {
+                        if(self.requestView == "home"){
+                            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                            let fileDict = ["foldrId":self.currentFolderId]
+                            NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
+                        }
                     }
                 }
-                if(self.requestView == "home"){
-                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                }
+                
             } else {
                 if(self.fileArrayToCreate.count>0){
                     print("create filelist : \(self.fileArrayToCreate)")
                     self.createFileListToServer(parameters: self.fileArrayToCreate)
+                } else {
+                    if(self.requestView == "home"){
+                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                        let fileDict = ["foldrId":self.currentFolderId]
+                        NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
+                    }
                 }
-                if(self.requestView == "home"){
-                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                }
+               
             }
     
         }
@@ -332,7 +340,11 @@ class SyncLocalFilleToNas {
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
                 print(" createFileListToServer message : \(String(describing: message))")
-                
+                if(self.requestView == "home"){
+                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                    let fileDict = ["foldrId":self.currentFolderId]
+                    NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
+                }
                 break
             case .failure(let error):
                 NSLog(error.localizedDescription)

@@ -195,7 +195,8 @@ class Util{
         ["etsionNm": "tiff", "googleMimeType": "image/tiff"],
         ["etsionNm": "tgz", "googleMimeType": "application/x-compressed"],
         ["etsionNm": "zip", "googleMimeType":  "application/zip"],
-        ["etsionNm": "mp3", "googleMimeType": "audio/mpeg"]
+        ["etsionNm": "mp3", "googleMimeType": "audio/mpeg"],
+        ["etsionNm": "folder", "googleMimeType": "application/vnd.google-apps.folder"]
     ]
     
     class func getGoogleMimeType(etsionNm:String) -> String {

@@ -126,6 +126,8 @@ class NasFileListCell: UICollectionViewCell {
         optionSHowCheck = 0
         btnMultiChecked = false
         backgroundColor = UIColor.white
+        
+        
         addSubview(ivSub)
         addSubview(lblMain)
         addSubview(lblSub)

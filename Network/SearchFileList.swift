@@ -18,7 +18,7 @@ class SearchFileList {
     var SearchedFileArray:[App.SearchedFileStruct] = []
   
    
-    func searchFile(searchKeyword:String, searchStep: HomeViewController.searchStepEnum, searchId:String, foldrWholePathNm:String, sortBy:String, searchGubun:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+    func searchFile(searchKeyword:String, searchStep: HomeViewController.searchStepEnum, searchId:String, foldrWholePathNm:String, sortBy:String, searchGubun:String, devUuid:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
          let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": loginToken,
@@ -31,10 +31,10 @@ class SearchFileList {
             params = ["userId":userId, "searchKeyword":searchKeyword,"sortBy":sortBy,"searchGubun":searchGubun]
             break
         case .device:
-            params = ["userId":userId, "searchKeyword":searchKeyword,"devUuid":searchId,"sortBy":sortBy,"searchGubun":searchGubun]
+            params = ["userId":userId, "searchKeyword":searchKeyword,"devUuid":devUuid,"sortBy":sortBy,"searchGubun":searchGubun]
             break
         case .folder:
-            params = ["userId":userId, "searchKeyword":searchKeyword,"devUuid":searchId, "foldrWholePathNm":foldrWholePathNm,"sortBy":sortBy,"searchGubun":searchGubun]
+            params = ["userId":userId, "searchKeyword":searchKeyword,"devUuid":devUuid, "foldrWholePathNm":foldrWholePathNm,"sortBy":sortBy,"searchGubun":searchGubun]
             break
         
         }

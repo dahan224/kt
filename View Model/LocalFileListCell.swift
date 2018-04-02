@@ -160,12 +160,12 @@ class LocalFileListCell: UICollectionViewCell {
         
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
+        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 50).isActive = true
         
         
         lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
         lblSub.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblSub.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        lblSub.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 50).isActive = true
         
         let width = App.Size.screenWidth / 2
         lblDevice.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true

@@ -10,6 +10,7 @@ import UIKit
 
 class SetupSearchView {
     class func setupSearchNavbar(View:UIView,navBarTitle:UIButton, backBUtton:UIButton, title:String){
+        
         View.addSubview(backBUtton)
         View.addSubview(navBarTitle)
         

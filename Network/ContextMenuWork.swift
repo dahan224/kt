@@ -350,6 +350,9 @@ class ContextMenuWork {
         }
     }
     
+    
+    //remote 관련
+    
     func downloadFromRemote(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
@@ -396,6 +399,52 @@ class ContextMenuWork {
         }
     }
     
+    func downloadFromRemoteToExcute(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
+        stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+        
+        let user = App.defaults.userId
+        let password = "1234"
+        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let base64Credentials = credentialData.base64EncodedString()
+        let headers = [
+            "Authorization": "Basic \(base64Credentials)"
+        ]
+        var saveFileNm = ""
+        //        if(fileNm.contains(" ")){
+        //            saveFileNm = fileNm.split(separator: " ").map(String.init).joined(separator: "-")
+        //        }
+        saveFileNm = fileNm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        print("stringUrl : \(stringUrl)")
+        let downloadUrl:URL = URL(string: stringUrl)!
+        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+            documentsURL.appendPathComponent("AppPlay/\(saveFileNm)")
+            return (documentsURL, [.removePreviousFile])
+        }
+        
+        Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
+            .downloadProgress(closure: { (progress) in
+                print("download progress : \(progress.fractionCompleted)")
+                //                 completionHandler(progress.fractionCompleted, nil)
+            })
+            .response { response in
+                print("response : \(response)")
+                if response.destinationURL != nil {
+                    print(response.destinationURL!)
+                    if let path = response.destinationURL?.path{
+                        let path2 = "/private\(path)"
+                        print("path2 : \(path2)" )
+                        print("fileId : \(fileId)")
+                        let stringDestinationUrl = response.destinationURL?.absoluteString
+                        print(stringDestinationUrl)
+                        completionHandler(stringDestinationUrl, nil)
+                    }
+                    
+                }
+        }
+    }
+    
     func downloadFromRemoteToSend(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
@@ -434,6 +483,47 @@ class ContextMenuWork {
                 }
         }
     }
+    
+    func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
+        
+        let urlString = App.URL.server+"reqFileDown.do"
+        var comnd = "RALI"
+        switch fromOsCd {
+        case "W":
+            comnd = "RWLI"
+        case "A":
+            comnd = "RALI"
+        default:
+            comnd = "RILI"
+            break
+        }
+        let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
+        print("notifyNasUploadFinish param : \(paramas)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: paramas,
+                          encoding : JSONEncoding.default,
+                          headers: jsonHeader).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+                                
+                                print(response.result.value)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("remoteDownloadRequest : \(message)")
+                               
+                                
+                                break
+                            case .failure(let error):
+                                
+                                print(error.localizedDescription)
+                            }
+        }
+    }
+    
+    
+    
+    
     
     func deleteNasFile(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         Alamofire.request(App.URL.server+"nasFileDel.do"
@@ -630,8 +720,7 @@ class ContextMenuWork {
     }
     
     func finishDownload(){
-        SyncLocalFilleToNas().sync(view: "ContextMenuWork")
-         
+        SyncLocalFilleToNas().sync(view: "ContextMenuWork", getFoldrId: "")         
         print("download finish")
         NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         
@@ -683,5 +772,7 @@ class ContextMenuWork {
                 }
         }
     }
+    
+    
     
 }

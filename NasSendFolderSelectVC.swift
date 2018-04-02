@@ -66,6 +66,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         case nas_multi = "nas_multi"
         case remote_nas_multi = "remote_nas_multi"
         case local_nas_multi = "local_nas_multi"
+        case local_gdrive_multi = "local_gdrive_multi"
         case multi_nas_multi = "multi_nas_multi"
         case googleDrive = "googleDrive"
     }
@@ -91,7 +92,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm), originalFileId : \(originalFileId)")
+        print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm), originalFileId : \(originalFileId), storageState : \(storageState)")
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(callSendToNasFromLocal(fileDict:)),
@@ -105,23 +106,29 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         
         
         NotificationCenter.default.addObserver(self,
-                                               selector: #selector(NasSendFolderSelectVCAlert),
-                                               name: NSNotification.Name("NasSendFolderSelectVCAlert"),
-                                               object: nil)
-        
-        NotificationCenter.default.addObserver(self,
                                                selector: #selector(downloadFromRemoteToNas(fileDict:)),
                                                name: NSNotification.Name("downloadFromRemoteToNas"),
                                                object: nil)
-        
-        
+    
         remoteMultiFileDownloadedCount = multiCheckedfolderArray.count
         switch storageState {
         case .googleDrive:
-            
             nasArray = ["내 드라이브"]
             if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-                
+                tableView.isHidden = true
+                activityIndicator.startAnimating()
+                accessToken = DbHelper().getAccessToken(email: googleEmail)
+                let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
+                //accessToken = GIDSignIn.sharedInstance().currentUser.authentication.accessToken
+                self.getFilesFromGoogleDrive(accessToken: accessToken, root: "root", parent: "root")
+            }
+            
+            break
+        case .local_gdrive_multi:
+            nasArray = ["내 드라이브"]
+            if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+                tableView.isHidden = true
+                activityIndicator.startAnimating()
                 accessToken = DbHelper().getAccessToken(email: googleEmail)
                 let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
                 //accessToken = GIDSignIn.sharedInstance().currentUser.authentication.accessToken
@@ -157,7 +164,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
         var count = nasArray.count
         
-        if(storageState == .googleDrive){
+        if(storageState == .googleDrive || storageState == .local_gdrive_multi ){
             switch listState {
             case .deviceSelect:
                 count = nasArray.count
@@ -228,6 +235,44 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     break
             }
             break
+        case .local_gdrive_multi:
+            switch listState {
+            case .deviceSelect:
+                let imageString = deviceImageArray[indexPath.row]
+                cell.ivIcon.image = UIImage(named: imageString)
+                cell.lblMain.text = nasArray[indexPath.row]
+                cell.checkButton.isHidden = false
+                cell.checkButton.tag = indexPath.row
+                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
+                break
+            case .deviceRoot:
+                
+                cell.ivIcon.image = UIImage(named: "ico_folder")
+                cell.lblMain.text = driveFileArray[indexPath.row].name
+                cell.checkButton.isHidden = false
+                if(indexPath.row == 0){
+                    cell.checkButton.isHidden = true
+                }
+                cell.checkButton.isHidden = false
+                cell.checkButton.tag = indexPath.row
+                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
+                break
+            case .folder:
+                cell.ivIcon.image = UIImage(named: "ico_folder")
+                cell.lblMain.text = folderArray[indexPath.row].foldrNm
+                cell.checkButton.isHidden = false
+                if(indexPath.row == 0){
+                    cell.checkButton.isHidden = true
+                }
+                cell.checkButton.tag = indexPath.row
+                cell.btnChecked = 0
+                cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
+                break
+            }
+            break
         default :
             switch listState {
             case .deviceSelect:
@@ -275,14 +320,15 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
       
-        
         switch storageState {
         case .googleDrive:
             switch listState {
                 case .deviceSelect :
                     googleDriveFileIdPath = ""
-                    newFoldrId = String(driveFileArray[sender.tag].fileId)
-                    newFoldrWholePathNm = driveFileArray[sender.tag].name
+//                    newFoldrId = String(driveFileArray[sender.tag].fileId)
+//                    newFoldrWholePathNm = driveFileArray[sender.tag].name
+                    newFoldrId = "root"
+                    newFoldrWholePathNm = "root"
                     print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
                     if(cell.btnChecked == 0){
                         for index in 0..<nasArray.count{
@@ -319,6 +365,49 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     }
                 break
                 }
+            break
+        case .local_gdrive_multi:
+            switch listState {
+            case .deviceSelect :
+                googleDriveFileIdPath = ""
+                newFoldrId = "root"
+                newFoldrWholePathNm = "root"
+                print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
+                if(cell.btnChecked == 0){
+                    for index in 0..<nasArray.count{
+                        let indexPath = IndexPath(row: index, section: 0)
+                        let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
+                        removeCheckCell.btnChecked = 0
+                        removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                    }
+                    sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
+                    cell.btnChecked = 1
+                    folderChecked = 1
+                } else {
+                    sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                    cell.btnChecked = 0
+                    folderChecked = 0
+                }
+                break
+            default:
+                googleDriveFileIdPath = "\(driveFileArray[buttonRow].fileId)"
+                if(cell.btnChecked == 0){
+                    for index in 0..<driveFileArray.count{
+                        let indexPath = IndexPath(row: index, section: 0)
+                        let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
+                        removeCheckCell.btnChecked = 0
+                        removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                    }
+                    sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
+                    cell.btnChecked = 1
+                    folderChecked = 1
+                } else {
+                    sender.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                    cell.btnChecked = 0
+                    folderChecked = 0
+                }
+                break
+            }
             break
         default:
             switch listState {
@@ -404,6 +493,39 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             }
 
             break
+        case .local_gdrive_multi:
+            switch listState {
+            case .deviceSelect:
+                self.driveFolderIdArray.removeAll()
+                self.driveFolderIdArray.append("root") // 0eun
+                self.listState = .deviceRoot
+                self.deviceName = nasArray[indexPath.row]
+                self.getFilesFromGoogleDrive(accessToken: accessToken, root: "root", parent: "root")
+                break
+            default:
+                var root = driveFileArray[indexPath.row].fileId
+                var parent = "root"
+                if driveFileArray[indexPath.row].name == ".." {
+                    if(driveFolderIdArray[driveFolderIdArray.count - 1] == "root") {
+                        self.listState = .deviceSelect
+                        root = "root"
+                        parent = "root"
+                    } else {
+                        root = driveFolderIdArray[driveFolderIdArray.count - 2]
+                        parent = driveFileArray[indexPath.row].parents
+                        driveFolderIdArray.remove(at: driveFolderIdArray.count-1)
+                    }
+                } else {
+                    self.driveFolderIdArray.append(root)
+                }
+                
+                print("root : \(root), idArray : \(driveFolderIdArray)")
+                self.getFilesFromGoogleDrive(accessToken: accessToken, root: root, parent: parent)
+                break
+            }
+            
+            break
+
         default:
             switch listState {
             case .deviceSelect:
@@ -549,12 +671,27 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             case .googleDrive:
                 print("googleDriveFileIdPath : \(googleDriveFileIdPath)")
                 if(fromDevUuid == Util.getUuid()){
-                    let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-                    self.sendToDriveFromLocal(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath, fileURL:fileURL)
+                    if(fromFoldrId.isEmpty){
+                        let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+                        self.sendToDriveFromLocal(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath, fileURL:fileURL)
+                    } else {
+                        print("upload folder from local to gDrive")
+                        GoogleWork().readyCreatFolders(getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent: self)
+                    }
+                    
                     
                 } else {
+                    if(fromFoldrId.isEmpty){
+                        // from nas to gdrive
+                        print("downloadFromNasToDrive")
+                        self.downloadFromNasToDrive(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath)
+                    } else {
+                        
+                        let inFoldrId = Int(fromFoldrId)
+                        GoogleWork().downloadFolderFromNas(foldrId: inFoldrId!, foldrWholePathNm: foldrWholePathNm, userId:fromUserId, devUuid:fromDevUuid, deviceName:deviceName, getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent:self)
+                       
+                    }
                     
-                    self.downloadFromNasToDrive(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath)
                 }
                 break
             case .nas_multi:
@@ -579,6 +716,9 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 activityIndicator.startAnimating()
                 startMultiLatelyToNas()
                 
+            case .local_gdrive_multi:
+                print("multi local to gdrive")
+                startMultiLocalToGdrive()
             }
         }
     }
@@ -668,10 +808,43 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             } else {
                 ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm, getMultiArray:multiCheckedfolderArray, parent:self)
             }
-            
+            return
         }
         DispatchQueue.main.async {
             let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                //Do you Success button Stuff here
+                self.activityIndicator.stopAnimating()
+                Util().dismissFromLeft(vc: self)
+            }
+            alertController.addAction(yesAction)
+            self.present(alertController, animated: true)
+            
+        }
+        
+    }
+    func startMultiLocalToGdrive(){
+        if(multiCheckedfolderArray.count > 0){
+            let index = multiCheckedfolderArray.count - 1
+            let originalFileId = String(multiCheckedfolderArray[index].fileId)
+            let fromFoldrId = String(multiCheckedfolderArray[index].foldrId)
+            let originalFileName = multiCheckedfolderArray[index].fileNm
+            let oldFoldrWholePathNm = multiCheckedfolderArray[index].foldrWholePathNm
+            let etsionNm = multiCheckedfolderArray[index].etsionNm
+            let amdDate = multiCheckedfolderArray[index].amdDate
+           
+            if(originalFileName != "nil"){
+                let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+                self.sendToDriveFromLocal(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath, fileURL:fileURL)
+            } else {
+                GoogleWork().readyCreatFolders(getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent: self)
+//                ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm, getMultiArray:multiCheckedfolderArray, parent:self)
+            }
+            return
+        }
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: nil, message: "업로드에 성공 하였습니다.", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 //Do you Success button Stuff here
@@ -763,6 +936,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
 
     
     func downloadFromNasToDrive(name:String, path:String, fileId:String){
+        activityIndicator.startAnimating()
         ContextMenuWork().downloadFromNasToSend(userId:fromUserId, fileNm:name, path:path){ responseObject, error in
             if let success = responseObject {
                 if(success.isEmpty){
@@ -812,12 +986,14 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                         let alertController = UIAlertController(title: nil, message: "파일 업로드에 성공 하였습니다.", preferredStyle: .alert)
                                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)  {
                                             UIAlertAction in
+                                            self.activityIndicator.stopAnimating()
                                             Util().dismissFromLeft(vc: self)
                                         }
                                         alertController.addAction(yesAction)
                                         self.present(alertController, animated: true)
                                     }
                                     catch let error as NSError {
+                                        self.activityIndicator.stopAnimating()
                                         print("Ooops! Something went wrong: \(error)")
                                     }
                                     
@@ -825,16 +1001,15 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 break
                             case .failure(let encodingError):
                                 print(encodingError.localizedDescription)
+                                self.activityIndicator.stopAnimating()
                                 break
                             }
                         })
                     } catch {
                         print("Unable to load data: \(error)")
+                        self.activityIndicator.stopAnimating()
                     }
-                    //
-                    //
-                    
-                    
+                 
                 }
                 
             }
@@ -857,18 +1032,24 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         let fileExtension = fileURL.pathExtension
         let googleMimeType:String = Util.getGoogleMimeType(etsionNm: fileExtension)
         print("fileExtension : \(fileExtension), googleMimeType : \(googleMimeType)")
-        if(googleMimeType.isEmpty){
-            DispatchQueue.main.async {
-                let alertController = UIAlertController(title: nil, message: "지원하지 않는 파일 형식 입니다.", preferredStyle: .alert)
-                let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                    UIAlertAction in
-                    Util().dismissFromLeft(vc: self)
-                }
-                alertController.addAction(yesAction)
-                self.present(alertController, animated: true, completion: nil)
-            }
-            return
+        if (self.storageState == .local_gdrive_multi){
+            
+        } else {
+//            if(googleMimeType.isEmpty){
+//                DispatchQueue.main.async {
+//                    let alertController = UIAlertController(title: nil, message: "지원하지 않는 파일 형식 입니다.", preferredStyle: .alert)
+//                    let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+//                        UIAlertAction in
+//                        Util().dismissFromLeft(vc: self)
+//                    }
+//                    alertController.addAction(yesAction)
+//                    self.present(alertController, animated: true, completion: nil)
+//                }
+//                return
+//            }
         }
+        
+       
         let stringUrl = "https://www.googleapis.com/upload/drive/v3/files?uploadType=multipart"
         let headers = [
             "Authorization": "Bearer \(accessToken)",
@@ -894,15 +1075,23 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 case .success(let upload, _, _):
                     upload.responseJSON { response in
                         print("response:: \(response)")
-                        let alertController = UIAlertController(title: nil, message: "파일 업로드에 성공 하였습니다.", preferredStyle: .alert)
-                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)  {
-                            UIAlertAction in
-                            self.activityIndicator.stopAnimating()
-                            Util().dismissFromLeft(vc: self)
+                        if (self.storageState == .local_gdrive_multi){
+                            if(self.multiCheckedfolderArray.count > 0) {
+                                let lastIndex = self.multiCheckedfolderArray.count - 1
+                                self.multiCheckedfolderArray.remove(at: lastIndex)
+                            }
+                            self.startMultiLocalToGdrive()
+                        } else {
+                            print("업로드 성공")
+                            let alertController = UIAlertController(title: nil, message: "파일 업로드에 성공 하였습니다.", preferredStyle: .alert)
+                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)  {
+                                UIAlertAction in
+                                self.activityIndicator.stopAnimating()
+                                Util().dismissFromLeft(vc: self)
+                            }
+                            alertController.addAction(yesAction)
+                            self.present(alertController, animated: true)
                         }
-                        alertController.addAction(yesAction)
-                        self.present(alertController, animated: true)
-                        
                     }
                     break
                 case .failure(let encodingError):
@@ -944,15 +1133,29 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 self.driveFileArray.append(fileStruct)
                             }
                             self.tableView.reloadData()
+                            self.tableView.isHidden = false
+                            self.activityIndicator.stopAnimating()
                         } else {
-                            DispatchQueue.main.async {
-                                self.driveFolderIdArray.remove(at: self.driveFolderIdArray.count - 1)
-                                let alertController = UIAlertController(title: nil, message: "더 이상 하위폴더가 없습니다.", preferredStyle: .alert)
-                                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
-                                alertController.addAction(yesAction)
-                                
-                                self.present(alertController, animated: true)
+                            if(self.listState == .deviceSelect) {
+                                self.tableView.isHidden = false
+                                self.activityIndicator.stopAnimating()
+                            } else {
+                                DispatchQueue.main.async {
+                                    if(self.driveFolderIdArray.count > 1){
+                                        self.driveFolderIdArray.remove(at: self.driveFolderIdArray.count - 1)
+                                    } else {
+                                        self.listState = .deviceSelect
+                                    }
+                                    self.tableView.isHidden = false
+                                    self.activityIndicator.stopAnimating()
+                                    let alertController = UIAlertController(title: nil, message: "더 이상 하위폴더가 없습니다.", preferredStyle: .alert)
+                                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                                    alertController.addAction(yesAction)
+                                    
+                                    self.present(alertController, animated: true)
+                                }
                             }
+                            
                         }
                     }
                     break
@@ -1355,13 +1558,13 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
     }
     
-    @objc func NasSendFolderSelectVCAlert(){
+    func NasSendFolderSelectVCAlert(title:String){
         DispatchQueue.main.async {
-            let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+            let alertController = UIAlertController(title: nil, message: title, preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 //Do you Success button Stuff here
-                SyncLocalFilleToNas().sync(view: "")
+                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
                 
                 Util().dismissFromLeft(vc: self)
             }
@@ -1371,7 +1574,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
     }
     
-  
+
     
     func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
         
@@ -1464,7 +1667,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
-                SyncLocalFilleToNas().sync(view: "")
+                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
                 
                 //Do you Success button Stuff here
                 Util().dismissFromLeft(vc: self)

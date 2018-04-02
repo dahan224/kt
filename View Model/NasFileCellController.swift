@@ -51,7 +51,7 @@ class NasFileCellController {
     }
 
     
-    func nasContextMenuCalled(cell:NasFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
+    func nasContextMenuCalled(cell:NasFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String, containerView:ContainerViewController){
         dv = deviceView
         var fromDevUuid = currentDevUuid
         let fileNm = folderArray[indexPath.row].fileNm
@@ -82,13 +82,18 @@ class NasFileCellController {
             dv?.showNasFileOption(tag: sender.tag)
                 let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":fromDevUuid]
                 
-                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
                 
             break
             
         case cell.btnGDrive:
             dv?.showNasFileOption(tag: sender.tag)
 //            dv?.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+            print("fileDict : \(fileDict)")
+            
+            //                deviceView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
+            containerView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
             
             break
             
@@ -112,7 +117,7 @@ class NasFileCellController {
         }
     }
     
-    func nasFileContextMenuCalledFromGrid(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:HomeViewController, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int){
+    func nasFileContextMenuCalledFromGrid(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:HomeViewController, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int, containerView:ContainerViewController){
         let fileNm = folderArray[intFolderArrayIndexPathRow].fileNm
         //        let etsionNm = folderArray[intFolderArrayIndexPathRow].etsionNm
         let amdDate = folderArray[intFolderArrayIndexPathRow].amdDate
@@ -145,6 +150,12 @@ class NasFileCellController {
                 break
             case 3:
                 //gdrive로 보내기
+                let fileIdDict = ["fileId":"0"]
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+                
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+                print("fileDict : \(fileDict)")
+                containerView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
                 
                 break
             case 4:

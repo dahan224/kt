@@ -84,6 +84,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     enum googleSignInSegueEnum: String {
         case loginForList = "loginForList"
         case loginForSend = "loginForSend"
+        case loginForMultiSend = "loginForMultiSend"
     }
     var googleSignInSegueState = googleSignInSegueEnum.loginForList
     
@@ -498,6 +499,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 
             } else {
 //                self.googleSignInSilently()
+                print("googleSignInSegueState : \(self.googleSignInSegueState)")
                 self.loginWBySelectedEmail()
             }
             
@@ -586,6 +588,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         print("loginWBySelectedEmail called")
         let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
         print("loginState : \(loginState)")
+        print("loginWBySelectedEmail sigin in purpose : \(self.googleSignInSegueState)")
         if(loginState != "login") {
             googleSignIn()
         }  else {
@@ -626,21 +629,47 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             }
             g.notify(queue: DispatchQueue.main){
                 print("final")
+            
                 self.signInButton.isHidden = true
                 self.service.authorizer = user.authentication.fetcherAuthorizer()
-                self.googleEmail = user.profile.email
-                self.googleDriveLoginState = .login
-                let defaults = UserDefaults.standard
-                defaults.set(self.googleEmail, forKey: "googleEmail")
-                defaults.set("login", forKey: "googleDriveLoginState")
-                defaults.synchronize()
+                
                 print("googleEmail : \(self.googleEmail)")
                 print("sigin in purpose : \(self.googleSignInSegueState)")
                 if(self.googleSignInSegueState == .loginForList) {
+                    self.googleEmail = user.profile.email
+                    self.googleDriveLoginState = .login
+                    let defaults = UserDefaults.standard
+                    defaults.set(self.googleEmail, forKey: "googleEmail")
+                    defaults.set("login", forKey: "googleDriveLoginState")
+                    defaults.synchronize()
                     self.getFiles(accessToken: accessToken, root: "root")
                 } else {
-                    
-                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
+                    if(self.googleDriveLoginState != .login){
+                        self.googleEmail = user.profile.email
+                        self.googleDriveLoginState = .login
+                        let defaults = UserDefaults.standard
+                        defaults.set(self.googleEmail, forKey: "googleEmail")
+                        defaults.set("login", forKey: "googleDriveLoginState")
+                        defaults.synchronize()
+                        let alertController = UIAlertController(title: "로그인 되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+                        
+                        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+                            self.halfBlackView.removeFromSuperview()
+                            if(self.homeViewController?.indicatorAnimating)!{
+                                self.homeViewController?.homeViewToggleIndicator()
+                            }
+                            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
+                        }
+                        alertController.addAction(okAction)
+                        self.present(alertController,animated: true,completion: nil)
+                        return
+                    } else {
+                        if(self.homeViewController?.indicatorAnimating)!{
+                            self.homeViewController?.homeViewToggleIndicator()
+                        }
+                        NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
+                    }
+                   
                 }
                 
             }
@@ -665,11 +694,14 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                             switch response.result {
                             case .success(let value):
                                 let json = JSON(value)
-                                print("json : \(json)")
+//                                print("json : \(json)")
                                 if(json["error"].exists()){
                                     print("error: \(json["error"])")
                                     self.googleSignIn()
-                                    self.homeViewController?.homeViewToggleIndicator()
+                                    if(self.homeViewController?.indicatorAnimating)!{
+                                        self.homeViewController?.homeViewToggleIndicator()
+                                    }
+                                    
                                 } else {
                                     if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
                                         for file in serverList {
@@ -681,11 +713,15 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                         }
                                         DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
                                         self.syncCloudEmailToServer(cloudId: self.googleEmail)
-                                        self.homeViewController?.homeViewToggleIndicator()
+                                        if(self.homeViewController?.indicatorAnimating)!{
+                                            self.homeViewController?.homeViewToggleIndicator()
+                                        }
                                     } else {
                                         print("error: \(json["errors"])")
                                         self.googleSignIn()
-                                        self.homeViewController?.homeViewToggleIndicator()
+                                        if(self.homeViewController?.indicatorAnimating)!{
+                                            self.homeViewController?.homeViewToggleIndicator()
+                                        }
                                     }
                                 }
                                 
@@ -765,6 +801,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                           encoding : JSONEncoding.default,
                           headers: headers).responseJSON{ (response) in
                             switch response.result {
+                                
                             case .success(let value):
                                 //                                let json = JSON(value)
                                 //                                let responseData = value as! NSDictionary
@@ -773,17 +810,20 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                 if(self.segueCheck == 1){
                                     
                                 }
-                                // 0eun - start
+                                // 0eun - start'
                                 print("googleSignInSegueState : \(self.googleSignInSegueState)")
                                 if (self.googleSignInSegueState == .loginForList){
-                                    
+                                    if(self.homeViewController?.indicatorAnimating)!{
+                                        self.homeViewController?.homeViewToggleIndicator()
+                                    }
                                     let cellStyle = ["cellStyle":3]
                                     NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self, userInfo: cellStyle)
 //                                     0eun - end
-                                    
-                                    
                                 } else {
-                                    
+                                    if(self.homeViewController?.indicatorAnimating)!{
+                                        self.homeViewController?.homeViewToggleIndicator()
+                                    }
+                                    NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
                                 }
 //                                Util().dismissFromLeft(vc:self)
                                 break
@@ -797,7 +837,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     func googleSignInCheck(name:String, path:String, fileDict:[String:String]){
         if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-            
+            GIDSignIn.sharedInstance().delegate = self
+            GIDSignIn.sharedInstance().uiDelegate = self
+            GIDSignIn.sharedInstance().scopes = scopes
+            homeViewController?.homeViewToggleIndicator()
             var accessToken = DbHelper().getAccessToken(email: googleEmail)
             let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
             print("accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
@@ -813,11 +856,12 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             if(hour! < 1){
                 //                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
                 let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
-                if(loginState == "login"){
+                if(loginState == "login" && GIDSignIn.sharedInstance().hasAuthInKeychain()){
                     print("get file")
+                    getFileDict = fileDict
                     googleSignInSegueState = .loginForSend
                     GIDSignIn.sharedInstance().signInSilently()
-                    getFileDict = fileDict
+                    
                     
                 } else {
                     
@@ -826,6 +870,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                     googleSignInAlertShow()
                 }
                 
+            } else {
+                print("token time expired")
+                googleSignInSegueState = .loginForSend
+                googleSignInAlertShow()
             }
         } else {
             print("google email")
@@ -885,6 +933,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             storageKind = .remote_nas_multi
         } else if toStorage == "local_nas_multi" {
             storageKind = .local_nas_multi
+        } else if toStorage == "local_gdrive_multi" {
+            storageKind = .local_gdrive_multi
         } else {
             storageKind = .multi_nas_multi
         }

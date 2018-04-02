@@ -99,6 +99,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                             case "remoteDownLoadToNas" :
                                 let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "queId":queId, "fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd]
                                 NotificationCenter.default.post(name: Notification.Name("downloadFromRemoteToNas"), object: self, userInfo: fileDict)
+                                
+                            case "remoteDownLoadToExcute":
+                                
+                                let path = "\(fromDevUuid)\(fromFoldr)"
+                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
+                                downloadFromRemoteToExcute(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
+                                
+                                
                             case "remoteDownLoadMulti":
                                 let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "fromDevUuid":fromDevUuid]
                                 let path = "\(fromDevUuid)\(fromFoldr)"
@@ -110,6 +118,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                                 NotificationCenter.default.post(name: Notification.Name("downloadFromRemoteToNas"), object: self, userInfo: fileDict)
                                 
                                 break
+                            
                                 
                             default:
                                 
@@ -171,7 +180,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
-                    SyncLocalFilleToNas().sync(view: "")
+                    SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
                     DispatchQueue.main.async {
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
@@ -183,6 +192,21 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                         alertWindow.makeKeyAndVisible()
                         alertWindow.rootViewController?.present(alertController, animated: true, completion: nil)
                     }
+                }
+            }
+            return
+        }
+    }
+    func downloadFromRemoteToExcute(userId:String, name:String, path:String, fileId:String){
+        ContextMenuWork().downloadFromRemoteToExcute(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+            if let success = responseObject {
+                print(success)
+                 if(success.isEmpty){
+                 } else {
+                    print("localUrl : \(success)")
+                    let url:URL = URL(string: success)!
+                    let urlDict = ["url":url]
+                    NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
                 }
             }
             return
@@ -226,7 +250,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     DispatchQueue.main.async {
                         let fileDict = ["fileId":fileId, "fileNm":name,"amdDate":amdDate, "oldFoldrWholePathNm":path,"state":"remote","fromUserId":fromUserId, "fromOsCd":fromOsCd, "fromDevUuid" : fromDevUuid, "fromFoldr" : fromFoldr]
                         print("fileDict : \(fileDict)")
-                        SyncLocalFilleToNas().sync(view: "")
+                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
                         
                         NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
                     }

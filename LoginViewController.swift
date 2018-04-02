@@ -129,7 +129,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
         let string = "/Mobile"
         let str =  string.cString(using: String.Encoding.utf8)
-        print("encodedString : \(str)")
+        print("encodedString : \(String(describing: str))")
         
         
         checkBox.boxType = BEMBoxType.square
@@ -402,7 +402,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     func sysncFileInfo() {
         print("syncFileInfo called")
-        SyncLocalFilleToNas().sync(view: "")
+        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
         getDeviceList(sortBy: DbHelper.sortByEnum.none)
         
         
