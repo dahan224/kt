@@ -35,8 +35,11 @@ class FileUtil {
                             }
                         }
                     }
-                    let folder = App.Folders(cmd : "C", userId : App.defaults.userId, devUuid : Util.getUuid(), foldrNm : fileName, foldrWholePathNm: foldrWholePathNm, cretDate : Util.date(text: folderCreateDate), amdDate : Util.date(text: modifiedDate))
-                    localFolderArray.append(folder)
+                    if(fileExtension.isEmpty && !foldrWholePathNm.contains("Trash")){
+                        let folder = App.Folders(cmd : "C", userId : App.defaults.userId, devUuid : Util.getUuid(), foldrNm : fileName, foldrWholePathNm: foldrWholePathNm, cretDate : Util.date(text: folderCreateDate), amdDate : Util.date(text: modifiedDate))
+                        localFolderArray.append(folder)
+                    }
+                    
                 }
             } catch {
             }

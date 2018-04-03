@@ -80,6 +80,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     var size = ""
     var createdTime = ""
     var modifiedTime = ""
+    var mimeType = ""
 
     enum googleSignInSegueEnum: String {
         case loginForList = "loginForList"
@@ -326,6 +327,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 vc.fromFoldr = fromFoldr
                 vc.fromFoldrId = fromFoldrId
                 vc.multiCheckedfolderArray = multiCheckedfolderArray
+                vc.mimeType = mimeType
             }
             
         }
@@ -600,10 +602,21 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
               withError error: Error!) {
         if let error = error {
             print("error: \(error)")
+            GIDSignIn.sharedInstance().signOut()
+            let userDefaults = UserDefaults.standard
+            let dict = UserDefaults.standard.dictionaryRepresentation()
+            for key in dict.keys {
+                if key == "GID_AppHasRunBefore" || key == "token" || key == "cookie" || key == "userId" || key == "autoLoginCheck" || key == "userId" || key == "userPassword" || key == "googleDriveLoginState" {
+                    continue
+                }
+                userDefaults.removeObject(forKey: key);
+            }
+            UserDefaults.standard.synchronize()
             DispatchQueue.main.async {
                 self.service.authorizer = nil
-                self.showAlert(title: "Authentication Error", message: error.localizedDescription)
+                self.showAlert(title: "Authentication Error", message: "재 시도 부탁 드립니다.")
             }
+            
             
         } else {
             var accessToken:String = ""
@@ -886,6 +899,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     @objc func nasFolderSelectSegue(fileDict:NSNotification){
         if let getFileId = fileDict.userInfo?["fileId"] as? String, let getFromDevUuid = fileDict.userInfo?["fromDevUuid"] as? String, let getUserId = fileDict.userInfo?["fromUserId"] as? String, let getOsCd = fileDict.userInfo?["fromOsCd"] as? String, let getToState = fileDict.userInfo?["toStorage"] as? String {
             fileId = getFileId
+            print("getFileId : \(fileId)")
+            
             foldrWholePathNm = fileDict.userInfo?["oldFoldrWholePathNm"] as? String ?? "nil"
             fileNm = fileDict.userInfo?["fileNm"] as? String ?? "nil"
             fromOsCd = getOsCd
@@ -897,6 +912,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             
             if let getFromFoldrId = fileDict.userInfo?["fromFoldrId"] as? String {
                 fromFoldrId = getFromFoldrId
+            }
+            
+            if let getMimeType = fileDict.userInfo?["mimeType"] as? String {
+                mimeType = getMimeType
             }
             
             switch getToState {

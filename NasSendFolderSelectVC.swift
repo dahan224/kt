@@ -12,7 +12,10 @@ import SwiftyJSON
 import GoogleSignIn
 
 class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableViewDelegate {
-
+    let g = DispatchGroup()
+    let q1 = DispatchQueue(label: "queue1")
+    let q2 = DispatchQueue(label: "queue2")
+    
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var indicatorAnimating = false
     var jsonHeader:[String:String] = [
@@ -60,7 +63,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var fromDevUuid = ""
     var fromFoldr = ""
     var fromFoldrId = ""
-    
+    var mimeType = ""
     enum toStorageKind:String {
         case nas = "nas"
         case nas_multi = "nas_multi"
@@ -324,7 +327,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         case .googleDrive:
             switch listState {
                 case .deviceSelect :
-                    googleDriveFileIdPath = ""
+                    googleDriveFileIdPath = "root"
 //                    newFoldrId = String(driveFileArray[sender.tag].fileId)
 //                    newFoldrWholePathNm = driveFileArray[sender.tag].name
                     newFoldrId = "root"
@@ -369,7 +372,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         case .local_gdrive_multi:
             switch listState {
             case .deviceSelect :
-                googleDriveFileIdPath = ""
+                googleDriveFileIdPath = "root"
                 newFoldrId = "root"
                 newFoldrWholePathNm = "root"
                 print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
@@ -660,7 +663,28 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                         
                     }
                     
+                } else if fromOsCd == "gDrive" {
+                    //gdrive to nas
+                    print("gdrive to nas")
+                    if(fromFoldrId.isEmpty){
+                        activityIndicator.startAnimating()
+                        GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: originalFileName) { responseObject, error in
+                            if let fileUrl = responseObject {
+                                print("fileUrl : \(fileUrl), name : \(self.originalFileName), toOsCd : \(self.toOsCd), fileId : \(self.originalFileId)")
+                                    print("sync start")
+                                //sync -> get file id > upload to nas from local
+                                    SyncLocalFilleToNas().callSyncFomNasSend(view: "NasSendFolderSelectVC", parent: self)
+                            }
+                            return
+                        }
+                    } else {
+                        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+                            accessToken = DbHelper().getAccessToken(email: googleEmail)
+                            SendFolderToNasFromGDrive().downloadFolderFromGDrive(foldrId: originalFileId, getAccessToken: accessToken, fileId: originalFileId, downloadRootFolderName:originalFileName, parent:self)
+                        }
+                    }
                 } else {
+                    
                     // remote to nas
                     print("remote to nas")
                     remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: fromOsCd, fromFoldr: fromFoldrId, fromFileNm: originalFileName, fromFileId: originalFileId)
@@ -680,13 +704,38 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     }
                     
                     
+                } else if fromOsCd == "gDrive" {
+                    //gdrive to gdrive
+                    print("gdrive to gdrive")
+                    activityIndicator.startAnimating()
+                    print("fileId : \(originalFileId), name : \(self.originalFileName), googleDriveFileIdPath : \(googleDriveFileIdPath)")
+                    GoogleWork().copyGdriveFile(name: originalFileName, fileId: originalFileId, parents: googleDriveFileIdPath) { responseObject, error in
+                        if let fileUrl = responseObject {
+                            DispatchQueue.main.async {
+                                let alertController = UIAlertController(title: nil, message: "파일 복사에 성공했습니다.", preferredStyle: .alert)
+                                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                                    UIAlertAction in
+                                    //Do you Success button Stuff here
+                                    self.activityIndicator.stopAnimating()
+                                    Util().dismissFromLeft(vc: self)
+                                }
+                                alertController.addAction(yesAction)
+                                self.present(alertController, animated: true)
+                                
+                            }
+                            
+                        }
+                        
+                        return
+                    }
+                    
                 } else {
                     if(fromFoldrId.isEmpty){
                         // from nas to gdrive
                         print("downloadFromNasToDrive")
                         self.downloadFromNasToDrive(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath)
                     } else {
-                        
+                        // from nas to gdrive folder
                         let inFoldrId = Int(fromFoldrId)
                         GoogleWork().downloadFolderFromNas(foldrId: inFoldrId!, foldrWholePathNm: foldrWholePathNm, userId:fromUserId, devUuid:fromDevUuid, deviceName:deviceName, getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent:self)
                        
@@ -722,6 +771,59 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             }
         }
     }
+    
+    
+    //get noti from sync
+    func notifiedSyncFinish(rootFolder:String){
+        GetListFromServer().getMobileFileLIst(devUuid: Util.getUuid(), userId:App.defaults.userId, deviceName:"sdf"){ responseObject, error in
+            let json = JSON(responseObject!)
+            if(json["listData"].exists()){
+                let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
+                for serverFile in serverList{
+                    let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
+                    let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
+                    let serverFileAmdDate = serverFile["amdDate"] as? String ?? "nil"
+                    print("serverFileNm : \(serverFileNm), serverFilePath : \(serverFilePath)")
+                    print("fromFoldrId : \(self.fromFoldrId)")
+                    self.toOsCd = "G"
+                    if(self.toUserId != App.defaults.userId){
+                        self.toOsCd = "S"
+                    }
+                    if(rootFolder.isEmpty){
+                        if(serverFileNm == self.originalFileName){
+                            if(self.fromFoldrId.isEmpty){
+                                //파일 업로드 to nas
+                                let getFileID = serverFile["fileId"] as? Int ?? 0
+                                print("getFileID : \(getFileID)")
+                                let fileUrl:URL = FileUtil().getFileUrl(fileNm: self.originalFileName, amdDate: self.amdDate)!
+                                self.sendToNasFromLocal(url: fileUrl, name: self.originalFileName, toOsCd:self.toOsCd, fileId: String(getFileID))
+                            }
+                        }
+                    } else {
+                        
+                        let folderNmArray = serverFilePath.components(separatedBy: "/")
+                        let lastName = folderNmArray[folderNmArray.count - 1]
+                        print("rootFolder : \(rootFolder), lastName : \(lastName)")
+                        if serverFilePath == rootFolder {
+                            //폴더 업로드 to nas
+                            print("upload path : \(self.newFoldrWholePathNm)")
+                            print("oldFoldrWholePathNm : \(self.oldFoldrWholePathNm)")
+                            ToNasFromLocalFolder().readyCreatFolders(getToUserId:self.toUserId, getNewFoldrWholePathNm:self.newFoldrWholePathNm, getOldFoldrWholePathNm:serverFilePath, getMultiArray:self.multiCheckedfolderArray, parent:self)
+
+                        }
+                        
+                    }
+                   
+                }
+            } else {
+                print("no file")
+            }
+            
+        }
+    }
+    
+    
+    
     func startMultiLatelyToNas(){
         if(multiCheckedfolderArray.count > 0){
             let index = multiCheckedfolderArray.count - 1
@@ -943,6 +1045,9 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 } else {
                     print("localUrl : \(success)")
                     let fileURL:URL = URL(string: success)!
+                    let fileExtension = fileURL.pathExtension
+                    let googleMimeType:String = Util.getGoogleMimeType(etsionNm: fileExtension)
+                    
                     var fileSize:Double = 0
                     do {
                         let attribute = try FileManager.default.attributesOfItem(atPath: (fileURL.path))
@@ -972,7 +1077,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                         Alamofire.upload(multipartFormData: { multipartFormData in
                             multipartFormData.append("{'name':'\(name)'\(addParents) }".data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName :"foo_bar_baz", mimeType: "application/json; charset=UTF-8")
                             
-                            multipartFormData.append(data, withName: "foo_bar_baz", fileName: name, mimeType: "image/jpeg")
+                            multipartFormData.append(data, withName: "foo_bar_baz", fileName: name, mimeType: googleMimeType)
                             
                         }, usingThreshold: UInt64.init(), to: stringUrl, method: .post, headers: headers,
                            encodingCompletion: { encodingResult in

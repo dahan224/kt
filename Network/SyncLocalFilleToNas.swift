@@ -37,6 +37,22 @@ class SyncLocalFilleToNas {
     var uuId = Util.getUuid()
     var requestView = ""
     var currentFolderId = ""
+    var nasSendFolderSelectVC:NasSendFolderSelectVC?
+    var getRootFolder = ""
+    func callSyncFomGdriveToNasSendFolder(view:String, parent:NasSendFolderSelectVC, rootFolder:String){
+        requestView = view
+        nasSendFolderSelectVC = parent
+        getRootFolder = rootFolder
+        getFileList()
+    }
+    
+    func callSyncFomNasSend(view:String, parent:NasSendFolderSelectVC){
+        requestView = view
+        nasSendFolderSelectVC = parent
+     
+        getFileList()
+    }
+    
     func sync(view:String, getFoldrId:String){
         currentFolderId = getFoldrId
         requestView = view
@@ -198,6 +214,8 @@ class SyncLocalFilleToNas {
                             NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                             let fileDict = ["foldrId":self.currentFolderId]
                             NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
+                        } else if(self.requestView == "NasSendFolderSelectVC"){
+                            self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                         }
                     }
                 }
@@ -211,6 +229,8 @@ class SyncLocalFilleToNas {
                         NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                         let fileDict = ["foldrId":self.currentFolderId]
                         NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
+                    } else if (self.requestView == "NasSendFolderSelectVC"){
+                        self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                     }
                 }
                
@@ -344,6 +364,8 @@ class SyncLocalFilleToNas {
                     NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                     let fileDict = ["foldrId":self.currentFolderId]
                     NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
+                }  else if (self.requestView == "NasSendFolderSelectVC"){
+                    self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                 }
                 break
             case .failure(let error):

@@ -87,6 +87,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         case bottomMultiListRemote = "bottomMultiListRemote"
         case bottomMultiListLocal = "bottomMultiListLocal"
         case oneView = "oneView"
+        case googleDrive = "googleDrive"
     }
     
     var ifNavBarClicked = false
@@ -102,6 +103,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var bottomMultiListNas = ["다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomMultiListRemote = ["다운로드", "GiGA NAS로 보내기"]
     var bottomMultiListLocal = ["GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
+    var bottomGoogleDrive = ["속성보기", "다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     
     var bottomListOneViewSort = ["기준정렬","이름순-ㄱ우선","이름순-ㅎ우선"]
     var bottomListOneViewSortKey = [DbHelper.sortByEnum.none, DbHelper.sortByEnum.asc, DbHelper.sortByEnum.desc]
@@ -573,7 +575,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         view.removeGestureRecognizer(tapGesture)
         sBar.endEditing(true)
         searchedText = searchBar.text!
-        searchInAllCategory()
+        print("\(mainContentState)")
+        if(mainContentState == .oneViewList) {
+            searchInAllCategory()
+        } else {
+            print("serch file in google drive")
+        }
+        
     }
     
     func searchInAllCategory(){
@@ -785,6 +793,12 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     folderArray = getFolderArray
                     intFolderArrayIndexPathRow = getIndexPath.row
                     
+                } else if let getDriveFileArray = stateInfo.userInfo?["driveFileArray"] as? [App.DriveFileStruct], let getIndexPath = stateInfo.userInfo?["selectedIndex"] as? IndexPath {
+                    
+                    print("getFolderArray : \(getDriveFileArray)")
+                    print("getIndexPath : \(getIndexPath)")
+                    driveFileArray = getDriveFileArray
+                    intFolderArrayIndexPathRow = getIndexPath.row
                 }
                 tableView.reloadData()
                 let fileIdDict = ["fileId":"\(fileId)"]
@@ -1069,7 +1083,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             listViewStyleState = .list
             containerViewController?.listViewStyleState = .list
             listButton.setImage(#imageLiteral(resourceName: "card_view").withRenderingMode(.alwaysOriginal), for: .normal)
-            if(mainContentState == .oneViewList){
+//            if(mainContentState == .oneViewList){
                 if(maintainFolder){
                     let fileDict = ["style":"list"]
                     NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
@@ -1077,13 +1091,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 } else {
                     setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
                 }
-            }
+//            }
             break
         case (.list):
             listViewStyleState = .grid
             containerViewController?.listViewStyleState = .grid
             listButton.setImage(#imageLiteral(resourceName: "list_view").withRenderingMode(.alwaysOriginal), for: .normal)
-            if(mainContentState == .oneViewList){
+//            if(mainContentState == .oneViewList){
                 if(maintainFolder){
                     let fileDict = ["style":"grid"]
                     NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
@@ -1091,7 +1105,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 } else {
                     setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
                 }
-            }
+//            }
             
             break
      
@@ -1135,6 +1149,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 return bottomMultiListRemote.count
             case .bottomMultiListLocal:
                 return bottomMultiListLocal.count
+            case .googleDrive:
+                return bottomGoogleDrive.count
             }
             
             
@@ -1215,6 +1231,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 let imageString = Util.getContextImageString(context: bottomMultiListLocal[indexPath.row])
                 cell.ivIcon.image = UIImage(named: imageString)
                 cell.lblTitle.text = bottomMultiListLocal[indexPath.row]
+            case .googleDrive:
+                let imageString = Util.getContextImageString(context: bottomGoogleDrive[indexPath.row])
+                cell.ivIcon.image = UIImage(named: imageString)
+                cell.lblTitle.text = bottomGoogleDrive[indexPath.row]
             }
         }
         return cell
@@ -1283,6 +1303,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 break
+            case .googleDrive:
+                GDriveFileListCellController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: "Google Drive", parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:driveFileArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
+                
+                break            
             case .bottomMultiListNas:
                 inActiveMultiCheck()
                 switch indexPath.row {

@@ -240,7 +240,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             cellWidth = width 
             height = 80.0
             minimumSpacing = 10
-            if(cellStyle == 2 || flickState == .lately || viewState == .search){
+            if(cellStyle == 2 || flickState == .lately || viewState == .search || cellStyle == 3){
                 minimumSpacing = 1
                 cellWidth = width 
             }
@@ -759,7 +759,6 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             homeViewController?.fromOsCd = fromOsCd
             selectedDevUuid = DeviceArray[indexPath.row].devUuid
             selectedDevUserId = DeviceArray[indexPath.row].userId
-            NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
             
             var state = HomeViewController.bottomListEnum.nasFileInfo
             if(fromOsCd == "G" || fromOsCd == "S"){
@@ -773,6 +772,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             let stateDict = ["bottomState":"\(state)","fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName, "selectedDevUuid":selectedDevUuid, "fileNm":fileNm, "userId":userId, "foldrId":String(foldrId),"fromOsCd":fromOsCd, "cellStyle":"1", "currentFolderId":currentFolderId]
 //            print(stateDict)
             NotificationCenter.default.post(name: Notification.Name("bottomStateFromContainer"), object: self, userInfo: stateDict)
+            
+            NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
             
         } else if (cellStyle == 2){
             //            if(contextMenuState == .nas){
@@ -808,6 +809,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     } else {
                         print("foldrId : \(foldrId)")
                         if(folderArray[indexPath.row].foldrNm == ".."){
+                            
                             folderIdArray.remove(at: folderIdArray.count-1)
                             folderNameArray.remove(at: folderNameArray.count-1)
                         } else {
@@ -877,11 +879,20 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             
             if mimeType.contains(".folder") { // 폴더
                 
+
                 let stringFoldrId = String(fileId)
                 if driveFileArray[indexPath.row].name == ".." {
+                    if(driveFolderIdArray[driveFolderIdArray.count - 1] == "root") {
+                        currentFolderId = "root"
+                    } else {
+                        currentFolderId = driveFolderIdArray[driveFolderIdArray.count - 2]
+                    }
+                    
                     driveFolderIdArray.remove(at: driveFolderIdArray.count-1)
                     driveFolderNameArray.remove(at: driveFolderNameArray.count-1)
+                    
                 } else {
+                    currentFolderId = fileId
                     self.driveFolderIdArray.append(fileId)
                     self.driveFolderNameArray.append(name)
                 }
@@ -891,15 +902,24 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 } else {
                     driveFolderNameArrayCount = driveFolderNameArray.count - 1
                 }
-                let folderName = ["folderName":"\(driveFolderNameArray[driveFolderNameArrayCount])","deviceName":deviceName, "devUuid":"googleDrive"]
+                let folderName = ["folderName":"\(driveFolderNameArray[driveFolderNameArrayCount])","deviceName":"Google Drive", "devUuid":"googleDrive"]
                 NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
+                
                 self.showInsideListGDrive(userId: userId, devUuid: selectedDevUuid, foldrId: stringFoldrId, deviceName: deviceName)
                 searchStepState = .folder
-                let state = HomeViewController.bottomListEnum.localFileInfo
+                let state = HomeViewController.bottomListEnum.googleDrive
                 //수정 요망
+                
                 Vc.dataFromContainer(containerData: indexPath.row, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: selectedDevUuid, getCurrentFolderId: currentFolderId)
             } else { // 파일
+                print("selectedFileId : \(driveFileArray[indexPath.row].fileId)")
+                let fileId = "\(driveFileArray[indexPath.row].fileId)"
+                let foldrWholePathNm = "\(driveFileArray[indexPath.row].foldrWholePath)"
+                var state = HomeViewController.bottomListEnum.googleDrive
                 
+                let stateDict = ["bottomState":"\(state)","fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":"Google Drive", "selectedDevUuid":selectedDevUuid, "fileNm":fileNm, "userId":userId, "foldrId":String(foldrId),"fromOsCd":fromOsCd, "currentFolderId":currentFolderId,"driveFileArray":driveFileArray,"selectedIndex":indexPath] as [String : Any]
+                print(stateDict)
+                NotificationCenter.default.post(name: Notification.Name("bottomStateFromContainer"), object: self, userInfo: stateDict)
             }
         }
         // 0eun - end
@@ -1075,7 +1095,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! GDriveFileListCell
-        GDriveFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: driveFileArray, deviceName: "Google Drive", parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, currentFolderId:  currentFolderId)
+        GDriveFileListCellController().localContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: driveFileArray, deviceName: "Google Drive", parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, currentFolderId:  currentFolderId, containerView:containerViewController!)
     }
     
     //구글드라이브 파일 컨텍스트 종료
@@ -1117,7 +1137,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! GDriveFolderListCell
-        GDriveFolderListCellController().LocalFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: driveFileArray, deviceName: deviceName, parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUuid, currentFolderId:  currentFolderId)
+        GDriveFolderListCellController().GdriveFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: driveFileArray, deviceName: "Google Drive", parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUuid, currentFolderId:  currentFolderId)
     }
     //구글드라이브 폴더 컨텍스트 종료
     
@@ -1177,106 +1197,59 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     // 0eun - end
     
 
-    @objc func optionShowClicked(sender:UIButton){
-        let buttonRow = sender.tag
-        let indexPath = IndexPath(row: buttonRow, section: 0)
-        let cell = deviceCollectionView.cellForItem(at: indexPath) as! FileListCell
-        self.gDriveContextMenuCalled(cell: cell, indexPath: indexPath, sender:sender)
-    }
-    // 0eun - start
-    func gDriveContextMenuCalled(cell:FileListCell, indexPath:IndexPath, sender:UIButton){
-        
-        fileId = String(driveFileArray[indexPath.row].fileId)
-        
-        var btn = "show"
-        switch sender {
-        case cell.btnShow:
-            btn = "show"
-        case cell.btnAction:
-            btn = "btnAction"
-            let mailURL = URL(string: "photos-redirect://")!
-            if UIApplication.shared.canOpenURL(mailURL) {
-                UIApplication.shared.openURL(mailURL)
-            }
-        case cell.btnDwnld:
-            let fileId = driveFileArray[indexPath.row].fileId
-            let mimeType = driveFileArray[indexPath.row].mimeType
-            let name = driveFileArray[indexPath.row].name
-            downloadGDriveFile(fileId: fileId, mimeType:mimeType, name:name)
-        case cell.btnNas:
-            let fileId = driveFileArray[indexPath.row].fileId
-            let mimeType = driveFileArray[indexPath.row].mimeType
-            let name = driveFileArray[indexPath.row].name
-            
-            let fileDict = ["fileId":fileId, "fileNm":name,"amdDate":"", "oldFoldrWholePathNm":foldrWholePathNm,"state":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
-            print("fileDict : \(fileDict)")
-            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-            //showLocalFileOption(tag: sender.tag)
-            
-            uploadNasGDriveFile(fileId: fileId, mimeType:mimeType, name:name)
-        case cell.btnGDrive:
-            btn = ""
-        case cell.btnDelete:
-            let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
-            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) { UIAlertAction in
-                self.deleteGDriveFile(fileId: self.fileId)
-                // 싱크 필요~
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
-                    let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
-                    let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                        UIAlertAction in
-                        
-                        self.showInsideList(userId: self.userId, devUuid: self.selectedDevUuid, foldrId: self.currentFolderId, deviceName: self.deviceName)
-                        
-                    }
-                    alertController.addAction(yesAction)
-                    self.present(alertController, animated: true)
-                })
-            }
-            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
-            alertController.addAction(yesAction)
-            alertController.addAction(noAction)
-            
-            self.present(alertController, animated: true)
-            
-        default:
-            break
-        }
-    }
-    
     func uploadNasGDriveFile(fileId:String, mimeType:String, name:String) {
-        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+            
+        accessToken = DbHelper().getAccessToken(email: googleEmail)
+//        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
         let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
         print("stringUrl : \(stringUrl)")
         
         let downloadUrl = URL(string: stringUrl)
+        }
     }
     
     // 구글드라이브 파일 다운로드, 기가나스 보내기
     func downloadGDriveFile(fileId:String, mimeType:String, name:String) {
-        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
-        print("fileId : \(fileId), mimeType : \(mimeType)")
-        let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
-        print("stringUrl : \(stringUrl)")
-        
-        let downloadUrl = URL(string: stringUrl)
-        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
-            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+//        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+            homeViewController?.homeViewToggleIndicator()
+            accessToken = DbHelper().getAccessToken(email: googleEmail)
+            print("fileId : \(fileId), mimeType : \(mimeType)")
+            let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
+            print("stringUrl : \(stringUrl)")
             
-            // the name of the file here I kept is yourFileName with appended extension
-            documentsURL.appendPathComponent("\(name)")
-            return (documentsURL, [.removePreviousFile])
-        }
-        
-        Alamofire.download(downloadUrl!, to: destination)
-            .downloadProgress(closure: { (progress) in
-                print("download progress : \(progress.fractionCompleted)")
-            })
-            .response { response in
-                print("response : \(response)")
-                if response.destinationURL != nil {
-                    print(response.destinationURL!)
-                }
+            let downloadUrl = URL(string: stringUrl)
+            let destination: DownloadRequest.DownloadFileDestination = { _, _ in
+                var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
+                
+                // the name of the file here I kept is yourFileName with appended extension
+                documentsURL.appendPathComponent("\(name)")
+                return (documentsURL, [.removePreviousFile])
+            }
+            
+            Alamofire.download(downloadUrl!, to: destination)
+                .downloadProgress(closure: { (progress) in
+                    print("download progress : \(progress.fractionCompleted)")
+                })
+                .response { response in
+                    print("response : \(response)")
+                    if response.destinationURL != nil {
+                        print(response.destinationURL!)
+                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                        DispatchQueue.main.async {
+                            let alertController = UIAlertController(title: nil, message: "다운로드를 성공하였습니다.", preferredStyle: .alert)
+                            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
+                                UIAlertAction in
+                                self.homeViewController?.homeViewToggleIndicator()
+                                
+                            }
+                            
+                            alertController.addAction(yesAction)
+                            self.present(alertController, animated: true)
+                        }
+                    }
+            }
         }
     }
     
@@ -1285,36 +1258,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         
     }
     
-    // 구글드라이브 파일 삭제
-    func deleteGDriveFile(fileId:String) {
-        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
-        let url = "https://www.googleapis.com/drive/v3/files/\(fileId)"
-        let headers: HTTPHeaders = [
-            "Authorization": "Bearer " + accessToken
-        ]
-        Alamofire.request(url,
-                          method: .delete,
-                          //parameters: {},
-            encoding : JSONEncoding.default,
-            headers:headers
-            ).responseJSON{ (response) in
-                print(response)
-                switch response.result {
-                case .success(let value):
-                    let json = JSON(value)
-                    if (json["code"].string != nil) {
-                        print(json["code"])
-                    } else {
-                        print("파일을 삭제하였습니다.")
-                        
-                        self.deviceCollectionView.reloadData()
-                    }
-                case .failure(let error):
-                    print(error)
-                }
-        }
-    }
-    // 0eun - end
+
     
     func finishedFileDownload(fetcher: GTMSessionFetcher, finishedWithData data: NSData, error: NSError?){
         if let error = error {
@@ -1377,6 +1321,16 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         cell.optionSHowCheck = 0
                     }
                 } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? LocalFolderListCell {
+                    if(cell.optionSHowCheck != 0){
+                        cell.optionHide()
+                        cell.optionSHowCheck = 0
+                    }
+                } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? GDriveFileListCell {
+                    if(cell.optionSHowCheck != 0){
+                        cell.optionHide()
+                        cell.optionSHowCheck = 0
+                    }
+                }  else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? GDriveFolderListCell {
                     if(cell.optionSHowCheck != 0){
                         cell.optionHide()
                         cell.optionSHowCheck = 0
@@ -1870,46 +1824,19 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     }
    
    
-    func downloadFromDrive(fileId:String, mimeType:String, name:String){
-        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
-        print("fileId : \(fileId), mimeType : \(mimeType)")
-        let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
-        print("stringUrl : \(stringUrl)")
-        var saveFileNm = ""
-        saveFileNm = name.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        
-        let downloadUrl = URL(string: stringUrl)
-        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
-            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            
-            // the name of the file here I kept is yourFileName with appended extension
-            documentsURL.appendPathComponent("\(saveFileNm)")
-            return (documentsURL, [.removePreviousFile])
-        }
-                Alamofire.download(downloadUrl!, to: destination)
-                    .downloadProgress(closure: { (progress) in
-                        print("download progress : \(progress.fractionCompleted)")
-                        })
-                    .response { response in
-                    print("response : \(response)")
-                    if response.destinationURL != nil {
-                        print(response.destinationURL!)
-//                        self.sendToNasFromLocal(fileURL: response.destinationURL!, name:name)
-                    }
-                }
-        
-    }
-    
+  
   
     func downloadFromNas(name:String, path:String, fileId:String){
-        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+//        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+        homeViewController?.homeViewToggleIndicator()
         ContextMenuWork().downloadFromNas(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
                     
                     DispatchQueue.main.async {
-                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                        self.homeViewController?.homeViewToggleIndicator()
+//                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                         
@@ -1918,7 +1845,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         self.present(alertController, animated: true)
                     }
                 } else {
-                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+//                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                    self.homeViewController?.homeViewToggleIndicator()
                 }
             }
             
@@ -2017,6 +1945,10 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             if let indexPathRow = Int(stringIndexPathRow) {
                 if(DeviceArray[indexPathRow].osCd == "D"){
                     mainContentState = .googleDriveList
+                    cellStyle = 3
+                    self.cellStyle = 3
+                    currentFolderId = "root"
+                    homeViewController?.currentFolderId = currentFolderId
                     print("google drive clicked")
 //                    let fileDict = ["state":"loginForList"]
 //                    NotificationCenter.default.post(name: Notification.Name("googleSignInSegue"), object: self, userInfo: fileDict)
@@ -2171,17 +2103,20 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
     @objc func refreshInsideList(folderIdDict:NSNotification){
         if let getfolderId = folderIdDict.userInfo?["foldrId"] as? String {
-            print("refreshInsideList userId: \(self.userId), devUuid: \(self.selectedDevUuid), foldrId:\(getfolderId), deviceName : \(self.deviceName)")
-            if(getfolderId == "0" || getfolderId.isEmpty) {
-                
-                // 리모트 디아비스 최상위 폴더
-                print("getRootFolder called")
-                cellStyle = 1
-                getRootFolder(userId: userId, devUuid: selectedDevUuid, deviceName: deviceName)
-            }  else {
-                self.showInsideList(userId: self.userId, devUuid: selectedDevUuid, foldrId: getfolderId, deviceName:self.deviceName)
+            if(mainContentState == .oneViewList) {
+                print("refreshInsideList userId: \(self.userId), devUuid: \(self.selectedDevUuid), foldrId:\(getfolderId), deviceName : \(self.deviceName)")
+                if(getfolderId == "0" || getfolderId.isEmpty) {
+                    
+                    // 리모트 디아비스 최상위 폴더
+                    print("getRootFolder called")
+                    cellStyle = 1
+                    getRootFolder(userId: userId, devUuid: selectedDevUuid, deviceName: deviceName)
+                }  else {
+                    self.showInsideList(userId: self.userId, devUuid: selectedDevUuid, foldrId: getfolderId, deviceName:self.deviceName)
+                }
+            } else {
+                showInsideListGDrive(userId: self.userId, devUuid: selectedDevUuid, foldrId: getfolderId, deviceName: self.deviceName)
             }
-            
             
         }
     }
