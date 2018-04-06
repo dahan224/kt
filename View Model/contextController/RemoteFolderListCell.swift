@@ -129,7 +129,12 @@ class RemoteFolderListCell: UICollectionViewCell {
             
         }
         
+        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
+        view1.layer.masksToBounds = false
+        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
         
+        addSubview(view1)
+
         optionSHowCheck = 0
         btnMultiChecked = false
         backgroundColor = UIColor.white

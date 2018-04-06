@@ -1,15 +1,14 @@
 //
-//  NasFileListCell.swift
+//  GDriveFolderListCell.swift
 //  KT
 //
-//  Created by 이다한 on 2018. 3. 11..
+//  Created by 김영은 on 2018. 3. 21..
 //  Copyright © 2018년 이다한. All rights reserved.
 //
 
 import UIKit
 
-class NasFileListCell: UICollectionViewCell {
-    
+class GDriveFolderListCell: UICollectionViewCell {
     
     var ivSub:UIImageView = {
         let imageView = UIImageView()
@@ -103,7 +102,7 @@ class NasFileListCell: UICollectionViewCell {
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
-    var btnMultiChecked = false
+    var btnMultiChecked = true
     
     var optionViewTrailingAnchor:NSLayoutConstraint?
     var btnDwnldTrailingAnchor:NSLayoutConstraint?
@@ -122,12 +121,17 @@ class NasFileListCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
+        if(subviews.contains(ivSub)){
+            for view in subviews{
+                view.removeFromSuperview()
+            }
+            
+        }
+        
         
         optionSHowCheck = 0
         btnMultiChecked = false
         backgroundColor = UIColor.white
-        
-        
         addSubview(ivSub)
         addSubview(lblMain)
         addSubview(lblSub)
@@ -135,8 +139,6 @@ class NasFileListCell: UICollectionViewCell {
         addSubview(btnMultiCheck)
         addSubview(btnOption)
         addSubview(optionView)
-        
-        
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
@@ -180,7 +182,7 @@ class NasFileListCell: UICollectionViewCell {
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: App.Size.screenWidth)
         optionViewTrailingAnchor?.isActive = true
         
-        setupNasView()
+        setupFoldrView()
         
     }
     required init?(coder aDecoder: NSCoder) {
@@ -190,19 +192,14 @@ class NasFileListCell: UICollectionViewCell {
     func multiCheck(){
         
     }
-    func resetMultiCheck(){
-        btnMultiChecked = false
-        btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-    }
     
     
-    @objc func setupNasView(){
+    @objc func setupFoldrView(){
         for view in optionView.subviews {
             view.removeFromSuperview()
         }
         
         optionView.addSubview(btnOptionRed)
-        optionView.addSubview(btnShow)
         optionView.addSubview(btnDwnld)
         optionView.addSubview(btnNas)
         optionView.addSubview(btnGDrive)
@@ -214,54 +211,43 @@ class NasFileListCell: UICollectionViewCell {
         btnOptionRed.heightAnchor.constraint(equalToConstant:  36).isActive = true
         btnOptionRed.leadingAnchor.constraint(equalTo: optionView.leadingAnchor, constant: 25).isActive = true
         
-        
-        btnShow.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
-        btnShow.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        btnShow.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnShow.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing).isActive = true
-        btnShow.setImage(textToImage(drawText: "속성보기", inImage: UIImage(named: "ico_18dp_contextmenu_info")!.withRenderingMode(.alwaysOriginal)), for: .normal)
-        
         btnDwnld.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnDwnld.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnDwnld.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        
-        btnDwnldTrailingAnchor = btnDwnld.leadingAnchor.constraint(equalTo: btnShow.trailingAnchor, constant: spacing)
+        btnDwnldTrailingAnchor = btnDwnld.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
         btnDwnldTrailingAnchor?.isActive = true
-        
         btnDwnld.setImage(textToImage(drawText: "다운로드", inImage: UIImage(named: "ico_18dp_contextmenu_dwld")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
         btnNas.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnNas.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnNas.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        
         btnNasTrailingAnchor = btnNas.leadingAnchor.constraint(equalTo: btnDwnld.trailingAnchor, constant: spacing)
         btnNasTrailingAnchor?.isActive = true
-        
         btnNas.setImage(textToImage2(drawText: "GiGA NAS로\n보내기", inImage: UIImage(named: "ico_18dp_contextmenu_send")!.withRenderingMode(.alwaysOriginal)), for: .normal)
-        
-        
-        btnGDrive.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
-        btnGDrive.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        btnGDrive.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnGDrive.leadingAnchor.constraint(equalTo: btnNas.trailingAnchor, constant: spacing).isActive = true
-        btnGDrive.setImage(textToImage2(drawText: "G 드라이브로\n보내기", inImage: UIImage(named: "ico_18dp_contextmenu_send")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
         btnDelete.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnDelete.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnDelete.heightAnchor.constraint(equalToConstant: 70).isActive = true
-        btnDelete.leadingAnchor.constraint(equalTo: btnGDrive.trailingAnchor, constant: spacing).isActive = true
+        btnDelete.leadingAnchor.constraint(equalTo: btnNas.trailingAnchor, constant: spacing).isActive = true
         btnDelete.setImage(textToImage(drawText: "삭제", inImage: UIImage(named: "ico_18dp_contextmenu_del")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
-        //        optionView.isHidden = true
+        
+        
+        
+        print("width: \(optionView.frame.size.width)")
+        
         
     }
     
-  
+    
+    
     func optionShow(spacing:CGFloat, style:Int){
         let layoutGuide = contentView.layoutMarginsGuide
+        let width = App.Size.optionWidth
+        let spacing = (width - 240) / 4
+        
         self.spacing = spacing
         optionViewTrailingAnchor?.isActive = false
-        btnDwnldTrailingAnchor?.isActive = false
         btnNasTrailingAnchor?.isActive = false
         btnShowTrailingAnchor?.isActive = false
         btnActionTrailingAnchor?.isActive = false
@@ -272,10 +258,28 @@ class NasFileListCell: UICollectionViewCell {
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
         optionViewTrailingAnchor?.isActive = true
         
-       setupNasView()
+        setupFoldrView()
+        
+        
     }
     
-  
+    @objc func showFolderView(){
+        let layoutGuide = contentView.layoutMarginsGuide
+        let width = App.Size.optionWidth
+        let spacing = (width - 240) / 4
+        self.spacing = spacing
+        optionViewTrailingAnchor?.isActive = false
+        btnNasTrailingAnchor?.isActive = false
+        btnShowTrailingAnchor?.isActive = false
+        btnActionTrailingAnchor?.isActive = false
+        optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
+        optionViewTrailingAnchor?.isActive = true
+        
+        setupFoldrView()
+        
+        
+        
+    }
     
     func optionHide(){
         let layoutGuide = contentView.layoutMarginsGuide
@@ -342,4 +346,3 @@ class NasFileListCell: UICollectionViewCell {
         return newImage!
     }
 }
-

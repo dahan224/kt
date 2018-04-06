@@ -18,17 +18,7 @@ class GDriveFolderListCellController {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "GDriveFolderListCell", for: indexPath) as! GDriveFolderListCell
         
-        if (multiCheckListState == .active){
-            cell.btnMultiCheck.isHidden = false
-            cell.btnMultiCheck.tag = indexPath.row
-            cell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-            cell.btnOption.isHidden = true
-            
-        } else {
-            cell.btnOption.isHidden = false
-            cell.btnMultiCheck.isHidden = true
-        }
-        if(folderArray[indexPath.row].name == ".."){
+       if(folderArray[indexPath.row].name == ".."){
             cell.btnOption.isHidden = true
         }
         
@@ -50,7 +40,7 @@ class GDriveFolderListCellController {
         return cell
     }
     
-    func LocalFolderContextMenuCalled(cell:GDriveFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.DriveFileStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
+    func GdriveFolderContextMenuCalled(cell:GDriveFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.DriveFileStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
         dv = deviceView
         let fileNm = folderArray[indexPath.row].name
         let etsionNm = folderArray[indexPath.row].fileExtension
@@ -61,17 +51,34 @@ class GDriveFolderListCellController {
         let upFoldrId = folderArray[indexPath.row].fileId
         switch sender {
         case cell.btnDwnld:
+            dv?.showGDriveFolderOption(tag: sender.tag)
+            let alertController = UIAlertController(title: nil, message: "해당 폴더를 다운로드 하시겠습니까?", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+                    let accessToken = DbHelper().getAccessToken(email: googleEmail)
+                    let downloadRootFolderName = fileNm
+                    print("downloadRootFolderName : \(downloadRootFolderName), foldrWholePathNm : \(foldrWholePathNm)")
+                    GoogleWork().downloadFolderFromGDrive(foldrId: foldrId, getAccessToken: accessToken, fileId: fileId, downloadRootFolderName:downloadRootFolderName)
+                }
+                
+            }
+            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+            alertController.addAction(yesAction)
+            alertController.addAction(noAction)
+            dv?.present(alertController, animated: true)
             break
-            //            self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
-            //            showOptionMenu(sender: sender, style: 0)
         case cell.btnNas:
+            dv?.showGDriveFolderOption(tag: sender.tag)
             print(deviceName)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
             
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":"gDrive","fromDevUuid":currentDevUuid, "fromFoldrId":String(foldrId)]
             print("fileDict : \(fileDict)")
+            
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-            dv?.showLocalFolderOption(tag: sender.tag)
+            break
         case cell.btnDelete:
+            dv?.showGDriveFolderOption(tag: sender.tag)
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 삭제 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
@@ -81,7 +88,7 @@ class GDriveFolderListCellController {
                 let pathForRemove:String = FileUtil().getFilePath(fileNm: foldrNm, amdDate: amdDate)
                 print("pathForRemove : \(pathForRemove)")
                 self.removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync(view: "")
+                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

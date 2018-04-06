@@ -44,12 +44,12 @@ class SetupHomeView {
     
     
     class func setupMainSearchView(View:UIView, sortButton:UIButton, sBar:UISearchBar, searchDownArrowButton:UIButton, parentViewContoller:UIViewController){
-        var previous = parentViewContoller.childViewControllers.first
-        if let previous = previous {
-            previous.willMove(toParentViewController: nil)
-            previous.view.removeFromSuperview()
-            previous.removeFromParentViewController()
-        }
+//        var previous = parentViewContoller.childViewControllers.first
+//        if let previous = previous {
+//            previous.willMove(toParentViewController: nil)
+//            previous.view.removeFromSuperview()
+//            previous.removeFromParentViewController()
+//        }
         View.addSubview(sortButton)
         View.addSubview(sBar)
         View.addSubview(searchDownArrowButton)

@@ -1,25 +1,25 @@
 //
-//  ToNasFromLocalFolder.swift
+//  ToNasFromLocalFomGDriveFolder.swift
 //  KT
 //
-//  Created by 이다한 on 2018. 3. 18..
+//  Created by 이다한 on 2018. 4. 4..
 //  Copyright © 2018년 이다한. All rights reserved.
 //
+
 
 import UIKit
 import SwiftyJSON
 import Alamofire
 
-class ToNasFromLocalFolder {
+class ToNasFromLocalFomGDriveFolder {
     
     var toUserId = ""
     var newFoldrWholePathNm = ""
     var oldFoldrWholePathNm = ""
-    var newFolderNm = ""
     var newPath = ""
     var style = ""
     var nasSendFolderSelectVC:NasSendFolderSelectVC?
-    var multiCheckedfolderArray:[App.FolderStruct] = []
+    var multiCheckedfolderArray:[App.DriveFileStruct] = []
     var loginCookie = UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     var loginToken = UserDefaults.standard.string(forKey: "token") ?? "nil"
     var jsonHeader:[String:String] = [
@@ -27,15 +27,13 @@ class ToNasFromLocalFolder {
         "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
         "Cookie": UserDefaults.standard.string(forKey: "cookie")!
     ]
-    func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.FolderStruct], parent:NasSendFolderSelectVC){
+    func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.DriveFileStruct], parent:NasSendFolderSelectVC){
         NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
         let folders:[App.Folders] = FileUtil().getFolderList()
         var foldersToCreate:[String] = []
         toUserId = getToUserId
         newFoldrWholePathNm = getNewFoldrWholePathNm
         oldFoldrWholePathNm = getOldFoldrWholePathNm
-        let oldFoldrWholePathNmArray = oldFoldrWholePathNm.components(separatedBy: "/")
-        newFolderNm = oldFoldrWholePathNmArray[oldFoldrWholePathNmArray.count - 1]
         multiCheckedfolderArray = getMultiArray
         nasSendFolderSelectVC = parent
         for folder in folders{
@@ -43,12 +41,12 @@ class ToNasFromLocalFolder {
                 print(folder.foldrWholePathNm)
                 var path = folder.foldrWholePathNm
                 print("local path : \(path)")
-                path = path.replacingOccurrences(of: oldFoldrWholePathNm, with: "\(newFoldrWholePathNm)/\(newFolderNm)")
+                path = path.replacingOccurrences(of: "/Mobile", with: newFoldrWholePathNm)
                 print("path to update : \(path)")
                 foldersToCreate.append(path)
             }
         }
-        print("newFolderNm : \(newFolderNm)")
+        
         createFolders(foldersToCreate: foldersToCreate)
     }
     
@@ -102,7 +100,7 @@ class ToNasFromLocalFolder {
                         let uploadFile:App.Files = App.Files(data: serverFile)
                         files.append(uploadFile)
                     }
-                   
+                    
                 }
                 self.uploadFile(files: files)
             }
@@ -123,8 +121,7 @@ class ToNasFromLocalFolder {
                 }
                 
                 var pathToUpdate = files[index].foldrWholePathNm
-//                pathToUpdate = pathToUpdate.replacingOccurrences(of: "/Mobile", with: newFoldrWholePathNm)
-                pathToUpdate = pathToUpdate.replacingOccurrences(of: oldFoldrWholePathNm, with: "\(newFoldrWholePathNm)/\(newFolderNm)")
+                pathToUpdate = pathToUpdate.replacingOccurrences(of: "/Mobile", with: newFoldrWholePathNm)
                 print("uploadFile originalFileName: \(originalFileName), newFoldrWholePathNm: \(newFoldrWholePathNm), pathToUpdate : \(pathToUpdate)")
                 if let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate) {
                     sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd, originalFileId:originalFileId, files:files,newFoldrWholePathNm:pathToUpdate)
@@ -138,12 +135,12 @@ class ToNasFromLocalFolder {
         if(multiCheckedfolderArray.count > 0){
             let lastIndex = multiCheckedfolderArray.count - 1
             multiCheckedfolderArray.remove(at: lastIndex)
-            nasSendFolderSelectVC?.multiCheckedfolderArray = multiCheckedfolderArray
-            nasSendFolderSelectVC?.startMultiLocalToNas()
+            nasSendFolderSelectVC?.gDriveMultiCheckedfolderArray = multiCheckedfolderArray
+            nasSendFolderSelectVC?.startMultiGdriveToNas()
             
         } else {
             NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
-//            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCAlert"), object: self, userInfo: nil)
+            //            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCAlert"), object: self, userInfo: nil)
             nasSendFolderSelectVC?.NasSendFolderSelectVCAlert(title: "NAS로 내보내기 성공")
         }
         
@@ -182,11 +179,11 @@ class ToNasFromLocalFolder {
         
         Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
             .uploadProgress { progress in // main queue by default
-//                print("Upload Progress: \(progress.fractionCompleted)")
+                //                print("Upload Progress: \(progress.fractionCompleted)")
                 
             }
             .downloadProgress { progress in // main queue by default
-//                print("Download Progress: \(progress.fractionCompleted)")
+                //                print("Download Progress: \(progress.fractionCompleted)")
             }
             .responseString { response in
                 print("Success: \(response.result.isSuccess)")
@@ -231,3 +228,4 @@ class ToNasFromLocalFolder {
     }
     
 }
+

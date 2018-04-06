@@ -16,7 +16,12 @@ import SwiftyJSON
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
  
-   
+    struct Connectivity {
+        static let sharedInstance = NetworkReachabilityManager()!
+        static var isConnectedToInternet:Bool {
+            return self.sharedInstance.isReachable
+        }
+    }
     
     var backgroundTask:UIBackgroundTaskIdentifier?
     var window: UIWindow?
@@ -30,7 +35,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
 //        FirebaseApp.configure()
 //        Messaging.messaging().remoteMessageDelegate = self
 
-        
+      
         GIDSignIn.sharedInstance().clientID = "855259523788-p97fg9b2h94g9ghlv7btv90h60evnlnc.apps.googleusercontent.com"
         GIDSignIn.sharedInstance().delegate = self
         
@@ -518,6 +523,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
+        if Connectivity.isConnectedToInternet {
+            print("Connected")
+            
+        } else {
+            print("No Internet")
+            DispatchQueue.main.async {
+                let alertController = UIAlertController(title: "네트워크 연결이 차단 되었습니다.", message: "네트워크 연결 상태를 확인 후\n다시 실행해 주세요.", preferredStyle: .alert)
+                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                    UIAlertAction in
+                    
+                    
+                    print("finish")
+                    exit(0)
+                }
+                alertController.addAction(yesAction)
+                let alertWindow = UIWindow(frame: UIScreen.main.bounds)
+                alertWindow.rootViewController = UIViewController()
+                alertWindow.windowLevel = UIWindowLevelAlert + 1;
+                alertWindow.makeKeyAndVisible()
+                alertWindow.rootViewController?.present(alertController, animated: true, completion: nil)
+                
+            }
+        }
     }
 
     func applicationWillTerminate(_ application: UIApplication) {

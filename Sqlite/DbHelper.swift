@@ -371,6 +371,56 @@ class DbHelper{
         }
     }
     
+    func googleDrivelistByName(sortBy:sortByEnum, fileNm:String) -> [App.DriveFileStruct] {
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleDriveFileList").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        
+        self.DriveFileArray.removeAll()
+        var tableOrder = self.googleDriveFileListTable.order()
+        do {
+            switch sortBy {
+            case .asc:
+                tableOrder = self.googleDriveFileListTable.order(name.asc)
+                break
+            case .desc:
+                tableOrder = self.googleDriveFileListTable.order(name.desc)
+                break
+            case .none:
+                tableOrder = self.googleDriveFileListTable.order()
+            }
+            let devices = try database.prepare(tableOrder)
+            for device in devices {
+                //                print("table data: id : \(device[id]), deviceData : \(device)")
+                let fileId = "\(device[self.fileId])"
+                let kind = "\(device[self.kind])"
+                let mimeType = "\(device[self.mimeType])"
+                let name = "\(device[self.name])"
+                let createdTime = "\(device[self.createdTime])"
+                let modifiedTime = "\(device[self.modifiedTime])"
+                let parents = "\(device[self.parents])"
+                let fileExtension = "\(device[self.fileExtension])"
+                let foldrWholePath = "\(device[self.foldrWholePath])"
+                let size = device[self.size]
+                if(name.contains(fileNm)){
+                    let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath)
+                    DriveFileArray.append(deviceStruct)
+                }
+                
+            }
+            
+            return DriveFileArray
+        }catch{
+            print(error)
+            return DriveFileArray
+            
+        }
+    }
     
     func googleEmailToSqlite(getEmail: String, getAccessToken:String, getTime:String){
         do {

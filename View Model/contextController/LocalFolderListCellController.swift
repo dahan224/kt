@@ -39,7 +39,7 @@ class LocalFolderListCellController {
         return cell
     }
     
-    func LocalFolderContextMenuCalled(cell:LocalFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
+    func LocalFolderContextMenuCalled(cell:LocalFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String, containerView:ContainerViewController){
         dv = deviceView
         let fileNm = folderArray[indexPath.row].fileNm
         let etsionNm = folderArray[indexPath.row].etsionNm
@@ -62,6 +62,11 @@ class LocalFolderListCellController {
             
         case cell.btnGDrive:
             dv?.showLocalFolderOption(tag: sender.tag)
+             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"fromFoldrId":String(foldrId)]
+            print("fileDict : \(fileDict)")
+            
+            containerView.googleSignInSegueState = .loginForSend
+            containerView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
             //            self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
             //            showOptionMenu(sender: sender, style: 0)
             break
@@ -76,7 +81,7 @@ class LocalFolderListCellController {
                 let pathForRemove:String = FileUtil().getFilePath(fileNm: foldrNm, amdDate: amdDate)
                     print("pathForRemove : \(pathForRemove)")
                 FileUtil().removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync(view: "")
+                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

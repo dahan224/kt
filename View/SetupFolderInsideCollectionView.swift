@@ -10,32 +10,39 @@ import UIKit
 
 class SetupFolderInsideCollectionView {
     
-    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton){
-        
+    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton, lblSubNav:UILabel) {
         
         for view in searchView.subviews {
             view.removeFromSuperview()
         }
         
-        let label = UILabel()
-        searchView.addSubview(label)
+        //let label = UILabel()
+        searchView.addSubview(lblSubNav)
         searchView.addSubview(sortButton)
         searchView.addSubview(searchButton)
         searchView.addSubview(multiButton)
         searchView.addSubview(localRefreshButton)
         searchView.addSubview(selectAllButton)
         
+        lblSubNav.translatesAutoresizingMaskIntoConstraints = false
+        lblSubNav.widthAnchor.constraint(equalToConstant: 200.0).isActive = true
+        lblSubNav.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        lblSubNav.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+        lblSubNav.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
         
-        label.textAlignment = .left
-        label.text = ">GiGA NAS"
-        label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
-        label.translatesAutoresizingMaskIntoConstraints = false
-        label.widthAnchor.constraint(equalToConstant: 200.0).isActive = true
-        label.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        label.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
-        label.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
-        
-        
+        /*
+         label.textAlignment = .left
+         label.text = ">GiGA NAS"
+         label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
+         label.translatesAutoresizingMaskIntoConstraints = false
+         label.widthAnchor.constraint(equalToConstant: 200.0).isActive = true
+         label.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+         label.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+         label.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
+         let tap = UITapGestureRecognizer(target: self, action: #selector(HomeViewController.subNavClikcked(gestureRecognizer:)))
+         label.isUserInteractionEnabled = true
+         label.addGestureRecognizer(tap)
+         */
         
         searchButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         searchButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
@@ -48,15 +55,15 @@ class SetupFolderInsideCollectionView {
         sortButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         sortButton.trailingAnchor.constraint(equalTo: searchButton.leadingAnchor, constant: -5.0).isActive = true
         
-//        if(listStyle == .list) {
-            multiButton.isHidden = false
-            multiButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
-            multiButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-            multiButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
-            multiButton.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -5.0).isActive = true
-//        } else {
-//            multiButton.isHidden = true
-//        }
+        //        if(listStyle == .list) {
+        multiButton.isHidden = false
+        multiButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
+        multiButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        multiButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+        multiButton.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -5.0).isActive = true
+        //        } else {
+        //            multiButton.isHidden = true
+        //        }
         
         
         localRefreshButton.translatesAutoresizingMaskIntoConstraints = false
@@ -83,7 +90,7 @@ class SetupFolderInsideCollectionView {
             localRefreshButton.isHidden = true
             selectAllButton.isHidden = true
         }
-       
+        
         
         for view in customNavBar.subviews {
             view.removeFromSuperview()
@@ -106,9 +113,10 @@ class SetupFolderInsideCollectionView {
         navBarTitle.widthAnchor.constraint(equalToConstant: 150.0).isActive = true
         navBarTitle.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         navBarTitle.centerYAnchor.constraint(equalTo: customNavBar.centerYAnchor).isActive = true
-        navBarTitle.centerXAnchor.constraint(equalTo: customNavBar.centerXAnchor).isActive = true      
-        label.text = "> \(getFolerName)"
+        navBarTitle.centerXAnchor.constraint(equalTo: customNavBar.centerXAnchor).isActive = true
+        
+        lblSubNav.text = "\(getFolerName)"
         navBarTitle.setTitle(getDeviceName, for: .normal)
-  
+        
     }
 }

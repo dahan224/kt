@@ -11,9 +11,12 @@ import SwiftyJSON
 import Alamofire
 
 class ContextMenuWork {
+    var upFoldersToDelete = ""
     var folderIdsToDownLoad:[Int] = []
+    var folderIdsToUp:[Int] = []
     var folderPathToDownLoad:[String] = []
     var fileArrayToDownload:[App.FolderStruct] = []
+    var foldersToDownLoad:[App.FolderStruct] = []
     var loginCookie = UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     var loginToken = UserDefaults.standard.string(forKey: "token") ?? "nil"
     var jsonHeader:[String:String] = [
@@ -26,8 +29,11 @@ class ContextMenuWork {
     var selectedDevUuid = ""
     var selectedUserId = ""
     var selectedDeviceName = ""
+    var rootFolderId = 0
+    var rootFoldrWholePathNm = ""
+    var upUpFolderId = 0
+    var request: Alamofire.Request?
     
-      
     func login(userId:String, password:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId,"password":password]
@@ -195,7 +201,7 @@ class ContextMenuWork {
             return (documentsURL, [.removePreviousFile])
         }
         
-        Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
+        request = Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
             .downloadProgress(closure: { (progress) in
                 print("download progress : \(progress.fractionCompleted)")
 //                 completionHandler(progress.fractionCompleted, nil)
@@ -217,6 +223,10 @@ class ContextMenuWork {
         }
     }
     
+    func cancelAamofire(){
+        self.request?.cancel()
+        print("canceld")
+    }
     
     func downloadFromNasToExcute(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
@@ -277,25 +287,29 @@ class ContextMenuWork {
         print("stringUrl : \(stringUrl)")
         var saveFileNm = ""
         saveFileNm = fileNm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        let fullNameArr = path.components(separatedBy: "/")
-        var folderName = ""
-        for (index, name) in fullNameArr.enumerated() {
-            print("name : \(name), index : \(index)")
-            if(1 < index && index < fullNameArr.count ){
-                folderName += "/\(fullNameArr[index])"
-            }
-        }
+        let fullPath = path
+        
+        let editPath = fullPath.replacingOccurrences(of: upFoldersToDelete, with: "")
+//        let fullNameArr = editPath.components(separatedBy: "/")
+//        var folderName = ""
+//        for (index, name) in fullNameArr.enumerated() {
+//            print("name : \(name), index : \(index)")
+//            if(1 < index && index < fullNameArr.count ){
+//                folderName += "/\(fullNameArr[index])"
+//            }
+//        }
+        print("file save folder : \(editPath), upFoldersToDelete: \(upFoldersToDelete)")
         let downloadUrl:URL = URL(string: stringUrl)!
         let destination: DownloadRequest.DownloadFileDestination = { _, _ in
             var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            documentsURL.appendPathComponent("\(folderName)/\(saveFileNm)")
+            documentsURL.appendPathComponent("\(editPath)/\(saveFileNm)")
             return (documentsURL, [.removePreviousFile])
         }
         
         Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
             .downloadProgress(closure: { (progress) in
                 print("download progress : \(progress.fractionCompleted)")
-                //                 completionHandler(progress.fractionCompleted, nil)
+                //                 completionHandler(progress.fractionCoprintmpleted, nil)
             })
             .response { response in
                 print("response : \(response)")
@@ -551,79 +565,99 @@ class ContextMenuWork {
     ///NAS 폴더 다운로드 시작
     
     
-    func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String){
+    
+    func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String){
         NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         selectedUserId = userId
         selectedDevUuid = devUuid
         selectedDeviceName = deviceName
-        
+        rootFolderId = foldrId
+        rootFoldrWholePathNm = foldrWholePathNm
         folderIdsToDownLoad.removeAll()
         folderPathToDownLoad.removeAll()
         fileArrayToDownload.removeAll()
+        foldersToDownLoad.removeAll()
+        folderIdsToUp.removeAll()
         print("call from downloadFolderFromNas")
-        getFolderIdsToDownload(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:selectedDevUuid,deviceName:deviceName)
+        print("foldrWholePathNm : \(foldrWholePathNm), dwldFoldrNm: \(dwldFoldrNm)")
+        folderIdsToDownLoad.append(foldrId)
+        folderPathToDownLoad.append(foldrWholePathNm)
+        folderIdsToUp.append(foldrId)
+        
+        getFolderIdsToDownload(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:selectedDevUuid,deviceName:deviceName, dwldFoldrNm:dwldFoldrNm)
+//        callGetFolderIdsToDownload(getArray: folderIdsToDownLoad, userId:userId, devUuid:selectedDevUuid,deviceName:deviceName, dwldFoldrNm:dwldFoldrNm)
     }
     
+    func callGetFolderIdsToDownload(getArray:[Int], userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String) {
+        
+        for id in getArray {
+            self.getFolderIdsToDownload(foldrId: id, foldrWholePathNm: rootFoldrWholePathNm, userId:userId, devUuid:selectedDevUuid,deviceName:deviceName, dwldFoldrNm:dwldFoldrNm)
+            return
+        }
+        
+    }
     
-    
-    func getFolderIdsToDownload(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String) {
-        print("get folders")
-        folderIdsToDownLoad.append(foldrId)
-        print("folderIdsToDownLoad : \(folderIdsToDownLoad)")
-        folderPathToDownLoad.append(foldrWholePathNm)
+    func getFolderIdsToDownload(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String) {
         var foldrLevel = 0
         var param = ["userId": userId, "devUuid":devUuid, "foldrId":String(foldrId),"sortBy":""]
         print("param : \(param)")
-        GetListFromServer().showInsideFoldrList(params: param, deviceName:selectedDeviceName) { responseObject, error in
+        GetListFromServer().getMobileFoldrLIst(devUuid:devUuid, userId:userId, deviceName: deviceName) { responseObject, error in
+//        GetListFromServer().showInsideFoldrList(params: param, deviceName: deviceName) { responseObject, error in
             let json = JSON(responseObject!)
             if(json["listData"].exists()){
                 let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
-                print("download serverList :\(serverList)")
+//                print("download serverList :\(serverList)")
+                var tempArray:[App.FolderStruct] = []
                 if (serverList.count > 0){
-                    for list in serverList{
-                        let folder = App.FolderStruct(data: list as AnyObject)
+                    for list in serverList {
                         
-                        if (self.folderIdsToDownLoad.contains(folder.foldrId)){
-                            print("first return called")
-                            return
-                        } else {
-                            print("folder : \(folder.foldrId)")
-                            self.folderIdsToDownLoad.append(folder.foldrId)
-                            self.folderPathToDownLoad.append(folder.foldrWholePathNm)
-                            foldrLevel = list["foldrLevel"] as? Int ?? 0
-                            if(foldrLevel > 0){
-                                print("second return called")
-                                self.getFolderIdsToDownload(foldrId: folder.foldrId, foldrWholePathNm: folder.foldrWholePathNm, userId: self.selectedUserId, devUuid: self.selectedDevUuid, deviceName: self.selectedDeviceName)
-                                return
-                            }
+                        let folderPath = list["foldrWholePathNm"] as? String ?? "nil"
+                        let foldrId = list["foldrId"] as? Int ?? 0
+                        if(folderPath.contains(foldrWholePathNm)){
+                                print("list : \(list)")
+                            self.folderIdsToDownLoad.append(foldrId)
+                            self.folderPathToDownLoad.append(folderPath)
                         }
+
                     }
                 }
-                self.printFolderPath()
+                
+                self.printFolderPath(dwldFoldrNm:dwldFoldrNm)
             }
         }
-        
-        
     }
-    
-    func printFolderPath(){
-        print("folderPathToDownLoad: \(folderPathToDownLoad)")
-        print("folderIdsToDownLoad: \(folderIdsToDownLoad)")
+        
+ 
+    func printFolderPath(dwldFoldrNm:String){
+        print("folderPathToDownLoad: \(folderPathToDownLoad.count)")
+        print("folderIdsToDownLoad: \(folderIdsToDownLoad.count)")
+        print("printFolderPath called")
+        let saveRootFoldrArray = folderPathToDownLoad[0].components(separatedBy: "/")
+        upFoldersToDelete = ""
+        for (index, name) in saveRootFoldrArray.enumerated() {
+            if(0 < index && index < saveRootFoldrArray.count - 1){
+                upFoldersToDelete += "/\(saveRootFoldrArray[index])"
+            }
+        }
+        print("upFoldersToDelete : \(upFoldersToDelete)")
         var localPathArray:[URL] = []
         for name in folderPathToDownLoad {
-            let fullNameArr = name.components(separatedBy: "/")
-            var folderName = ""
-            for (index, name) in fullNameArr.enumerated() {
-                print("name : \(name), index : \(index)")
-                if(1 < index && index < fullNameArr.count ){
-                    folderName += "/\(fullNameArr[index])"
-                }
-            }
-            print("folderName : \(folderName)")
-            let createdPath:URL = self.createLocalFolder(folderName: folderName)!
+            let fullName = name.replacingOccurrences(of: upFoldersToDelete, with: "")
+            print("fullName : \(fullName)")
+//            let fullNameArr = fullName.components(separatedBy: "/")
+//            var folderName = ""
+//            for (index, name) in fullNameArr.enumerated() {
+//                print("name : \(name), index : \(index)")
+//                let startIndex = fullNameArr.index(of: dwldFoldrNm)
+//                if(startIndex! < index && index < fullNameArr.count ){
+//                    folderName += "/\(fullNameArr[index])"
+//                }
+//            }
+//            print("folderName : \(folderName)")
+            let createdPath:URL = self.createLocalFolder(folderName: fullName)!
             localPathArray.append(createdPath)
         }
-        
+
         getFilesFromFolder()
         
         
@@ -651,43 +685,49 @@ class ContextMenuWork {
     func getFilesFromFolder(){
         print("folderIdsToDownLoad.count:  \(folderIdsToDownLoad.count)")
         if(folderIdsToDownLoad.count > 0){
-            let index = folderIdsToDownLoad.count - 1
-            if(index > -1){
-                let stringFolderId = String(folderIdsToDownLoad[index])
-                getFileListToDownload(userId: userId, devUuid: selectedDevUuid, foldrId: stringFolderId, index:index)
-                return
+            let lastIndex = folderIdsToDownLoad.count - 1
+            print("lastIndex : \(lastIndex)")
+            if(lastIndex > -1){
+                let stringFolderId = String(folderIdsToDownLoad[lastIndex])
+                getFileListToDownload(userId: userId, devUuid: selectedDevUuid, foldrId: stringFolderId, lastIndex:lastIndex)
+                
             }
+            return
         }
         self.downloadFile()
-        print("file download start")
+        print("file download start : \(fileArrayToDownload.count)")
+        
         
     }
     
-    func getFileListToDownload(userId: String, devUuid: String, foldrId: String, index:Int){
+    func getFileListToDownload(userId: String, devUuid: String, foldrId: String, lastIndex:Int){
         let param:[String : Any] = ["userId": selectedUserId, "devUuid":selectedDevUuid, "foldrId":foldrId,"page":1,"sortBy":""]
         print("param : \(param)")
+        print("count : \(self.folderIdsToDownLoad.count), lastIndex: \(lastIndex)")
         GetListFromServer().getFileList(params: param){ responseObject, error in
             let json = JSON(responseObject!)
             //            let message = responseObject?.object(forKey: "message")
             if(json["listData"].exists()){
                 let listData = json["listData"]
-                //                print("getFileListToDownloadlistData : \(listData)")
+                print("getFileListToDownloadlistData : \(listData)")
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                 for list in serverList{
                     let folder = App.FolderStruct(data: list as AnyObject)
                     self.fileArrayToDownload.append(folder)
+                   
                 }
+                
+                self.folderIdsToDownLoad.remove(at: lastIndex)
+                self.getFilesFromFolder()
+                return
             }
-            self.folderIdsToDownLoad.remove(at: index)
-            self.getFilesFromFolder()
+            
         }
-        
-        
     }
     
     func downloadFile(){
-        print("fileArrayToDownload : \(fileArrayToDownload)")
-        for file in fileArrayToDownload{
+        print("fileArrayToDownload : \(fileArrayToDownload.count)")
+        for file in fileArrayToDownload {
             print("download file : \(file)")
         }
         if(fileArrayToDownload.count > 0){
@@ -699,7 +739,7 @@ class ContextMenuWork {
                 callDownloadFromNasFolder(name: downFileName, path: downPath, fileId: downId, index:index)
                 return
             }
-            
+
         }
         self.finishDownload()
     }
@@ -708,7 +748,8 @@ class ContextMenuWork {
     
     
     func callDownloadFromNasFolder(name:String, path:String, fileId:String, index:Int){
-        ContextMenuWork().downloadFromNasFolder(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+        print("upFoldersToDelete : \(upFoldersToDelete)")
+        downloadFromNasFolder(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
                 if(success == "success"){

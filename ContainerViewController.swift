@@ -16,6 +16,7 @@ import BEMCheckBox
 class ContainerViewController: UIViewController,UITableViewDelegate, UITableViewDataSource, GIDSignInDelegate, GIDSignInUIDelegate {
     
     var homeViewController:HomeViewController?
+    var contextMenuWork:ContextMenuWork?
     var latelyUpdatedFileViewController:LatelyUpdatedFileViewController?
     let g = DispatchGroup()
     let q1 = DispatchQueue(label: "queue1")
@@ -45,10 +46,11 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     
     var multiCheckedfolderArray:[App.FolderStruct] = []
+    var gDriveMultiCheckedfolderArray:[App.DriveFileStruct] = []
     let halfBlackView:UIView = {
         let view = UIView()
         view.backgroundColor = UIColor.black
-        view.alpha = 0.5
+//        view.alpha = 0.5
         view.translatesAutoresizingMaskIntoConstraints = false
         return view;
     }()
@@ -327,6 +329,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 vc.fromFoldr = fromFoldr
                 vc.fromFoldrId = fromFoldrId
                 vc.multiCheckedfolderArray = multiCheckedfolderArray
+                vc.gDriveMultiCheckedfolderArray = gDriveMultiCheckedfolderArray
                 vc.mimeType = mimeType
             }
             
@@ -381,6 +384,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        
+        
         let alertController = UIAlertController(title: "Google Drive에 로그인\n하시겠습니까?",message: "", preferredStyle: UIAlertControllerStyle.alert)
         
         let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
@@ -573,7 +578,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         let userDefaults = UserDefaults.standard
         let dict = UserDefaults.standard.dictionaryRepresentation()
         for key in dict.keys {
-            if key == "GID_AppHasRunBefore" || key == "token" || key == "cookie" || key == "userId" || key == "autoLoginCheck" || key == "userId" || key == "userPassword" || key == "googleDriveLoginState" {
+            if key == "GID_AppHasRunBefore" || key == "token" || key == "cookie" || key == "userId" || key == "autoLoginCheck" || key == "userId" || key == "userPassword" || key == "googleDriveLoginState" || key == "idSaveCheck"{
                 continue
             }
             userDefaults.removeObject(forKey: key);
@@ -830,6 +835,9 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                         self.homeViewController?.homeViewToggleIndicator()
                                     }
                                     let cellStyle = ["cellStyle":3]
+                                      let folderName = ["folderName":"Google Drive","deviceName":"Google Drive", "devUuid":"googleDrive"]
+                                    NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
+
                                     NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self, userInfo: cellStyle)
 //                                     0eun - end
                                 } else {
@@ -963,16 +971,52 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         self.fromDevUuid = fromDevUuid
         
         performSegue(withIdentifier: "nasFolderSelectSegue", sender: self)
-        //파일
-      
-//        let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
-//
-//        NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-//        //폴더
-//        let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
-//
+    }
+    func getGDriveMultiFolderArray(getArray:[App.DriveFileStruct], toStorage:String, fromUserId:String, fromOsCd:String,fromDevUuid:String){
+        print("getArray : \(getArray)")
+        gDriveMultiCheckedfolderArray = getArray
+        storageKind = .gdrive_nas_multi
+        self.fromOsCd = fromOsCd
+        self.fromUserId = fromUserId
+        self.fromDevUuid = fromDevUuid
+        
+        performSegue(withIdentifier: "nasFolderSelectSegue", sender: self)
+    }
+    
+    func showHalfBlackView(getContextMenuWork:ContextMenuWork){
+        view.addSubview(self.halfBlackView)
+        contextMenuWork = getContextMenuWork
+        halfBlackView.alpha = 0.3
+        halfBlackView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        tapGesture = UITapGestureRecognizer(target: self, action: #selector(finishAlamofire))
+        tapGesture.cancelsTouchesInView = false
+        halfBlackView.addGestureRecognizer(tapGesture)
         
     }
     
+    @objc func finishAlamofire(){
         
+        if(self.homeViewController?.indicatorAnimating)!{
+            self.homeViewController?.homeViewToggleIndicator()
+        }
+        halfBlackView.removeGestureRecognizer(tapGesture)
+        self.halfBlackView.removeFromSuperview()
+        contextMenuWork?.cancelAamofire()
+        
+        let alertController = UIAlertController(title: "작업이 취소되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+            
+        }
+        alertController.addAction(okAction)
+        self.present(alertController,animated: true,completion: nil)
+        
+    }
+    func alamofireCompleted(){
+        halfBlackView.removeGestureRecognizer(tapGesture)
+        self.halfBlackView.removeFromSuperview()
+        contextMenuWork?.cancelAamofire()
+    }
 }

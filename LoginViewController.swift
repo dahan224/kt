@@ -14,8 +14,9 @@ import SwiftyJSON
 
 class LoginViewController: UIViewController, UITextFieldDelegate {
     
-    @IBOutlet weak var checkBox: BEMCheckBox!
+    @IBOutlet weak var autoLoginCheckBox: BEMCheckBox!
     
+    @IBOutlet weak var idSaveCheckBox: BEMCheckBox!
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     var hexToUIColor:HexStringToUIColor = HexStringToUIColor()
@@ -63,12 +64,29 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     var folderSyncFinished = false
     var fileSyncFinished = false
     
-  
+    @IBOutlet weak var idView: UIView! {
+        didSet{
+            idView.layer.borderColor = hexToUIColor.getUIColor(hex: "d1d2d4").cgColor
+            idView.layer.borderWidth = 1.0
+        }
+    }
+    
+    @IBOutlet weak var pwView: UIView!{
+        didSet{
+            pwView.layer.borderColor = hexToUIColor.getUIColor(hex: "d1d2d4").cgColor
+            pwView.layer.borderWidth = 1.0
+        }
+    }
     
     @IBOutlet weak var textFieldId: UITextField!{
         didSet{
+            let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: textFieldId.frame.size.height))
+            textFieldId.leftView = paddingView
+            textFieldId.leftViewMode = .always
             textFieldId.placeholder = "아이디"
-            textFieldId.addBorderBottom(height: 1.0, color: hexToUIColor.getUIColor(hex: "D1D2D4"))
+            textFieldId.layer.borderColor = hexToUIColor.getUIColor(hex: "d1d2d4").cgColor
+            textFieldId.layer.borderWidth = 1.0
+//            textFieldId.addBorderBottom(height: 1.0, color: hexToUIColor.getUIColor(hex: "D1D2D4"))
             textFieldId.addTarget(self,
                                   action: #selector(LoginViewController.textFieldDidChange),
                                   for: .editingDidBegin)
@@ -80,9 +98,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     @IBOutlet weak var textFieldPw: UITextField!{
         didSet{
+            let paddingView = UIView(frame: CGRect(x: 0, y: 0, width: 10, height: textFieldPw.frame.size.height))
+            textFieldPw.leftView = paddingView
+            textFieldPw.leftViewMode = .always
             textFieldPw.placeholder = "비밀번호"
             textFieldPw.isSecureTextEntry = true
-            textFieldPw.addBorderBottom(height: 1.0, color: hexToUIColor.getUIColor(hex: "D1D2D4"))
+            textFieldPw.layer.borderColor = hexToUIColor.getUIColor(hex: "d1d2d4").cgColor
+            textFieldPw.layer.borderWidth = 1.0
             textFieldPw.addTarget(self,
                                   action: #selector(LoginViewController.textFieldDidChange),
                                   for: .editingDidBegin)
@@ -103,6 +125,15 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
     }
     
+    
+    @IBOutlet weak var btnLogin: UIButton! {
+        didSet{
+            btnLogin.layer.borderWidth = 1.0
+            btnLogin.layer.borderColor = hexToUIColor.getUIColor(hex: "ff0000").cgColor
+        }
+    }
+    
+    
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
         for textField in self.view.subviews where textField is UITextField {
             textField.resignFirstResponder()
@@ -122,6 +153,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     override func viewDidLoad() {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
+        
+      
+        
         textFieldId.text = ""
         textFieldPw.text = ""
         UserDefaults.standard.removeObject(forKey: "cookie")
@@ -132,7 +166,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         print("encodedString : \(String(describing: str))")
         
         
-        checkBox.boxType = BEMBoxType.square
+        autoLoginCheckBox.boxType = BEMBoxType.square
+        idSaveCheckBox.boxType = BEMBoxType.square
+        let idSaveChecked =  UserDefaults.standard.bool(forKey: "idSaveCheck")
+        if(idSaveChecked) {
+            textFieldId.text = UserDefaults.standard.string(forKey: "userId")
+            idSaveCheckBox.setOn(true, animated: false)
+        }
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
         view.addGestureRecognizer(tapGesture)
         uuId = Util.getUuid()
@@ -141,10 +182,16 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         print("model :\(deviceModel)")
         
         autoLogin()
+      
     }
     
+    @IBAction func idSaveCheked(_ sender: BEMCheckBox) {
+        let idSaveChecked = autoLoginCheckBox.on
+        let defaults = UserDefaults.standard
+        defaults.set(idSaveChecked, forKey: "idSaveCheck")
+    }
     @IBAction func autoLocinChecked(_ sender: BEMCheckBox) {
-        autoLoginCheck = checkBox.on
+        autoLoginCheck = autoLoginCheckBox.on
         print("autocheck : \(autoLoginCheck)")
         let defaults = UserDefaults.standard
         defaults.set(autoLoginCheck, forKey: "autoLoginCheck")
@@ -154,9 +201,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         autoLoginCheck = UserDefaults.standard.bool(forKey: "autoLoginCheck")
         print("autoLoginCheck : \(autoLoginCheck)")
         if(autoLoginCheck){
-            textFieldId.text = UserDefaults.standard.string(forKey: "userId")
             textFieldPw.text = UserDefaults.standard.string(forKey: "userPassword")
-            checkBox.setOn(true, animated: false)
+            autoLoginCheckBox.setOn(true, animated: false)
             login()
         }
     }
@@ -186,6 +232,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         activityIndicator.startAnimating()
         userId =  UserDefaults.standard.string(forKey: "userId") ?? "nil"
         userPassword =  UserDefaults.standard.string(forKey: "userPassword") ?? "nil"
+        
+        
         loginWarningLabel.isHidden = true
         let urlString = App.URL.server+"login.do"
         let url = URL(string:urlString)
@@ -451,7 +499,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         //        if(self.folderSyncFinished && self.fileSyncFinished){
         self.activityIndicator.stopAnimating()
         self.performSegue(withIdentifier: "LoginSegue", sender: nil)
-        self.dismiss(animated: false, completion: nil)
+//        self.dismiss(animated: false, completion: nil)
         
         //        }
     }

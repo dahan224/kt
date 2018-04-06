@@ -608,5 +608,8 @@ struct App {
             ]
         }
     }
-   
+    struct Color {
+        static let listBorder = "D1D2D4"
+        static let navBorder = "666666"
+    }
 }

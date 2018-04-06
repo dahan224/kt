@@ -1,14 +1,15 @@
 //
-//  LocalFileListCell.swift
+//  LocalFolderListCell.swift
 //  KT
 //
-//  Created by 이다한 on 2018. 3. 12..
+//  Created by 이다한 on 2018. 3. 16..
 //  Copyright © 2018년 이다한. All rights reserved.
 //
 
 import UIKit
 
-class LocalFileListCell: UICollectionViewCell {
+
+class LocalFolderListCell: UICollectionViewCell {
     
     
     var ivSub:UIImageView = {
@@ -112,7 +113,6 @@ class LocalFileListCell: UICollectionViewCell {
     var btnNasTrailingAnchor:NSLayoutConstraint?
     var btnMultiCheckLeadingAnchor:NSLayoutConstraint?
     
-    
     var optionSHowCheck = 0
     var spacing:CGFloat = 0
     
@@ -130,7 +130,12 @@ class LocalFileListCell: UICollectionViewCell {
             
         }
         
+        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
+        view1.layer.masksToBounds = false
+        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
         
+        addSubview(view1)
+
         optionSHowCheck = 0
         btnMultiChecked = false
         backgroundColor = UIColor.white
@@ -141,6 +146,7 @@ class LocalFileListCell: UICollectionViewCell {
         addSubview(btnMultiCheck)
         addSubview(btnOption)
         addSubview(optionView)
+        
         
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
@@ -186,7 +192,7 @@ class LocalFileListCell: UICollectionViewCell {
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: App.Size.screenWidth)
         optionViewTrailingAnchor?.isActive = true
         
-        setupLocalView()
+        setupFoldrView()
         
     }
     required init?(coder aDecoder: NSCoder) {
@@ -196,19 +202,19 @@ class LocalFileListCell: UICollectionViewCell {
     func multiCheck(){
         
     }
+    
     func resetMultiCheck(){
         btnMultiChecked = false
         btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
     }
     
-    @objc func setupLocalView(){
+    @objc func setupFoldrView(){
         for view in optionView.subviews {
             view.removeFromSuperview()
         }
-        
+        optionView.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
         optionView.addSubview(btnOptionRed)
-        optionView.addSubview(btnShow)
-        optionView.addSubview(btnAction)
+        optionView.addSubview(btnDwnld)
         optionView.addSubview(btnNas)
         optionView.addSubview(btnGDrive)
         optionView.addSubview(btnDelete)
@@ -220,27 +226,13 @@ class LocalFileListCell: UICollectionViewCell {
         btnOptionRed.leadingAnchor.constraint(equalTo: optionView.leadingAnchor, constant: 25).isActive = true
         
         
-        btnShow.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
-        btnShow.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        btnShow.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnShowTrailingAnchor = btnShow.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
-        btnShowTrailingAnchor?.isActive = true
-        btnShow.setImage(textToImage(drawText: "속성보기", inImage: UIImage(named: "ico_18dp_contextmenu_info")!.withRenderingMode(.alwaysOriginal)), for: .normal)
-        
-        
-        btnAction.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
-        btnAction.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        btnAction.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnActionTrailingAnchor = btnAction.leadingAnchor.constraint(equalTo: btnShow.trailingAnchor, constant: spacing)
-        btnActionTrailingAnchor?.isActive = true
-        btnAction.setImage(textToImage(drawText: "앱 실행", inImage: UIImage(named: "ico_18dp_contextmenu_app")!.withRenderingMode(.alwaysOriginal)), for: .normal)
-        
         
         btnNas.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnNas.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnNas.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnNasTrailingAnchor =  btnNas.leadingAnchor.constraint(equalTo: btnAction.trailingAnchor, constant: spacing)
+        btnNasTrailingAnchor = btnNas.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
         btnNasTrailingAnchor?.isActive = true
+        
         btnNas.setImage(textToImage2(drawText: "GiGA NAS로\n보내기", inImage: UIImage(named: "ico_18dp_contextmenu_send")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
         
@@ -258,19 +250,21 @@ class LocalFileListCell: UICollectionViewCell {
         
         
         
+        
         print("width: \(optionView.frame.size.width)")
         
+        
     }
-  
+    
     
     
     func optionShow(spacing:CGFloat, style:Int){
         let layoutGuide = contentView.layoutMarginsGuide
         let width = App.Size.optionWidth
-        let spacing = (width - 300) / 5
+        let spacing = (width - 240) / 4
+        
         self.spacing = spacing
         optionViewTrailingAnchor?.isActive = false
-        btnDwnldTrailingAnchor?.isActive = false
         btnNasTrailingAnchor?.isActive = false
         btnShowTrailingAnchor?.isActive = false
         btnActionTrailingAnchor?.isActive = false
@@ -281,28 +275,29 @@ class LocalFileListCell: UICollectionViewCell {
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
         optionViewTrailingAnchor?.isActive = true
         
-       setupLocalView()
+        setupFoldrView()
+        
+        
     }
     
-    
-    @objc func showLocalView(){
+    @objc func showFolderView(){
         let layoutGuide = contentView.layoutMarginsGuide
         let width = App.Size.optionWidth
-        let spacing = (width - 300) / 5
+        let spacing = (width - 240) / 4
         self.spacing = spacing
         optionViewTrailingAnchor?.isActive = false
-        btnDwnldTrailingAnchor?.isActive = false
         btnNasTrailingAnchor?.isActive = false
         btnShowTrailingAnchor?.isActive = false
         btnActionTrailingAnchor?.isActive = false
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
         optionViewTrailingAnchor?.isActive = true
         
-        setupLocalView()
+        setupFoldrView()
         
         
         
     }
+    
     func optionHide(){
         let layoutGuide = contentView.layoutMarginsGuide
         optionViewTrailingAnchor?.isActive = false
@@ -368,4 +363,5 @@ class LocalFileListCell: UICollectionViewCell {
         return newImage!
     }
 }
+
 

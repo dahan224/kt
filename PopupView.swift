@@ -30,8 +30,8 @@ class PopupView: UIView {
     
     var jsonHeader:[String:String] = [
         "Content-Type": "application/json",
-        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
-        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+        "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     ]
     var parentViewController: UIViewController? {
         var parentResponder: UIResponder? = self
@@ -49,7 +49,7 @@ class PopupView: UIView {
     // Only override draw() if you perform custom drawing.
     // An empty implementation adversely affects performance during animation.
     override func draw(_ rect: CGRect) {
-        
+        btnReSend.addTarget(self, action: #selector(fnReSendSms), for: .touchUpInside) // 추가
         lblTop.textColor = HexStringToUIColor().getUIColor(hex: "ffffff")
         lblInfo.text = "- 발송된 인증번호를 유효시간 안에 입력하세요.\n- 인증번호를 입력 후 확인 버튼을 클릭하세요.\n- 인증번호가 수신이 안된 경우 재발송 버튼을 클릭하세요."
         btnReSend.backgroundColor = HexStringToUIColor().getUIColor(hex: "717171")
@@ -122,8 +122,8 @@ class PopupView: UIView {
                                             case .failure(let error):
                                                 NSLog(error.localizedDescription)
                                             }
-                                            
-                                            
+
+                        
                         }
                     }
                 }
@@ -136,6 +136,45 @@ class PopupView: UIView {
         Vc.stopAnimating()
         
         super.removeFromSuperview()
+    }
+    @objc func fnReSendSms() {
+        
+        let userId:String = UserDefaults.standard.string(forKey: "userId")!
+        
+        /*
+         let urlString = App.URL.server+"smsReSend.do"
+         Alamofire.request(urlString,
+         method: .post,
+         parameters: ["userId":userId,"devUuid":uuid],
+         encoding : JSONEncoding.default,
+         headers: jsonHeader).responseJSON{ (response) in
+         switch response.result {
+         case .success(let value):
+         print(value)
+         let json = JSON(value)
+         let responseData = value as! NSDictionary
+         let message = responseData.object(forKey: "message")
+         print("smsAuth message : \(message)")
+         if let statusCode = json["statusCode"].int, statusCode != 100 {
+         
+         } else {
+         if let listData = responseData.object(forKey: "data") as? NSDictionary {
+         self.data = App.smsInfo(sms: listData as! AnyObject)*/
+        let alertView = UIAlertController(title: nil, message: "재발송 되었습니다.", preferredStyle: .alert)
+        let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+        alertView.addAction(confirmAction)
+        UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
+        /*} else {
+         let alertView = UIAlertController(title: nil, message: "실패하였습니다. 다시 시도해주세요.", preferredStyle: .alert)
+         let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+         alertView.addAction(confirmAction)
+         UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
+         }
+         }
+         case .failure(let error):
+         NSLog(error.localizedDescription)
+         }
+         }*/
     }
     
     func startTimer() {

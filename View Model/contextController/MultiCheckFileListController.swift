@@ -14,6 +14,7 @@ class MultiCheckFileListController {
     
     var multiCheckedfolderArray:[App.FolderStruct] = []
     var dv:HomeDeviceCollectionVC?
+    var homeViewController:HomeViewController?
     var nasSendFolderSelectVC:NasSendFolderSelectVC?
     var selectedUserId = ""
     var selectedDevUuid = ""
@@ -24,6 +25,164 @@ class MultiCheckFileListController {
     var folderPathToDownLoad:[String] = []
     var fileArrayToDownload:[App.FolderStruct] = []
     
+    func btnMultiCheckClicked(sender:UIButton, getHomeViewController:HomeViewController, parent:HomeDeviceCollectionVC){
+        homeViewController = getHomeViewController
+        dv = parent
+        let buttonRow = sender.tag
+        let indexPath = IndexPath(row: buttonRow, section: 0)
+        //        print("superview : \(sender.superview?.superview)")
+        if let cell = sender.superview as? NasFileListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = sender.superview as? NasFolderListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = sender.superview as? CollectionViewGridCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = sender.superview as? RemoteFileListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = sender.superview as? LocalFileListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = sender.superview as? LocalFolderListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = sender.superview as? GDriveFolderListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = sender.superview as? GDriveFileListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        }
+    }
+    
+    func cellMultiCheckClicked(indexPath:IndexPath, parent:HomeDeviceCollectionVC, deviceCollectionView:UICollectionView){
+        dv = parent
+        
+        if let cell = deviceCollectionView.cellForItem(at: indexPath) as? NasFileListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? NasFolderListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? CollectionViewGridCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? RemoteFileListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? LocalFileListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? LocalFolderListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? GDriveFileListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        } else if let cell = deviceCollectionView.cellForItem(at: indexPath) as? GDriveFolderListCell {
+            if(cell.btnMultiChecked){
+                cell.btnMultiChecked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            dv?.multiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked)
+        }
+    }
     
     func callDwonLoad(getFolderArray:[App.FolderStruct], parent:HomeDeviceCollectionVC, devUuid:String, deviceName:String){
         dv = parent
@@ -49,7 +208,7 @@ class MultiCheckFileListController {
             return
         }
         
-        SyncLocalFilleToNas().sync(view: "")
+        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
         DispatchQueue.main.async {
             let alertController = UIAlertController(title: nil, message: "다운로드를 성공하였습니다.", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
@@ -294,7 +453,7 @@ class MultiCheckFileListController {
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
                 UIAlertAction in
                 NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                NotificationCenter.default.post(name: Notification.Name("btnMulticlicked"), object: self, userInfo: nil)
+//                NotificationCenter.default.post(name: Notification.Name("btnMulticlicked"), object: self, userInfo: nil)
                 let fileDict = ["foldrId":self.selectedDevFoldrId]
                 print("delete filedict : \(fileDict)")
                 NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo: fileDict)
@@ -548,12 +707,11 @@ class MultiCheckFileListController {
             return
         }
         DispatchQueue.main.async {
-            SyncLocalFilleToNas().sync(view: "")
+            SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
             let alertController = UIAlertController(title: nil, message: "멀티 파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
                 UIAlertAction in
                 NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                NotificationCenter.default.post(name: Notification.Name("btnMulticlicked"), object: self, userInfo: nil)
                 let fileDict = ["foldrId":self.selectedDevFoldrId]
                 print("delete filedict : \(fileDict)")
                 NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo: fileDict)

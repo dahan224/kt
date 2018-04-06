@@ -1,15 +1,14 @@
 //
-//  RemoteFileListCell.swift
+//  GDriveFileListCell.swift
 //  KT
 //
-//  Created by 이다한 on 2018. 3. 14..
+//  Created by 김영은 on 2018. 3. 21..
 //  Copyright © 2018년 이다한. All rights reserved.
 //
 
 import UIKit
 
-class RemoteFileListCell: UICollectionViewCell {
-    
+class GDriveFileListCell: UICollectionViewCell {
     
     var ivSub:UIImageView = {
         let imageView = UIImageView()
@@ -17,8 +16,6 @@ class RemoteFileListCell: UICollectionViewCell {
         return imageView
         
     }()
-    
-    
     
     let lblMain:UILabel = {
         let label = UILabel()
@@ -103,7 +100,7 @@ class RemoteFileListCell: UICollectionViewCell {
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
-    var btnMultiChecked = false
+    var btnMultiChecked = true
     
     var optionViewTrailingAnchor:NSLayoutConstraint?
     var btnDwnldTrailingAnchor:NSLayoutConstraint?
@@ -116,13 +113,13 @@ class RemoteFileListCell: UICollectionViewCell {
     var optionSHowCheck = 0
     var spacing:CGFloat = 0
     
+    
     var contextMenuStyle = HomeDeviceCollectionVC.contextMenuEnum.nas
     
     var deviceShow = false
     
     override init(frame: CGRect) {
         super.init(frame: frame)
-        
         
         optionSHowCheck = 0
         btnMultiChecked = false
@@ -134,6 +131,7 @@ class RemoteFileListCell: UICollectionViewCell {
         addSubview(btnMultiCheck)
         addSubview(btnOption)
         addSubview(optionView)
+        
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
@@ -147,6 +145,7 @@ class RemoteFileListCell: UICollectionViewCell {
         ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 25).isActive = true
         ivSub.widthAnchor.constraint(equalToConstant: 20).isActive = true
         ivSub.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        
         
         
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
@@ -177,7 +176,7 @@ class RemoteFileListCell: UICollectionViewCell {
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: App.Size.screenWidth)
         optionViewTrailingAnchor?.isActive = true
         
-        setupRemoteFileView()
+        setupLocalView()
         
     }
     required init?(coder aDecoder: NSCoder) {
@@ -187,11 +186,9 @@ class RemoteFileListCell: UICollectionViewCell {
     func multiCheck(){
         
     }
-    func resetMultiCheck(){
-        btnMultiChecked = false
-        btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-    }
-    @objc func setupRemoteFileView(){
+    
+    
+    @objc func setupLocalView(){
         for view in optionView.subviews {
             view.removeFromSuperview()
         }
@@ -200,6 +197,8 @@ class RemoteFileListCell: UICollectionViewCell {
         optionView.addSubview(btnShow)
         optionView.addSubview(btnDwnld)
         optionView.addSubview(btnNas)
+        optionView.addSubview(btnGDrive)
+        optionView.addSubview(btnDelete)
         
         
         btnOptionRed.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
@@ -211,38 +210,50 @@ class RemoteFileListCell: UICollectionViewCell {
         btnShow.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnShow.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnShow.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnShow.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing).isActive = true
+        btnShowTrailingAnchor = btnShow.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
+        btnShowTrailingAnchor?.isActive = true
         btnShow.setImage(textToImage(drawText: "속성보기", inImage: UIImage(named: "ico_18dp_contextmenu_info")!.withRenderingMode(.alwaysOriginal)), for: .normal)
+        
         
         btnDwnld.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnDwnld.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnDwnld.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        
         btnDwnldTrailingAnchor = btnDwnld.leadingAnchor.constraint(equalTo: btnShow.trailingAnchor, constant: spacing)
         btnDwnldTrailingAnchor?.isActive = true
-        
         btnDwnld.setImage(textToImage(drawText: "다운로드", inImage: UIImage(named: "ico_18dp_contextmenu_dwld")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
         btnNas.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnNas.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnNas.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        
         btnNasTrailingAnchor = btnNas.leadingAnchor.constraint(equalTo: btnDwnld.trailingAnchor, constant: spacing)
         btnNasTrailingAnchor?.isActive = true
-        
         btnNas.setImage(textToImage2(drawText: "GiGA NAS로\n보내기", inImage: UIImage(named: "ico_18dp_contextmenu_send")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
         
-      
+        btnGDrive.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
+        btnGDrive.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        btnGDrive.heightAnchor.constraint(equalToConstant:  70).isActive = true
+        btnGDrive.leadingAnchor.constraint(equalTo: btnNas.trailingAnchor, constant: spacing).isActive = true
+        btnGDrive.setImage(textToImage2(drawText: "G 드라이브로\n보내기", inImage: UIImage(named: "ico_18dp_contextmenu_send")!.withRenderingMode(.alwaysOriginal)), for: .normal)
+        
+        btnDelete.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
+        btnDelete.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        btnDelete.heightAnchor.constraint(equalToConstant: 70).isActive = true
+        btnDelete.leadingAnchor.constraint(equalTo: btnGDrive.trailingAnchor, constant: spacing).isActive = true
+        btnDelete.setImage(textToImage(drawText: "삭제", inImage: UIImage(named: "ico_18dp_contextmenu_del")!.withRenderingMode(.alwaysOriginal)), for: .normal)
+        
+        
+        
+        print("width: \(optionView.frame.size.width)")
         
     }
+    
     
     
     func optionShow(spacing:CGFloat, style:Int){
         let layoutGuide = contentView.layoutMarginsGuide
         let width = App.Size.optionWidth
-        let spacing = (width - 240) / 4
-        
+        let spacing = (width - 300) / 5
         self.spacing = spacing
         optionViewTrailingAnchor?.isActive = false
         btnDwnldTrailingAnchor?.isActive = false
@@ -256,10 +267,8 @@ class RemoteFileListCell: UICollectionViewCell {
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
         optionViewTrailingAnchor?.isActive = true
         
-        setupRemoteFileView()
+        setupLocalView()
     }
-    
-    
     
     func optionHide(){
         let layoutGuide = contentView.layoutMarginsGuide
@@ -326,5 +335,3 @@ class RemoteFileListCell: UICollectionViewCell {
         return newImage!
     }
 }
-
-

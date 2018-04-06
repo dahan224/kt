@@ -1,5 +1,5 @@
 //
-//  NasFolderListCell.swift
+//  NasFileListCell.swift
 //  KT
 //
 //  Created by 이다한 on 2018. 3. 11..
@@ -8,7 +8,7 @@
 
 import UIKit
 
-class NasFolderListCell: UICollectionViewCell {
+class NasFileListCell: UICollectionViewCell {
     
     
     var ivSub:UIImageView = {
@@ -122,17 +122,17 @@ class NasFolderListCell: UICollectionViewCell {
     override init(frame: CGRect) {
         super.init(frame: frame)
         
-        if(subviews.contains(ivSub)){
-            for view in subviews{
-                view.removeFromSuperview()
-            }
-            
-        }
-        
         
         optionSHowCheck = 0
         btnMultiChecked = false
         backgroundColor = UIColor.white
+        
+        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
+        view1.layer.masksToBounds = false
+        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
+        
+        addSubview(view1)
+
         addSubview(ivSub)
         addSubview(lblMain)
         addSubview(lblSub)
@@ -140,6 +140,7 @@ class NasFolderListCell: UICollectionViewCell {
         addSubview(btnMultiCheck)
         addSubview(btnOption)
         addSubview(optionView)
+        
         
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
@@ -155,9 +156,11 @@ class NasFolderListCell: UICollectionViewCell {
         ivSub.widthAnchor.constraint(equalToConstant: 20).isActive = true
         ivSub.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
+        
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true        
+        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
+        
         
         lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
         lblSub.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
@@ -182,7 +185,7 @@ class NasFolderListCell: UICollectionViewCell {
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: App.Size.screenWidth)
         optionViewTrailingAnchor?.isActive = true
         
-        setupFoldrView()
+        setupNasView()
         
     }
     required init?(coder aDecoder: NSCoder) {
@@ -197,13 +200,14 @@ class NasFolderListCell: UICollectionViewCell {
         btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
     }
     
-
-    @objc func setupFoldrView(){
+    
+    @objc func setupNasView(){
         for view in optionView.subviews {
             view.removeFromSuperview()
         }
-        
+        optionView.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
         optionView.addSubview(btnOptionRed)
+        optionView.addSubview(btnShow)
         optionView.addSubview(btnDwnld)
         optionView.addSubview(btnNas)
         optionView.addSubview(btnGDrive)
@@ -216,19 +220,25 @@ class NasFolderListCell: UICollectionViewCell {
         btnOptionRed.leadingAnchor.constraint(equalTo: optionView.leadingAnchor, constant: 25).isActive = true
         
         
+        btnShow.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
+        btnShow.widthAnchor.constraint(equalToConstant: 60).isActive = true
+        btnShow.heightAnchor.constraint(equalToConstant:  70).isActive = true
+        btnShow.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing).isActive = true
+        btnShow.setImage(textToImage(drawText: "속성보기", inImage: UIImage(named: "ico_18dp_contextmenu_info")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
         btnDwnld.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnDwnld.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnDwnld.heightAnchor.constraint(equalToConstant:  70).isActive = true
         
-        
-        btnDwnldTrailingAnchor = btnDwnld.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
+        btnDwnldTrailingAnchor = btnDwnld.leadingAnchor.constraint(equalTo: btnShow.trailingAnchor, constant: spacing)
         btnDwnldTrailingAnchor?.isActive = true
+        
         btnDwnld.setImage(textToImage(drawText: "다운로드", inImage: UIImage(named: "ico_18dp_contextmenu_dwld")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
         btnNas.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnNas.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnNas.heightAnchor.constraint(equalToConstant:  70).isActive = true
+        
         btnNasTrailingAnchor = btnNas.leadingAnchor.constraint(equalTo: btnDwnld.trailingAnchor, constant: spacing)
         btnNasTrailingAnchor?.isActive = true
         
@@ -247,21 +257,13 @@ class NasFolderListCell: UICollectionViewCell {
         btnDelete.leadingAnchor.constraint(equalTo: btnGDrive.trailingAnchor, constant: spacing).isActive = true
         btnDelete.setImage(textToImage(drawText: "삭제", inImage: UIImage(named: "ico_18dp_contextmenu_del")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
-        
-        
-        
-        print("width: \(optionView.frame.size.width)")
-        
+        //        optionView.isHidden = true
         
     }
     
-    
-    
+  
     func optionShow(spacing:CGFloat, style:Int){
         let layoutGuide = contentView.layoutMarginsGuide
-        let width = App.Size.optionWidth
-        let spacing = (width - 240) / 4
-        
         self.spacing = spacing
         optionViewTrailingAnchor?.isActive = false
         btnDwnldTrailingAnchor?.isActive = false
@@ -274,30 +276,11 @@ class NasFolderListCell: UICollectionViewCell {
         //        setupNasView()
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
         optionViewTrailingAnchor?.isActive = true
-    
-        setupFoldrView()
-    
         
+       setupNasView()
     }
     
-    @objc func showFolderView(){
-        let layoutGuide = contentView.layoutMarginsGuide
-        let width = App.Size.optionWidth
-        let spacing = (width - 240) / 4
-        self.spacing = spacing
-        optionViewTrailingAnchor?.isActive = false
-        btnDwnldTrailingAnchor?.isActive = false
-        btnNasTrailingAnchor?.isActive = false
-        btnShowTrailingAnchor?.isActive = false
-        btnActionTrailingAnchor?.isActive = false
-        optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
-        optionViewTrailingAnchor?.isActive = true
-        
-        setupFoldrView()
-        
-        
-        
-    }
+  
     
     func optionHide(){
         let layoutGuide = contentView.layoutMarginsGuide

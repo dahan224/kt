@@ -39,7 +39,7 @@ class NasFolderListCellController {
         return cell
     }
     
-    func NasFolderContextMenuCalled(cell:NasFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
+    func NasFolderContextMenuCalled(cell:NasFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String, containerView:ContainerViewController){
         dv = deviceView
         let fileNm = folderArray[indexPath.row].fileNm
         let etsionNm = folderArray[indexPath.row].etsionNm
@@ -48,15 +48,18 @@ class NasFolderListCellController {
         let fileId = String(folderArray[indexPath.row].fileId)
         let foldrId = folderArray[indexPath.row].foldrId
         let upFoldrId = folderArray[indexPath.row].upFoldrId
+        let foldrNm = folderArray[indexPath.row].foldrNm
         print("foldrId : \(foldrId)")
         
         switch sender {
         case cell.btnDwnld:
+            
             self.dv?.showNasFolderOption(tag: sender.tag)
+            
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 다운로드 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
-                ContextMenuWork().downloadFolderFromNas(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:currentDevUuid, deviceName:deviceName)
+                ContextMenuWork().downloadFolderFromNas(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:currentDevUuid, deviceName:deviceName, dwldFoldrNm:foldrNm)
                 
                 }
             let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
@@ -66,6 +69,7 @@ class NasFolderListCellController {
             break
         case cell.btnNas:
             self.dv?.showNasFolderOption(tag: sender.tag)
+            
             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
             
             print("fileDict : \(fileDict)")
@@ -75,8 +79,14 @@ class NasFolderListCellController {
             
         case cell.btnGDrive:
             self.dv?.showNasFolderOption(tag: sender.tag)
-//            self.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
-//            showOptionMenu(sender: sender, style: 0)
+       
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
+            
+            print("fileDict : \(fileDict)")
+            
+            //                deviceView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
+            containerView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
+            
             break
         case cell.btnDelete:
             self.dv?.showNasFolderOption(tag: sender.tag)
@@ -133,18 +143,5 @@ class NasFolderListCellController {
             print("Ooops! Something went wrong: \(error)")
         }
     }
-    
-    @objc func btnMultiCheckClicked(sender:UIButton){
-        let buttonRow = sender.tag
-        let indexPath = IndexPath(row: buttonRow, section: 0)
-        print(sender.superview)
-        let cell = cv?.cellForItem(at: indexPath) as! NasFolderListCell
-        if(cell.btnMultiChecked){
-            cell.btnMultiChecked = false
-            cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-        } else {
-            cell.btnMultiChecked = true
-            cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-        }
-    }
+   
 }

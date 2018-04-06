@@ -69,7 +69,7 @@ class NasFileCellController {
         case cell.btnShow:
             dv?.showNasFileOption(tag: sender.tag)
             print("nas btnShow clicked")
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
             

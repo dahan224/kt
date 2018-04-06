@@ -12,7 +12,7 @@ import SwiftyJSON
 
 class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
   
-
+    @IBOutlet weak var lblUserId: UILabel!
     let hexStringToUIColor = HexStringToUIColor()
     
     @IBOutlet weak var collectionViewHeightConstraint: NSLayoutConstraint!
@@ -70,6 +70,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         screenWidth = screenSize.width
         screenHeight = screenSize.height
         
+        UserDefaults.standard.string(forKey: "userId")
         let swipeLeft = UISwipeGestureRecognizer(target: self,
                                                  action: #selector(SlideMenuViewController.swipedLeft))
         swipeLeft.direction = UISwipeGestureRecognizerDirection.left

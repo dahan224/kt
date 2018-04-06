@@ -93,7 +93,54 @@ class GetListFromServer {
                 }
         }
     }
-    
+    func getMobileFoldrLIst(devUuid:String, userId:String, deviceName:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        let filnalUrl = "mobileFoldrList.json"
+        var params:[String:Any] = [String:Any]()
+        params = ["userId":userId,"devUuid":devUuid]
+        Alamofire.request(App.URL.server+filnalUrl
+            , method: .post
+            , parameters:params
+            , encoding : JSONEncoding.default
+            , headers: jsonHeader
+            ).responseJSON { response in
+                
+                switch response.result {
+                case .success(let value):
+                    completionHandler(value as? NSDictionary, nil)
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    completionHandler(nil, error as NSError)
+                    break
+                    
+                }
+        }
+    }
+    func getNasFolderLIst(devUuid:String, userId:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        let filnalUrl = "listNasFoldr.json"
+        var params:[String:Any] = [String:Any]()
+        params = ["userId":userId,"devUuid":devUuid]
+        Alamofire.request(App.URL.server+filnalUrl
+            , method: .post
+            , parameters:params
+            , encoding : JSONEncoding.default
+            , headers: jsonHeader
+            ).responseJSON { response in
+                
+                switch response.result {
+                case .success(let value):
+                    completionHandler(value as? NSDictionary, nil)
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    completionHandler(nil, error as NSError)
+                    break
+                    
+                }
+        }
+    }
     func showInsideFoldrList(params:[String:Any], deviceName:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         let filnalUrl = "listFoldr.json"
         Alamofire.request(App.URL.server+filnalUrl

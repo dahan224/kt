@@ -1,14 +1,15 @@
 //
-//  GDriveFileListCell.swift
+//  NasFolderListCell.swift
 //  KT
 //
-//  Created by 김영은 on 2018. 3. 21..
+//  Created by 이다한 on 2018. 3. 11..
 //  Copyright © 2018년 이다한. All rights reserved.
 //
 
 import UIKit
 
-class GDriveFileListCell: UICollectionViewCell {
+class NasFolderListCell: UICollectionViewCell {
+    
     
     var ivSub:UIImageView = {
         let imageView = UIImageView()
@@ -16,6 +17,8 @@ class GDriveFileListCell: UICollectionViewCell {
         return imageView
         
     }()
+    
+    
     
     let lblMain:UILabel = {
         let label = UILabel()
@@ -100,18 +103,17 @@ class GDriveFileListCell: UICollectionViewCell {
         button.translatesAutoresizingMaskIntoConstraints = false
         return button
     }()
-    var btnMultiChecked = true
+    var btnMultiChecked = false
     
     var optionViewTrailingAnchor:NSLayoutConstraint?
     var btnDwnldTrailingAnchor:NSLayoutConstraint?
     var btnShowTrailingAnchor:NSLayoutConstraint?
     var btnActionTrailingAnchor:NSLayoutConstraint?
     var btnNasTrailingAnchor:NSLayoutConstraint?
-    
+    var btnMultiCheckLeadingAnchor:NSLayoutConstraint?
     
     var optionSHowCheck = 0
     var spacing:CGFloat = 0
-    
     
     var contextMenuStyle = HomeDeviceCollectionVC.contextMenuEnum.nas
     
@@ -119,6 +121,19 @@ class GDriveFileListCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        
+        if(subviews.contains(ivSub)){
+            for view in subviews{
+                view.removeFromSuperview()
+            }
+            
+        }
+        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
+        view1.layer.masksToBounds = false
+        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
+        
+        addSubview(view1)
+
         
         optionSHowCheck = 0
         btnMultiChecked = false
@@ -132,23 +147,22 @@ class GDriveFileListCell: UICollectionViewCell {
         addSubview(optionView)
         
         
+        btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
+        btnMultiCheck.heightAnchor.constraint(equalToConstant:  36).isActive = true
+        btnMultiCheckLeadingAnchor = btnMultiCheck.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 36)
+        btnMultiCheckLeadingAnchor?.isActive = true
+        
+        btnMultiCheck.isHidden = true
+        
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        ivSub.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 25).isActive = true
+        ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 25).isActive = true
         ivSub.widthAnchor.constraint(equalToConstant: 20).isActive = true
         ivSub.heightAnchor.constraint(equalToConstant: 20).isActive = true
         
-        btnMultiCheck.centerYAnchor.constraint(equalTo: ivSub.centerYAnchor).isActive = true
-        btnMultiCheck.widthAnchor.constraint(equalToConstant: 48).isActive = true
-        btnMultiCheck.heightAnchor.constraint(equalToConstant:  48).isActive = true
-        btnMultiCheck.centerXAnchor.constraint(equalTo: ivSub.centerXAnchor).isActive = true
-        btnMultiCheck.isHidden = true
-        
-        
-        
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
-        
+        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true        
         
         lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
         lblSub.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
@@ -173,7 +187,7 @@ class GDriveFileListCell: UICollectionViewCell {
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: App.Size.screenWidth)
         optionViewTrailingAnchor?.isActive = true
         
-        setupLocalView()
+        setupFoldrView()
         
     }
     required init?(coder aDecoder: NSCoder) {
@@ -183,15 +197,18 @@ class GDriveFileListCell: UICollectionViewCell {
     func multiCheck(){
         
     }
+    func resetMultiCheck(){
+        btnMultiChecked = false
+        btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+    }
     
-    
-    @objc func setupLocalView(){
+
+    @objc func setupFoldrView(){
         for view in optionView.subviews {
             view.removeFromSuperview()
         }
-        
+        optionView.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
         optionView.addSubview(btnOptionRed)
-        optionView.addSubview(btnShow)
         optionView.addSubview(btnDwnld)
         optionView.addSubview(btnNas)
         optionView.addSubview(btnGDrive)
@@ -204,18 +221,13 @@ class GDriveFileListCell: UICollectionViewCell {
         btnOptionRed.leadingAnchor.constraint(equalTo: optionView.leadingAnchor, constant: 25).isActive = true
         
         
-        btnShow.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
-        btnShow.widthAnchor.constraint(equalToConstant: 60).isActive = true
-        btnShow.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnShowTrailingAnchor = btnShow.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
-        btnShowTrailingAnchor?.isActive = true
-        btnShow.setImage(textToImage(drawText: "속성보기", inImage: UIImage(named: "ico_18dp_contextmenu_info")!.withRenderingMode(.alwaysOriginal)), for: .normal)
-        
         
         btnDwnld.centerYAnchor.constraint(equalTo: optionView.centerYAnchor).isActive = true
         btnDwnld.widthAnchor.constraint(equalToConstant: 60).isActive = true
         btnDwnld.heightAnchor.constraint(equalToConstant:  70).isActive = true
-        btnDwnldTrailingAnchor = btnDwnld.leadingAnchor.constraint(equalTo: btnShow.trailingAnchor, constant: spacing)
+        
+        
+        btnDwnldTrailingAnchor = btnDwnld.leadingAnchor.constraint(equalTo: btnOptionRed.trailingAnchor, constant: spacing)
         btnDwnldTrailingAnchor?.isActive = true
         btnDwnld.setImage(textToImage(drawText: "다운로드", inImage: UIImage(named: "ico_18dp_contextmenu_dwld")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
@@ -224,6 +236,7 @@ class GDriveFileListCell: UICollectionViewCell {
         btnNas.heightAnchor.constraint(equalToConstant:  70).isActive = true
         btnNasTrailingAnchor = btnNas.leadingAnchor.constraint(equalTo: btnDwnld.trailingAnchor, constant: spacing)
         btnNasTrailingAnchor?.isActive = true
+        
         btnNas.setImage(textToImage2(drawText: "GiGA NAS로\n보내기", inImage: UIImage(named: "ico_18dp_contextmenu_send")!.withRenderingMode(.alwaysOriginal)), for: .normal)
         
         
@@ -241,7 +254,9 @@ class GDriveFileListCell: UICollectionViewCell {
         
         
         
+        
         print("width: \(optionView.frame.size.width)")
+        
         
     }
     
@@ -250,7 +265,8 @@ class GDriveFileListCell: UICollectionViewCell {
     func optionShow(spacing:CGFloat, style:Int){
         let layoutGuide = contentView.layoutMarginsGuide
         let width = App.Size.optionWidth
-        let spacing = (width - 300) / 5
+        let spacing = (width - 240) / 4
+        
         self.spacing = spacing
         optionViewTrailingAnchor?.isActive = false
         btnDwnldTrailingAnchor?.isActive = false
@@ -263,8 +279,29 @@ class GDriveFileListCell: UICollectionViewCell {
         //        setupNasView()
         optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
         optionViewTrailingAnchor?.isActive = true
+    
+        setupFoldrView()
+    
         
-        setupLocalView()
+    }
+    
+    @objc func showFolderView(){
+        let layoutGuide = contentView.layoutMarginsGuide
+        let width = App.Size.optionWidth
+        let spacing = (width - 240) / 4
+        self.spacing = spacing
+        optionViewTrailingAnchor?.isActive = false
+        btnDwnldTrailingAnchor?.isActive = false
+        btnNasTrailingAnchor?.isActive = false
+        btnShowTrailingAnchor?.isActive = false
+        btnActionTrailingAnchor?.isActive = false
+        optionViewTrailingAnchor = optionView.trailingAnchor.constraint(equalTo: layoutGuide.trailingAnchor, constant: 0)
+        optionViewTrailingAnchor?.isActive = true
+        
+        setupFoldrView()
+        
+        
+        
     }
     
     func optionHide(){
@@ -332,3 +369,4 @@ class GDriveFileListCell: UICollectionViewCell {
         return newImage!
     }
 }
+
