@@ -101,6 +101,7 @@ class NasFileListCell: UICollectionViewCell {
         let button = UIButton(type: .custom)
         button.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
+        
         return button
     }()
     var btnMultiChecked = false
@@ -153,13 +154,13 @@ class NasFileListCell: UICollectionViewCell {
         
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 25).isActive = true
-        ivSub.widthAnchor.constraint(equalToConstant: 20).isActive = true
-        ivSub.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        ivSub.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        ivSub.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
+        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -50).isActive = true
         
         
         lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true

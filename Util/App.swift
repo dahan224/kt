@@ -31,7 +31,6 @@ struct App {
     }
     
     struct defaults {
-        static let notificationToken = UserDefaults.standard.string(forKey: "notification_token")!
         static let userId = UserDefaults.standard.string(forKey: "userId")!
        
     }
@@ -167,9 +166,10 @@ struct App {
         var etsionNm:String
         var fileNm:String
         var fileShar:String
-        var fileSize:Int
+        var fileSize:String
         var upFoldrId:Int
         var osCd: String
+        var checked:Bool
         init(data: AnyObject) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
             self.foldrId = data["foldrId"] as? Int ?? 0
@@ -194,10 +194,12 @@ struct App {
             self.etsionNm = data["etsionNm"] as? String ?? "nil"
             self.fileNm = data["fileNm"] as? String ?? "nil"
             self.fileShar = data["fileShar"] as? String ?? "nil"
-            self.fileSize = data["fileSize"] as? Int ?? 0
+            self.fileSize = data["fileSize"] as? String ?? "0"
             self.upFoldrId = data["upFoldrId"] as? Int ?? 0
             self.devNm = data["devNm"] as? String ?? "nil"
             self.osCd = data["osCd"] as? String ?? "nil"
+            self.checked = data["checked"] as? Bool ?? false
+            
         }
         init(data: [String:Any]) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
@@ -213,11 +215,13 @@ struct App {
             self.etsionNm = data["etsionNm"] as? String ?? "nil"
             self.fileNm = data["fileNm"] as? String ?? "nil"
             self.fileShar = data["fileShar"] as? String ?? "nil"
-            self.fileSize = data["fileSize"] as? Int ?? 0
+            self.fileSize = data["fileSize"] as? String ?? "0"
             self.upFoldrId = data["upFoldrId"] as? Int ?? 0
             self.osCd = data["osCd"] as? String ?? "nil"
+            self.checked = data["checked"] as? Bool ?? false
         }
     }
+  
     struct SearchedFileStruct {
         var foldrYn: String
         var userNm: String

@@ -73,10 +73,18 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     }
     var btnArrState:searchCategoryEnum = searchCategoryEnum.start
     
+    
     enum bottomListEnum: String {
         case sort = "sort"
-        case fileInfo = "fileInfo"
+        case nasFileInfo = "nasFileInfo"
+        case localFileInfo = "localFileInfo"
+        case remoteFileInfo = "remoteFileInfo"
+        case bottomMultiListNas = "bottomMultiListNas"
+        case bottomMultiListRemote = "bottomMultiListRemote"
+        case bottomMultiListLocal = "bottomMultiListLocal"
+        case bottomMultiListGDrive = "bottomMultiListGDrive"
         case oneView = "oneView"
+        case googleDrive = "googleDrive"
     }
     
     var ifNavBarClicked = false
@@ -85,7 +93,15 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     var bottomListSort = ["날짜순-최신 항목 우선", "날짜순-오래된 항목 우선","이름순-ㄱ우선","이름순-ㅎ우선","종류순"]
     var bottomListSortKey = ["new", "old","asc","desc","kind"]
     
+    
+    var bottomListLocalFileInfo = ["속성보기", "앱 실행", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     var bottomListFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
+    var bottomListRemoteFileInfo = ["속성보기", "다운로드", "GiGA NAS로 보내기"]
+    var bottomMultiListNas = ["다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
+    var bottomMultiListRemote = ["다운로드", "GiGA NAS로 보내기"]
+    var bottomMultiListLocal = ["GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
+    var bottomMultiListGDrive = ["다운로드", "GiGA NAS로 보내기", "삭제"]
+    var bottomGoogleDrive = ["속성보기", "다운로드", "GiGA NAS로 보내기", "Google Drive로 보내기", "삭제"]
     
     var bottomListOneViewSort = ["기준정렬","이름순-ㄱ우선","이름순-ㅎ우선"]
     var bottomListOneViewSortKey = [DbHelper.sortByEnum.none, DbHelper.sortByEnum.asc, DbHelper.sortByEnum.desc]
@@ -162,7 +178,7 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "ico_24dp_nav").withRenderingMode(.alwaysOriginal), for: .normal)
         button.translatesAutoresizingMaskIntoConstraints = false
-//        button.addTarget(self, action: #selector(MenuButtonTabbed), for: .touchUpInside)
+        button.addTarget(self, action: #selector(MenuButtonTabbed), for: .touchUpInside)
         return button
     }()
 //
@@ -286,6 +302,14 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     var containerViewTopAnchor:NSLayoutConstraint?
     var containerViewBottomAnchor:NSLayoutConstraint?
     
+    var selectedDevUuid = ""
+    var currentDevUuid = ""
+    var selectedDevUserId = ""
+    var fileNm = ""
+    var foldrId = ""
+    var fromOsCd = ""
+    var currentFolderId = ""
+    
     @IBOutlet weak var flickView: UIStackView!
     var bottomMultiList = ["GiGA NAS로 보내기"]
     
@@ -293,20 +317,25 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     override func viewDidLoad() {
         super.viewDidLoad()
 
+          // Do any additional setup after loading the view.
+        
+        getLatelyUpdateFileList()
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.reloadData()
+        self.tableView.isHidden = true
+        
+    }
+    
+    override func viewDidLayoutSubviews() {
         customNavBar.layer.shadowColor = UIColor.lightGray.cgColor
         customNavBar.layer.shadowOffset = CGSize(width:0,height: 2.0)
         customNavBar.layer.shadowRadius = 1.0
         customNavBar.layer.shadowOpacity = 1.0
         customNavBar.layer.masksToBounds = false;
         customNavBar.layer.shadowPath = UIBezierPath(roundedRect:customNavBar.bounds, cornerRadius:customNavBar.layer.cornerRadius).cgPath
-
-        setLatelyView()
-        // Do any additional setup after loading the view.
         
-        getLatelyUpdateFileList()
-        tableView.delegate = self
-        tableView.dataSource = self
-        tableView.reloadData()
+        setLatelyView()
         
     }
     
@@ -378,6 +407,7 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         child?.listViewStyleState = self.listViewStyleState
         child?.mainContentState = self.mainContentState
         child?.flickState = self.flickState
+        child?.cellStyle = 2
         child?.folderArray = self.LatelyUpdatedFileArray
         child?.driveFileArray = self.driveFileArray
         child?.containerViewController = containerViewController
@@ -398,11 +428,6 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
         containerViewBottomAnchor?.isActive = true
         
-        
-        
-        
-        self.willMove(toParentViewController: nil)
-        child?.willMove(toParentViewController: parent)
         self.addChildViewController(child!)
         listContainerView.addSubview((child?.view)!)
         
@@ -500,9 +525,10 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         multiButtonChecked = false
         flickView.isHidden = false
         multiButton.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
-        containerViewBottomAnchor?.isActive = false
-        containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
-        containerViewBottomAnchor?.isActive = true
+        
+//        containerViewBottomAnchor?.isActive = false
+//        containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+//        containerViewBottomAnchor?.isActive = true
         if self.view.contains(multiCheckBottomView){
             for view in multiCheckBottomView.subviews {
                 view.removeFromSuperview()
@@ -533,10 +559,11 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
                 print("animation finished")
                 self.backgroundView.removeGestureRecognizer(self.tapGesture)
                 self.backgroundView.removeFromSuperview()
-                
+                self.tableView.isHidden = true
             })
             
         }else{
+            self.tableView.isHidden = false
             UIView.animate(withDuration: 0.2, animations: {
                 self.tableBottomConstant.constant = 0
                 self.bottomMenuOpen = true
@@ -566,10 +593,59 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         }
         
     }
+    
     @objc func latelyCloseBottomMenu() {
         latelyViewToggleBottomMenu()
         backgroundView.removeGestureRecognizer(tapGesture)
     }
+    
+    func bottomStateFromContainer(fileDict:[String:Any]){
+        
+        if let bottomState = fileDict["bottomState"] as? String, let getFileId = fileDict["fileId"] as? String, let getFoldrWholePathNm = fileDict["foldrWholePathNm"] as? String, let getDeviceName = fileDict["deviceName"] as? String, let getDevUuid = fileDict["selectedDevUuid"] as? String, let getFileNm = fileDict["fileNm"] as? String, let getUserId = fileDict["userId"] as? String, let getFoldrId = fileDict["foldrId"] as? String, let getFomOsCd = fileDict["fromOsCd"] as? String, let getCurrentFolderId = fileDict["currentFolderId"] as? String{
+            
+            flickView.isHidden = true
+            bottomListState = bottomListEnum(rawValue: bottomState)!
+            
+            
+            fileId = getFileId
+            foldrWholePathNm = getFoldrWholePathNm
+            deviceName = getDeviceName
+            selectedDevUuid = getDevUuid
+            currentDevUuid = getDevUuid
+            selectedDevUserId = getUserId
+            fileNm = getFileNm
+            foldrId = getFoldrId
+            fromOsCd = getFomOsCd
+            currentFolderId = getCurrentFolderId
+            
+            
+            print("bottomListState: \(bottomListState), foldrWholePathNm : \(foldrWholePathNm)")
+            if(selectedDevUuid == Util.getUuid()){
+                //로컬 파일
+                bottomListState = .localFileInfo
+            }
+            ifNavBarClicked = false
+            containerViewBottomAnchor?.isActive = false
+            containerViewBottomAnchor = listContainerView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+            containerViewBottomAnchor?.isActive = true
+            
+        } else {
+            print("not called")
+        }
+        
+        if(listViewStyleState == .grid){
+       
+            if  let getIndexPath = fileDict["selectedIndex"] as? IndexPath {
+            
+                tableView.reloadData()
+                let fileIdDict = ["fileId":"\(fileId)"]
+                latelyViewToggleBottomMenu()
+//                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+       
+            }
+        }
+    }
+    
     
     @objc func listStyleChange() {
         switch (listViewStyleState) {
@@ -655,7 +731,20 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     }
     
     
-    
+    @objc func MenuButtonTabbed() {
+        tapGesture = UITapGestureRecognizer(target: self, action: #selector(closeMenu))
+        tapGesture.cancelsTouchesInView = false
+        view.addGestureRecognizer(tapGesture)
+        NotificationCenter.default.post(name: Notification.Name("toggleSideMenu"), object: nil)
+        inActiveMultiCheck()
+    }
+    @objc func closeMenu() {
+        sideMenuOpen = UserDefaults.standard.bool(forKey: "sideMenuOpen")
+        if(sideMenuOpen){
+            NotificationCenter.default.post(name: Notification.Name("toggleSideMenu"), object: nil)
+        }
+        view.removeGestureRecognizer(tapGesture)
+    }
     
     /*
     // MARK: - Navigation

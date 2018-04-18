@@ -142,6 +142,7 @@ class DbHelper{
                 DeviceArray.append(deviceStruct)
             }
             
+            
             return DeviceArray
         }catch{
             print(error)
@@ -517,11 +518,12 @@ class DbHelper{
     
     
     func getAccessToken(email:String) -> String {
+        var database: Connection!
         do {
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
             let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
-            let database = try Connection(fileUrl.path)
-            self.database = database
+            database = try Connection(fileUrl.path)
+//            self.database = database
         } catch {
             print(error)
         }
@@ -537,6 +539,7 @@ class DbHelper{
                     token = device[accessToken]
                 }
             }
+            self.database = nil
             return token
         }catch{
             print(error)
@@ -545,11 +548,12 @@ class DbHelper{
     }
     
     func getTokenTime(email:String) -> String {
+        var database: Connection!
         do {
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
             let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
-            let database = try Connection(fileUrl.path)
-            self.database = database
+            database = try Connection(fileUrl.path)
+//            self.database = database
         } catch {
             print(error)
         }
@@ -565,6 +569,7 @@ class DbHelper{
                     token = device[getTokenTime]
                 }
             }
+            self.database = nil
             return token
         }catch{
             print(error)

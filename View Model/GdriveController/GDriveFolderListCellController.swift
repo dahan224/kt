@@ -51,7 +51,7 @@ class GDriveFolderListCellController {
         let upFoldrId = folderArray[indexPath.row].fileId
         switch sender {
         case cell.btnDwnld:
-            dv?.showGDriveFolderOption(tag: sender.tag)
+            dv?.hideSelectedOptions(tag: sender.tag)
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 다운로드 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
@@ -69,7 +69,7 @@ class GDriveFolderListCellController {
             dv?.present(alertController, animated: true)
             break
         case cell.btnNas:
-            dv?.showGDriveFolderOption(tag: sender.tag)
+            dv?.hideSelectedOptions(tag: sender.tag)
             print(deviceName)
             
             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":"gDrive","fromDevUuid":currentDevUuid, "fromFoldrId":String(foldrId)]
@@ -78,7 +78,7 @@ class GDriveFolderListCellController {
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
             break
         case cell.btnDelete:
-            dv?.showGDriveFolderOption(tag: sender.tag)
+            dv?.hideSelectedOptions(tag: sender.tag)
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 삭제 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in

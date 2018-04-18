@@ -22,6 +22,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             return self.sharedInstance.isReachable
         }
     }
+
     
     var backgroundTask:UIBackgroundTaskIdentifier?
     var window: UIWindow?
@@ -44,19 +45,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         if #available(iOS 10, *) {
             UNUserNotificationCenter.current().requestAuthorization(options:[.badge, .alert, .sound]){ (granted, error) in }
             application.registerForRemoteNotifications()
-        }
+            print(" iOS 10 support")
+        } else if #available(iOS 9, *) {
             // iOS 9 support
-        else if #available(iOS 9, *) {
             UIApplication.shared.registerUserNotificationSettings(UIUserNotificationSettings(types: [.badge, .sound, .alert], categories: nil))
             UIApplication.shared.registerForRemoteNotifications()
-        }
+            print(" iOS 9 support")
+        } else if #available(iOS 8, *) {
             // iOS 8 support
-        else if #available(iOS 8, *) {
             UIApplication.shared.registerUserNotificationSettings(UIUserNotificationSettings(types: [.badge, .sound, .alert], categories: nil))
             UIApplication.shared.registerForRemoteNotifications()
-        }
+            print(" iOS 8 support")
+        } else {
             // iOS 7 support
-        else {
+            print(" iOS 7 support")
             application.registerForRemoteNotifications(matching: [.badge, .sound, .alert])
         }
 
@@ -81,24 +83,35 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     print("\(dataString)")
                     let data = dataString.data(using: .utf8, allowLossyConversion: false)
                     let json = JSON(data)
+                    print("json : \(json)")
 //                    let fromFileId = json["fromFileId"].string
                     let toDevUuid:String = json["toDevUuid"].stringValue
+                    let fromFileNm:String = json["fromFileNm"].stringValue
+                    let fromDevUuid:String = json["fromDevUuid"].stringValue
+                    let toUserId:String = json["toUserId"].stringValue
+                    let toFoldr:String = json["toFoldr"].stringValue
+                    let queId:String = json["queId"].stringValue
+                    let intFileId = json["fromFileId"].intValue
+                    let fromFileId = String(describing: intFileId)
+                    let fromFoldr = json["fromFoldr"].stringValue
+                    let toOsCd = json["toOsCd"].stringValue
+                    let fromUserId = json["fromUserId"].stringValue
+                    let fromOsCd = json["fromOsCd"].stringValue
+                    
                     if(toDevUuid == Util.getUuid()){
-                        let fromUserId = json["fromUserId"].stringValue
-                        let fromFoldr = json["fromFoldr"].stringValue
-                        let fromFileNm = json["fromFileNm"].stringValue
-                        let fromFileId = json["fromFileId"].stringValue
-                        let fromDevUuid:String = json["fromDevUuid"].stringValue
-                        let fromOsCd = json["fromOsCd"].stringValue
-                        let queId:String = json["queId"].stringValue
                         print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
                         if let remoteDownLoadStyle = UserDefaults.standard.string(forKey: "remoteDownLoadStyle") {
                             print("remoteDownLoadStyle : \(remoteDownLoadStyle)")
                             switch remoteDownLoadStyle {
                             case "remoteDownLoad":
-                                let path = "\(fromDevUuid)\(fromFoldr)"
-                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
-                                downloadFromRemote(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
+                                let path = "\(fromDevUuid)/\(fromFoldr)"
+                                
+                                if(!notificationOnGoing){
+                                    notificationOnGoing = true
+                                    print("noti get")
+                                    downloadFromRemote(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
+                                }
+                                
                                 break
                                 
                             case "remoteDownLoadToNas" :
@@ -114,8 +127,15 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                                 
                             case "remoteDownLoadMulti":
                                 let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "fromDevUuid":fromDevUuid]
-                                let path = "\(fromDevUuid)\(fromFoldr)"
-                                downloadFromRemoteMulti(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
+                                let path = "\(fromDevUuid)/\(fromFoldr)"
+                                
+                                if(!notificationOnGoing){
+//                                    notificationOnGoing = true
+                                    print("noti get")
+                                    downloadFromRemoteMulti(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
+//                                    downloadFromRemote(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
+                                }
+                                
                                 break
                             case "remoteDownLoadNasMulti":
                                 
@@ -134,14 +154,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                         
                         
                     } else {
-                        let fromFileNm:String = json["fromFileNm"].stringValue                        
-                        let fromDevUuid:String = json["fromDevUuid"].stringValue
-                        let queId:String = json["queId"].stringValue
-                        let intFileId = json["fromFileId"].intValue
-                        let fromFileId = String(describing: intFileId)
-                        let fromFoldr = json["fromFoldr"].stringValue
+                       
+                        print("toOsCd : \(toOsCd)" )
                         print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
-                        showFileInfo(fileId: fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
+                        if(toOsCd == "G" || toOsCd == "S"){
+                            let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: fromFileNm, foldrWholePathNm: "/Mobile", amdDate: "self.amdDate")!
+                            sendToNasFromLocal(url: fileUrl, name: fromFileNm, toOsCd:toOsCd, fileId: fromFileId, toUserId: toUserId, newFoldrWholePathNm:toFoldr)
+                        } else {
+                            showFileInfo(fileId: fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
+                        }
+                        
                     }
                     
                 }
@@ -188,7 +210,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
                     DispatchQueue.main.async {
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
-                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+//                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            self.notificationOnGoing = false
+                        }
                         alertController.addAction(yesAction)
                         print("download Success")
                         let alertWindow = UIWindow(frame: UIScreen.main.bounds)
@@ -224,48 +250,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                 print(success)
                 if(success == "success"){
                     
-                   NotificationCenter.default.post(name: Notification.Name("countRemoteDownloadFinished"), object: self)
+                    NotificationCenter.default.post(name: Notification.Name("countRemoteDownloadFinished"), object: self)
                 }
             }
             return
         }
     }
     
-    func showFileInfoToNas(fromUserId:String, fileId:String, fileNm:String, queId:String, fromFoldr:String, fromDevUuid:String, fromOsCd:String){
-        ContextMenuWork().getFileDetailInfo(fileId: fileId){ responseObject, error in
-            let json = JSON(responseObject!)
-            print("showFileInfo json : \(json)")
-            if(json["fileData"].exists()){
-                let fileData = json["fileData"]
-                let amdDate = fileData["amdDate"].stringValue
-                print("filNm: \(fileNm),fileAmdDate : \(amdDate)")
-
-                self.downloadFromRemoteToNas(fromUserId: fromUserId, name: fileNm, path: fromFoldr, fileId: fileId, amdDate:amdDate, fromOsCd:fromOsCd, fromDevUuid:fromDevUuid, fromFoldr:fromFoldr)
-            }
-            return
-        }
-    }
-    
-    func downloadFromRemoteToNas(fromUserId:String, name:String, path:String, fileId:String, amdDate:String, fromOsCd:String, fromDevUuid:String, fromFoldr:String){
-       print("downloadFromRemoteToNas")
-        ContextMenuWork().downloadFromRemote(userId:fromUserId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
-            if let success = responseObject {
-                print(success)
-                if(success == "success"){
-                    DispatchQueue.main.async {
-                        let fileDict = ["fileId":fileId, "fileNm":name,"amdDate":amdDate, "oldFoldrWholePathNm":path,"state":"remote","fromUserId":fromUserId, "fromOsCd":fromOsCd, "fromDevUuid" : fromDevUuid, "fromFoldr" : fromFoldr]
-                        print("fileDict : \(fileDict)")
-                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
-                        
-                        NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
-                    }
-                }
-            }
-            return
-        }
-    }
-    
-    
+  
     func beginBackgroundTask() -> UIBackgroundTaskIdentifier {
         return UIApplication.shared.beginBackgroundTask(expirationHandler: {})
     }
@@ -282,7 +274,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                 let fileData = json["fileData"]
                 let amdDate = fileData["amdDate"].stringValue
                 print("fileAmdDate : \(amdDate)")
-                let fileUrl:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
+//                let fileUrl:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
+                let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: fileNm, foldrWholePathNm: "/Mobile", amdDate: amdDate)!
                 self.createTmpFolder(fileUrl: fileUrl, name: fileNm, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
 //                self.sendToNasFromLocalForDownload(url: fileUrl, name: fileNm, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
             }
@@ -291,7 +284,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     }
     func createTmpFolder(fileUrl:URL, name:String, queId:String, fromFoldr:String,fromDevUuid:String){
         let userId = App.defaults.userId
-        let password = "1234"
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         
         let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
@@ -321,7 +314,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                                 break
                             case .failure(let error):
                                 print("create temp folder error : \(error.localizedDescription)")
-                                self.sendToNasFromLocalForDownload(url: fileUrl, name: name, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
+                                
                             }
         }
     }
@@ -330,7 +323,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     func sendToNasFromLocalForDownload(url:URL, name:String, queId:String, fromFoldr:String,fromDevUuid:String){
         
         let userId = App.defaults.userId
-        let password = "1234"
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         
         let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
@@ -368,7 +361,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                 } else { //no errors
                     let statusCode = (response.response?.statusCode)! //example : 200
                     print("statusCode : \(statusCode)")
-                    self.notifyNasUploadFinishToRemoteDownload(name: name, queId:queId)
+                    if(statusCode == 200){
+                        self.notifyNasUploadFinishToRemoteDownload(name: name, queId:queId)
+                    }
+                    
                     
                 }
         }
@@ -407,6 +403,111 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                             }
         }
     }
+    
+    func sendToNasFromLocal(url:URL, name:String, toOsCd:String, fileId:String, toUserId:String, newFoldrWholePathNm:String){
+        
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
+        var loginUserId = UserDefaults.standard.string(forKey: "userId")
+        var userId:String = toUserId
+        if(toUserId.isEmpty){
+            userId = loginUserId!
+        }
+        
+        print("loginUserId : \(String(describing: loginUserId!))")
+        let credentialData = "gs-\(String(describing: loginUserId!)):\(password)".data(using: String.Encoding.utf8)!
+        let base64Credentials = credentialData.base64EncodedString(options: [])
+        
+        let decodedData = Data(base64Encoded: base64Credentials)!
+        let decodedString = String(data: decodedData, encoding: .utf8)!
+        print("decodedString : \(decodedString)")
+        
+        var headers = [
+            "Authorization": "Basic \(base64Credentials)",
+            "x-isi-ifs-target-type":"object"
+            
+        ]
+        if(toOsCd != "G"){
+            headers = [
+                "Authorization": "Basic \(base64Credentials)",
+                "x-isi-ifs-target-type":"object",
+                "x-isi-ifs-access-control":"770"
+                
+            ]
+        }
+        print("headers : \(headers)")
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
+        stringUrl =  stringUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        print("stringUrl : \(stringUrl)" )
+        
+        let filePath = url.path
+        let fileExtension = url.pathExtension
+        print("fileExtension : \(fileExtension)")
+        print("file path : \(filePath)")
+        
+        
+        //되는 거
+        print("fileId : \(fileId)")
+        
+        Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
+            .uploadProgress { progress in // main queue by default
+                print("Upload Progress: \(progress.fractionCompleted)")
+                
+            }
+            .downloadProgress { progress in // main queue by default
+                //                print("Download Progress: \(progress.fractionCompleted)")
+            }
+            .responseString { response in
+                print("Success: \(response.result.isSuccess)")
+                print("Response String: \(response)")
+                if let alamoError = response.result.error {
+                    let alamoCode = alamoError._code
+                    let statusCode = (response.response?.statusCode)!
+                } else { //no errors
+                    let statusCode = (response.response?.statusCode)! //example : 200
+                    print("statusCode : \(statusCode)")
+                    if(statusCode == 200) {
+                        self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, fileId:fileId, toUserId:toUserId, toFoldr:newFoldrWholePathNm)
+                    }
+                    
+                    
+                }
+        }
+    }
+    
+    
+    
+    func notifyNasUploadFinish(name:String, toOsCd:String, fileId:String, toUserId:String, toFoldr:String){
+        let urlString = App.URL.server+"nasUpldCmplt.do"
+        var jsonHeader:[String:String] = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
+            "Cookie": UserDefaults.standard.string(forKey: "cookie")!
+        ]
+        
+        
+        let paramas:[String : Any] = ["userId":toUserId,"fileId":fileId,"toFoldr":toFoldr,"toFileNm":name,"toOsCd":toOsCd]
+        print("notifyNasUploadFinish param : \(paramas)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: paramas,
+                          encoding : JSONEncoding.default,
+                          headers: jsonHeader).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+                                
+                                print(response.result.value)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("message : \(message)")
+                                                              
+                                break
+                            case .failure(let error):
+                                
+                                print(error.localizedDescription)
+                            }
+        }
+    }
+    
     // [END receive_message]
     func application(_ application: UIApplication, didFailToRegisterForRemoteNotificationsWithError error: Error) {
         print("Unable to register for remote notifications: \(error.localizedDescription)")

@@ -131,7 +131,11 @@ class GDriveFileListCell: UICollectionViewCell {
         addSubview(btnMultiCheck)
         addSubview(btnOption)
         addSubview(optionView)
-        
+//        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
+//        view1.layer.masksToBounds = false
+//        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
+//        
+//        addSubview(view1)
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
@@ -143,14 +147,14 @@ class GDriveFileListCell: UICollectionViewCell {
         
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 25).isActive = true
-        ivSub.widthAnchor.constraint(equalToConstant: 20).isActive = true
-        ivSub.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        ivSub.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        ivSub.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         
         
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
+        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -50).isActive = true
         
         
         lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
@@ -177,6 +181,7 @@ class GDriveFileListCell: UICollectionViewCell {
         optionViewTrailingAnchor?.isActive = true
         
         setupLocalView()
+        
         
     }
     required init?(coder aDecoder: NSCoder) {

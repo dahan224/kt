@@ -106,23 +106,26 @@ class Util{
     }
     
     let fileImageCheck = [
-        ["etsionNm": "sound",  "image": "file_format_sound_192_list"],
-        ["etsionNm": "code",  "image": "file_format_code_192_list"],
-        ["etsionNm": "doc",  "image": "file_format_doc_192_list"],
-        ["etsionNm": "etc",  "image": "file_format_etc_192_list"],
-        ["etsionNm": "exe",  "image": "file_format_exe_192_list"],
-        ["etsionNm": "film",  "image": "file_format_film_192_list"],
-        ["etsionNm": "foldr",  "image": "file_format_folder_192_list"],
-        ["etsionNm": "hwp",  "image": "file_format_hwp_192_list"],
-        ["etsionNm": "img",  "image": "file_format_img_192_list"],
-        ["etsionNm": "jpg",  "image": "file_format_img_192_list"],
-        ["etsionNm": "png",  "image": "file_format_img_192_list"],
-        ["etsionNm": "pdf",  "image": "file_format_pdf_192_list"],
-        ["etsionNm": "ppt",  "image": "file_format_ppt_192_list"],
-        ["etsionNm": "txt",  "image": "file_format_txt_192_list"],
-        ["etsionNm": "webcode",  "image": "file_format_webcode_192_list"],
-        ["etsionNm": "xls",  "image": "file_format_xls_192_list"],
-        ["etsionNm": "zip",  "image": "file_format_zip_192_list"]
+        ["etsionNm": "sound",  "image": "ico_24dp_filetype_sound"],
+        ["etsionNm": "code",  "image": "ico_24dp_filetype_code"],
+        ["etsionNm": "doc",  "image": "ico_24dp_filetype_doc"],
+        ["etsionNm": "docx",  "image": "ico_24dp_filetype_doc"],
+        ["etsionNm": "etc",  "image": "ico_24dp_filetype_etc"],
+        ["etsionNm": "exe",  "image": "ico_24dp_filetype_exe"],
+        ["etsionNm": "film",  "image": "ico_24dp_filetype_film"],
+//        ["etsionNm": "foldr",  "image": "file_format_folder_192_list"],
+        ["etsionNm": "hwp",  "image": "ico_24dp_filetype_hwp"],
+        ["etsionNm": "img",  "image": "ico_24dp_filetype_img"],
+        ["etsionNm": "jpg",  "image": "ico_24dp_filetype_img"],
+        ["etsionNm": "png",  "image": "ico_24dp_filetype_img"],
+        ["etsionNm": "pdf",  "image": "ico_24dp_filetype_pdf"],
+        ["etsionNm": "ppt",  "image": "ico_24dp_filetype_ppt"],
+        ["etsionNm": "pptx",  "image": "ico_24dp_filetype_ppt"],
+        ["etsionNm": "txt",  "image": "ico_24dp_filetype_txt"],
+        ["etsionNm": "webcode",  "image": "ico_24dp_filetype_webcode"],
+        ["etsionNm": "xls",  "image": "ico_24dp_filetype_xls"],
+        ["etsionNm": "xlsx",  "image": "ico_24dp_filetype_xls"],
+        ["etsionNm": "zip",  "image": "ico_24dp_filetype_zip"]
     ]
     class func getFileImageString(fileExtension:String) -> String {
         var imageString = ""
@@ -131,17 +134,48 @@ class Util{
 //            print("result  \(String(describing: result[0]["image"]))")
             imageString = result[0]["image"]!
         } else {
-            imageString = "file_format_etc_192_list"
+            imageString = "ico_24dp_filetype_etc"
         }
         
         return imageString
     }
-    
+    let thumbNailImageCheck = [
+        ["etsionNm": "sound",  "image": "file_format_sound"],
+        ["etsionNm": "code",  "image": "file_format_code"],
+        ["etsionNm": "doc",  "image": "file_format_doc"],
+        ["etsionNm": "etc",  "image": "file_format_etc"],
+        ["etsionNm": "exe",  "image": "file_format_exe"],
+        ["etsionNm": "film",  "image": "file_format_film"],
+        //        ["etsionNm": "foldr",  "image": "file_format_folder_192_list"],
+        ["etsionNm": "hwp",  "image": "file_format_hwp"],
+        ["etsionNm": "img",  "image": "file_format_img"],
+        ["etsionNm": "jpg",  "image": "file_format_img"],
+        ["etsionNm": "png",  "image": "file_format_img"],
+        ["etsionNm": "pdf",  "image": "file_format_pdf"],
+        ["etsionNm": "ppt",  "image": "file_format_ppt"],
+        ["etsionNm": "pptx",  "image": "file_format_ppt"],
+        ["etsionNm": "txt",  "image": "file_format_txt"],
+        ["etsionNm": "webcode",  "image": "file_format_webcode"],
+        ["etsionNm": "xls",  "image": "file_format_xls"],
+        ["etsionNm": "zip",  "image": "file_format_zip"]
+    ]
+    class func getthumbNailImageString(fileExtension:String) -> String {
+        var imageString = ""
+        let result = Util().thumbNailImageCheck.filter({ $0["etsionNm"] == fileExtension})
+        if (!result.isEmpty){
+            //            print("result  \(String(describing: result[0]["image"]))")
+            imageString = result[0]["image"]!
+        } else {
+            imageString = "ico_24dp_filetype_etc"
+        }
+        
+        return imageString
+    }
     let googleImageCheck = [
         ["mimeType": "application/vnd.google-apps.document",  "image": "ico_24dp_filetype_etc"],
-        ["mimeType": "image/jpeg",  "image": "ico_24dp_filetype_img"],
+        ["mimeType": "image/jpeg",  "image": "file_format_img"],
         ["mimeType": "application/vnd.google-apps.folder",  "image": "ico_folder"],
-        ["mimeType": "image/png",  "image": "ico_24dp_filetype_img"]        
+        ["mimeType": "image/png",  "image": "file_format_img"]        
     ]
     class func getGoogleImageString(mimeType:String) -> String {
         var imageString = ""
@@ -208,6 +242,15 @@ class Util{
         return imageString
     }
     
+    class func getEtsionFromMimetype(mimeType:String) -> String {
+        var imageString = ""
+        let result = Util().googleMimeTypeCheck.filter({ $0["googleMimeType"] == mimeType})
+        if (!result.isEmpty){
+            imageString = result[0]["etsionNm"]!
+        }
+        return imageString
+    }
+    
 }
 
 extension CALayer {
@@ -233,5 +276,29 @@ extension CALayer {
             border.backgroundColor = color.cgColor;
             self.addSublayer(border)
         }
+    }
+}
+extension UILabel {
+    func setLineHeight(lineHeight: CGFloat) {
+        
+        let text = self.text
+        if let text = text {
+            
+            let attributeString = NSMutableAttributedString(string: text)
+            let style = NSMutableParagraphStyle()
+            
+            style.lineSpacing = lineHeight
+            attributeString.addAttribute(NSAttributedStringKey.paragraphStyle,
+                                         value: style,
+                                         range: NSMakeRange(0, text.characters.count))
+            
+            self.attributedText = attributeString
+        }
+    }
+}
+extension UISearchBar {
+    var textField : UITextField{
+        return self.value(forKey: "_searchField") as! UITextField
+        
     }
 }

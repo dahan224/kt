@@ -30,7 +30,7 @@ class FileUtil {
                     if let folderNmArray = URLComponents(url: file, resolvingAgainstBaseURL: true)?.path.components(separatedBy: "/") {
                         let documentIndex = folderNmArray.index(of: "Documents")
                         for (index, path) in folderNmArray.enumerated() {
-                            if(documentIndex! < index && index < folderNmArray.count){
+                            if(documentIndex! < index && index < folderNmArray.count - 1){
                                 foldrWholePathNm += "/\(folderNmArray[index])"
                             }
                         }
@@ -98,7 +98,6 @@ class FileUtil {
                     let attribute = try FileManager.default.attributesOfItem(atPath: fileSavedPath)
                     let fileName:String = (NSURL(fileURLWithPath: file.lastPathComponent).deletingPathExtension?.lastPathComponent)!
                     let fileExtension = file.pathExtension
-                    let folderCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                     let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
                     let localFilFullName = "\(fileName).\(fileExtension)"
                     let decodedFileName:String = localFilFullName.removingPercentEncoding!
@@ -122,25 +121,71 @@ class FileUtil {
         return retrunUrl
     }
     
+    func getFileUrlWithFoldr(fileNm:String, foldrWholePathNm:String, amdDate:String) -> URL?{
+        let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let fileEnumerator = FileManager.default.enumerator(at: documentsDirectory!, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions())
+        var retrunUrl:URL?
+  
+        while let file = fileEnumerator?.nextObject() as? URL{
+            let fileSavedPath = file.path
+            do {
+                let attribute = try FileManager.default.attributesOfItem(atPath: file.path)
+                let fileName:String = (NSURL(fileURLWithPath: file.lastPathComponent).deletingPathExtension?.lastPathComponent)!
+                let fileExtension = file.pathExtension
+                var localFilFullName = "\(fileName).\(fileExtension)"
+                if(fileExtension.isEmpty){
+                    localFilFullName = fileName
+                }
+                let fullPathFromParameter = "\(foldrWholePathNm)/\(fileNm)"
+                let folderNmArray = fileSavedPath.components(separatedBy: "/")
+                let documentIndex = folderNmArray.index(of: "Documents")
+                var revisedSavedPath = "/Mobile"
+                for (index, path) in folderNmArray.enumerated() {
+                    
+                    if(documentIndex! < index && index < folderNmArray.count){
+                        revisedSavedPath += "/\(folderNmArray[index])"
+                    }
+                }
+                print("fullPathFromParameter : \(fullPathFromParameter), revisedSavedPath:\(revisedSavedPath)")
+                
+                let decodedFileName:String = localFilFullName.removingPercentEncoding!
+                revisedSavedPath = revisedSavedPath.removingPercentEncoding!
+                print("fullPathFromParameter : \(fullPathFromParameter), revisedSavedPath:\(revisedSavedPath)")
+                
+                let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
+                let stringModifiedDate = Util.date(text: modifiedDate)
+                print("fileNm : \(fileNm), localFilFullName : \(localFilFullName), amdDate: \(amdDate) , stringModifiedDate : \(stringModifiedDate), decodedFileName: \(decodedFileName)")
+                //                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
+                if(fileNm == decodedFileName && revisedSavedPath == fullPathFromParameter && !fileExtension.isEmpty && !foldrWholePathNm.contains("Trash")){
+                    retrunUrl = file
+                    print("return url : \(retrunUrl)")
+                    break
+                }
+                
+                
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+        
+        print("return path : \(retrunUrl)")
+        return retrunUrl
+    }
     func getFilePath(fileNm:String, amdDate:String) -> String{
-        let fileManager = FileManager.default
-        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let fileEnumerator = FileManager.default.enumerator(at: documentsDirectory!, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions())
         var returnPath = ""
-        do {
-            let fileURLs = try fileManager.contentsOfDirectory(at: documentsURL, includingPropertiesForKeys: nil)
-            print("files : \(fileURLs)")
-            for (_, f) in fileURLs.enumerated() {
+        while let file = fileEnumerator?.nextObject() as? URL{
+            let fileSavedPath = file.path
                 do {
-                    let attribute = try FileManager.default.attributesOfItem(atPath: f.path)
-                    let fileName:String = (NSURL(fileURLWithPath: f.lastPathComponent).deletingPathExtension?.lastPathComponent)!
-                    let fileExtension = f.pathExtension
+                    let attribute = try FileManager.default.attributesOfItem(atPath: file.path)
+                    let fileName:String = (NSURL(fileURLWithPath: file.lastPathComponent).deletingPathExtension?.lastPathComponent)!
+                    let fileExtension = file.pathExtension
                     var localFilFullName = "\(fileName).\(fileExtension)"
                     if(fileExtension.isEmpty){
                         localFilFullName = fileName
                     } 
-                    
                     let decodedFileName:String = localFilFullName.removingPercentEncoding!
-                    let fileSavedPath = f.path
                     print("fileSavedPath  : \(fileSavedPath)")
                     let fileCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                     let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
@@ -150,6 +195,7 @@ class FileUtil {
                     if(fileNm == decodedFileName){
                         returnPath = fileSavedPath
                         print("return path : \(returnPath)")
+                        break
                     }
                     
                     
@@ -157,14 +203,122 @@ class FileUtil {
                     print("Error: \(error)")
                 }
             }
-            
-        } catch {
-            print(error.localizedDescription)
-            
-        }
+        
         print("return path : \(returnPath)")
         return returnPath
     }
+    
+    
+    func getFilePathWithFoldr(fileNm:String, foldrWholePathNm:String, amdDate:String) -> String{
+        let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let fileEnumerator = FileManager.default.enumerator(at: documentsDirectory!, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions())
+        var returnPath = ""
+        while let file = fileEnumerator?.nextObject() as? URL{
+            let fileSavedPath = file.path
+            do {
+                let attribute = try FileManager.default.attributesOfItem(atPath: file.path)
+                let fileName:String = (NSURL(fileURLWithPath: file.lastPathComponent).deletingPathExtension?.lastPathComponent)!
+                let fileExtension = file.pathExtension
+                var localFilFullName = "\(fileName).\(fileExtension)"
+                if(fileExtension.isEmpty){
+                    localFilFullName = fileName
+                }
+                let fullPathFromParameter = "\(foldrWholePathNm)/\(fileNm)"
+                let folderNmArray = fileSavedPath.components(separatedBy: "/")
+                let documentIndex = folderNmArray.index(of: "Documents")
+                var revisedSavedPath = "/Mobile"
+                for (index, path) in folderNmArray.enumerated() {
+                    
+                    if(documentIndex! < index && index < folderNmArray.count){
+                        revisedSavedPath += "/\(folderNmArray[index])"
+                    }
+                }
+                print("fullPathFromParameter : \(fullPathFromParameter), revisedSavedPath:\(revisedSavedPath)")
+                
+                let decodedFileName:String = localFilFullName.removingPercentEncoding!
+                revisedSavedPath = revisedSavedPath.removingPercentEncoding!
+                print("fullPathFromParameter : \(fullPathFromParameter), revisedSavedPath:\(revisedSavedPath)")
+                
+                let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
+                let stringModifiedDate = Util.date(text: modifiedDate)
+                print("for remove fileNm : \(fileNm), localFilFullName : \(localFilFullName), amdDate: \(amdDate) , stringModifiedDate : \(stringModifiedDate), decodedFileName: \(decodedFileName)")
+                //                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
+                if(fileNm == decodedFileName && revisedSavedPath == fullPathFromParameter){
+                    returnPath = fileSavedPath
+                    print("return path : \(returnPath)")
+                    break
+                }
+                
+                
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+        
+        print("return path : \(returnPath)")
+        return returnPath
+    }
+    
+    func getFolderPathWithFoldr(fileNm:String, foldrWholePathNm:String, amdDate:String) -> String{
+        let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let fileEnumerator = FileManager.default.enumerator(at: documentsDirectory!, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions())
+        var returnPath = ""
+        while let file = fileEnumerator?.nextObject() as? URL{
+            let fileSavedPath = file.path
+            do {
+                let attribute = try FileManager.default.attributesOfItem(atPath: file.path)
+                let fileName:String = (NSURL(fileURLWithPath: file.lastPathComponent).deletingPathExtension?.lastPathComponent)!
+                let fileExtension = file.pathExtension
+                if(fileExtension.isEmpty && !fileName.contains("Trash")){
+                    let fullPathFromParameter = foldrWholePathNm
+                    let folderNmArray = fileSavedPath.components(separatedBy: "/")
+                    let documentIndex = folderNmArray.index(of: "Documents")
+                    var revisedSavedPath = "/Mobile"
+                    for (index, path) in folderNmArray.enumerated() {
+                        
+                        if(documentIndex! < index && index < folderNmArray.count){
+                            revisedSavedPath += "/\(folderNmArray[index])"
+                        }
+                    }
+//                    print("fullPathFromParameter : \(fullPathFromParameter), revisedSavedPath:\(revisedSavedPath)")
+                    
+                    let decodedFileName:String = fileName.removingPercentEncoding!
+                    revisedSavedPath = revisedSavedPath.removingPercentEncoding!
+                    print("fullPathFromParameter : \(fullPathFromParameter), revisedSavedPath:\(revisedSavedPath)")
+                    
+                    let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
+                    let stringModifiedDate = Util.date(text: modifiedDate)
+//                    print("for remove fileNm : \(fileNm), amdDate: \(amdDate) , stringModifiedDate : \(stringModifiedDate), decodedFileName: \(decodedFileName)")
+                    //                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){
+                    if(fileNm == decodedFileName && revisedSavedPath == fullPathFromParameter && fileExtension.isEmpty){
+                        returnPath = fileSavedPath
+                        print("return path : \(returnPath)")
+                        break
+                    }
+                }
+            } catch {
+                print("Error: \(error)")
+            }
+        }
+        
+        print("return path : \(returnPath)")
+        return returnPath
+    }
+    func getFileUrlFromPath(filePath:String) -> URL?{
+        let documentsDirectory =  try? FileManager().url(for: .documentDirectory, in: .userDomainMask, appropriateFor: nil, create: true)
+        let fileEnumerator = FileManager.default.enumerator(at: documentsDirectory!, includingPropertiesForKeys: nil, options: FileManager.DirectoryEnumerationOptions())
+        var retrunUrl:URL?
+        while let file = fileEnumerator?.nextObject() as? URL{
+            let fileSavedPath = file.path
+            if(filePath == fileSavedPath){
+               retrunUrl = file
+                break
+            }
+        }
+        print("return url : \(retrunUrl)")
+        return retrunUrl
+    }
+    
     
     func removeFile(path:String){
         let fileManager = FileManager.default
@@ -176,6 +330,15 @@ class FileUtil {
             print("Ooops! Something went wrong: \(error)")
         }
     }
-    
+    func covertFileSize(getSize:String) -> String {
+        var convertedValue: Double = Double(getSize)!
+        var multiplyFactor = 0
+        let tokens = ["bytes", "KB", "MB", "GB", "TB", "PB",  "EB",  "ZB", "YB"]
+        while convertedValue > 1024 {
+            convertedValue /= 1024
+            multiplyFactor += 1
+        }
+        return String(format: "%4.2f %@", convertedValue, tokens[multiplyFactor])
+    }
     
 }

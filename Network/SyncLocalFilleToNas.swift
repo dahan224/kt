@@ -121,6 +121,7 @@ class SyncLocalFilleToNas {
                                         let deleteFolderParameter = App.FoldersToEdit(folder:deleteFolder, cmd:"D").getParameter
                                         self.folderArrayToDelete.append(deleteFolderParameter)
                                     }
+                                    
                                 }
                             }
                             if(self.folderArrayToDelete.count > 0){

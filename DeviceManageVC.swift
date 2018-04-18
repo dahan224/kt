@@ -197,6 +197,7 @@ class DeviceManageVC: UIViewController  {
     }
     
     @objc func fnBack() { // 뒤로가기
+        NotificationCenter.default.post(name: NSNotification.Name("toggleSideMenu"), object: nil)
         dismiss(animated: true, completion: nil)
     }
 

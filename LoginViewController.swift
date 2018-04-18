@@ -154,7 +154,10 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         super.viewDidLoad()
         // Do any additional setup after loading the view, typically from a nib.
         
-      
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(clearInputLogin),
+                                               name: NSNotification.Name("clearInputLogin"),
+                                               object: nil)
         
         textFieldId.text = ""
         textFieldPw.text = ""
@@ -187,6 +190,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     @IBAction func idSaveCheked(_ sender: BEMCheckBox) {
         let idSaveChecked = autoLoginCheckBox.on
+        print("idSaveChecked : \(idSaveChecked)")
         let defaults = UserDefaults.standard
         defaults.set(idSaveChecked, forKey: "idSaveCheck")
     }
@@ -194,6 +198,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         autoLoginCheck = autoLoginCheckBox.on
         print("autocheck : \(autoLoginCheck)")
         let defaults = UserDefaults.standard
+        defaults.set(autoLoginCheck, forKey: "idSaveCheck")
         defaults.set(autoLoginCheck, forKey: "autoLoginCheck")
     }
     
@@ -201,6 +206,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         autoLoginCheck = UserDefaults.standard.bool(forKey: "autoLoginCheck")
         print("autoLoginCheck : \(autoLoginCheck)")
         if(autoLoginCheck){
+            textFieldId.text = UserDefaults.standard.string(forKey: "userId")
             textFieldPw.text = UserDefaults.standard.string(forKey: "userPassword")
             autoLoginCheckBox.setOn(true, animated: false)
             login()
@@ -358,7 +364,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     func registerDevice(jsonHeader:[String:String]){
         
-        let deviceParameter = App.DeviceInfo(userId: userId, devUuid: uuId, devNm: UIDevice.current.name, osCd: "I", osDesc: "IOS", mkngVndrNm: "apple", devAuthYn: "N", rootFoldrNm: "Mobile", lastUpdtId: userId, token: App.defaults.notificationToken)
+        let notificationToken:String = UserDefaults.standard.string(forKey: "notification_token") ?? "nil_for_simulator"
+        print("notificationToken : \(notificationToken)")
+        let deviceParameter = App.DeviceInfo(userId: userId, devUuid: uuId, devNm: UIDevice.current.name, osCd: "I", osDesc: "IOS", mkngVndrNm: "apple", devAuthYn: "N", rootFoldrNm: "Mobile", lastUpdtId: userId, token: notificationToken)
         let urlString = App.URL.server+"devAthn.do"
         Alamofire.request(urlString,
                           method: .post,
@@ -482,6 +490,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                 
                 let googleDrive = App.DeviceStruct(devNm : "Google Drive", devUuid : "devUuidValue", logical: "nll", mkngVndrNm : "mkngVndrNmValue", newFlag: "N", onoff : "N", osCd : "D", osDesc : "D", osNm : "D", userId : "userIdValue", userName : "Y")
                 self.DeviceArray.append(googleDrive)
+                print("DeviceArray : \(self.DeviceArray.count)")
                 //
                 DbHelper().jsonToSqlite(getArray: self.DeviceArray)
                 DispatchQueue.main.async {
@@ -506,6 +515,19 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     func stopAnimating() {
         self.activityIndicator.stopAnimating()
+    }
+    
+    @objc func clearInputLogin() {
+        textFieldPw.text = ""
+        if UserDefaults.standard.bool(forKey: "idSaveCheck") {
+            textFieldId.text = UserDefaults.standard.string(forKey: "userId")
+            idSaveCheckBox.setOn(true, animated: false)
+        } else {
+            textFieldId.text = ""
+            idSaveCheckBox.setOn(false, animated: false)
+        }
+        
+        autoLoginCheckBox.setOn(false, animated: false)
     }
     
     

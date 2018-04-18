@@ -105,7 +105,7 @@ class GdriveMultiCheckController {
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
                 UIAlertAction in
                 NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                NotificationCenter.default.post(name: Notification.Name("btnMulticlicked"), object: self, userInfo: nil)
+//                NotificationCenter.default.post(name: Notification.Name("btnMulticlicked"), object: self, userInfo: nil)
             }
             alertController.addAction(yesAction)
             parent.present(alertController, animated: true)

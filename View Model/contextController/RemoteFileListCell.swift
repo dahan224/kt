@@ -47,6 +47,7 @@ class RemoteFileListCell: UICollectionViewCell {
     }()
     
     
+    
     let btnOption:UIButton = {
         let button = UIButton(type: .system)
         button.setImage(#imageLiteral(resourceName: "ico_36dp_context_open").withRenderingMode(.alwaysOriginal), for: .normal)
@@ -150,13 +151,13 @@ class RemoteFileListCell: UICollectionViewCell {
         
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 25).isActive = true
-        ivSub.widthAnchor.constraint(equalToConstant: 20).isActive = true
-        ivSub.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        ivSub.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        ivSub.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
+        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -50).isActive = true
         
         
         lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true

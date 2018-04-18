@@ -83,7 +83,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     var createdTime = ""
     var modifiedTime = ""
     var mimeType = ""
-
+    var etsionNm = ""
+    
     enum googleSignInSegueEnum: String {
         case loginForList = "loginForList"
         case loginForSend = "loginForSend"
@@ -162,7 +163,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         print("slideViewWith: \(slideViewWith)")
        
         
-        setupDeviceListView(container: containerView)
+        
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(openLicenseSegue),
                                                name: NSNotification.Name("openLicenseSegue"),
@@ -217,22 +218,33 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
         GIDSignIn.sharedInstance().scopes = scopes
+//        setupDeviceListView(container: containerView)
+        homeViewController = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
+        homeViewController?.containerViewController = self
+        self.addChildViewController(homeViewController!)
+        containerView.addSubview(homeViewController!.view)
+        homeViewController?.didMove(toParentViewController: parent)
+        
+        
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+//        setupDeviceListView(container: containerView)
+        
+//        homeViewController?.willMove(toParentViewController: parent)
+       
+        let w = containerView.frame.size.width;
+        let h = containerView.frame.size.height;
+        homeViewController?.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+    }
+    
+    override func viewDidLayoutSubviews() {
         
     }
     
     func setupDeviceListView(container: UIView){
       
-        homeViewController = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
-        homeViewController?.containerViewController = self
-        
-        homeViewController?.willMove(toParentViewController: parent)
-        self.addChildViewController(homeViewController!)
-        container.addSubview(homeViewController!.view)
-        homeViewController?.didMove(toParentViewController: parent)
-        
-        let w = container.frame.size.width;
-        let h = container.frame.size.height;
-        homeViewController?.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+     
         
         print("containerA setting called")
         
@@ -249,7 +261,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         let child = storyboard!.instantiateViewController(withIdentifier: "LatelyUpdatedFileViewController") as! LatelyUpdatedFileViewController
         child.containerViewController = self
         child.listViewStyleState = listViewStyleState
-        self.willMove(toParentViewController: nil)
+//        self.willMove(toParentViewController: nil)
         child.willMove(toParentViewController: parent)
         self.addChildViewController(child)
         
@@ -277,8 +289,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         homeViewController = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
         homeViewController?.containerViewController = self
         homeViewController?.listViewStyleState = listViewStyleState
-        self.willMove(toParentViewController: nil)
-        homeViewController?.willMove(toParentViewController: parent)
+//        self.willMove(toParentViewController: nil)
+//        homeViewController?.willMove(toParentViewController: parent)
         self.addChildViewController(homeViewController!)
         
         let transition = CATransition()
@@ -326,11 +338,13 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 vc.amdDate = amdDate
                 vc.fromOsCd = fromOsCd
                 vc.fromDevUuid = fromDevUuid
+                vc.deviceName = self.deviceName
                 vc.fromFoldr = fromFoldr
                 vc.fromFoldrId = fromFoldrId
                 vc.multiCheckedfolderArray = multiCheckedfolderArray
                 vc.gDriveMultiCheckedfolderArray = gDriveMultiCheckedfolderArray
                 vc.mimeType = mimeType
+                vc.etsionNm = etsionNm
             }
             
         }
@@ -379,12 +393,16 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     }
 
     @objc func googleSignInAlertShow(){
+        let transition = CATransition()
+        transition.type = kCATransitionPush
+        transition.subtype = kCATransitionFromRight
+        view.layer.add(transition, forKey: nil)
         view.addSubview(self.halfBlackView)
+        
         halfBlackView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
         halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
         halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
         halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
-        
         
         let alertController = UIAlertController(title: "Google Drive에 로그인\n하시겠습니까?",message: "", preferredStyle: UIAlertControllerStyle.alert)
         
@@ -397,6 +415,11 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         }
         let cancelButton = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
             self.halfBlackView.removeFromSuperview()
+            if(self.homeViewController?.indicatorAnimating)!{
+                self.homeViewController?.homeViewToggleIndicator()
+            }
+            self.homeViewController?.cellStyle = 1
+            self.homeViewController?.showBottomIndicator()
         }
         alertController.addAction(okAction)
         alertController.addAction(cancelButton)
@@ -513,6 +536,11 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         }
         let cancelAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
             self.halfBlackView.removeFromSuperview()
+            if(self.homeViewController?.indicatorAnimating)!{
+                self.homeViewController?.homeViewToggleIndicator()
+            }
+            self.homeViewController?.cellStyle = 1
+            self.homeViewController?.showBottomIndicator()
         }
         
         alertController.addAction(okAction)
@@ -619,9 +647,15 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             UserDefaults.standard.synchronize()
             DispatchQueue.main.async {
                 self.service.authorizer = nil
+               
                 self.showAlert(title: "Authentication Error", message: "재 시도 부탁 드립니다.")
+                
             }
-            
+            if(self.homeViewController?.indicatorAnimating)!{
+                self.homeViewController?.homeViewToggleIndicator()
+            }
+            self.homeViewController?.cellStyle = 1
+            self.homeViewController?.showBottomIndicator()
             
         } else {
             var accessToken:String = ""
@@ -716,9 +750,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                 if(json["error"].exists()){
                                     print("error: \(json["error"])")
                                     self.googleSignIn()
-                                    if(self.homeViewController?.indicatorAnimating)!{
-                                        self.homeViewController?.homeViewToggleIndicator()
-                                    }
+                                   
                                     
                                 } else {
                                     if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
@@ -731,9 +763,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                         }
                                         DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
                                         self.syncCloudEmailToServer(cloudId: self.googleEmail)
-                                        if(self.homeViewController?.indicatorAnimating)!{
-                                            self.homeViewController?.homeViewToggleIndicator()
-                                        }
+                                        
                                     } else {
                                         print("error: \(json["errors"])")
                                         self.googleSignIn()
@@ -863,39 +893,45 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             GIDSignIn.sharedInstance().scopes = scopes
             homeViewController?.homeViewToggleIndicator()
             var accessToken = DbHelper().getAccessToken(email: googleEmail)
-            let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
-            print("accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
-            let now = Date()
-            let dateGetTokenTime = Util.stringToDate(text: getTokenTime)
-            var userCalendar = Calendar.current
-            userCalendar.timeZone = TimeZone.current
-            let requestedComponent: Set<Calendar.Component> = [.hour,.minute,.second]
-            //        let requestedComponent: Set<Calendar.Component> = [.hour]
-            let timeDifference = userCalendar.dateComponents(requestedComponent, from: dateGetTokenTime, to: now)
-            //                        print(timeDifference.hour)
-            let hour = timeDifference.hour
-            if(hour! < 1){
-                //                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
-                let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
-                if(loginState == "login" && GIDSignIn.sharedInstance().hasAuthInKeychain()){
-                    print("get file")
-                    getFileDict = fileDict
-                    googleSignInSegueState = .loginForSend
-                    GIDSignIn.sharedInstance().signInSilently()
-                    
+            var getTokenTime =  ""
+            if !accessToken.isEmpty {
+                getTokenTime = DbHelper().getTokenTime(email: googleEmail)
+            }
+            if(!getTokenTime.isEmpty){
+                print("accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
+                let now = Date()
+                let dateGetTokenTime = Util.stringToDate(text: getTokenTime)
+                var userCalendar = Calendar.current
+                userCalendar.timeZone = TimeZone.current
+                let requestedComponent: Set<Calendar.Component> = [.hour,.minute,.second]
+                //        let requestedComponent: Set<Calendar.Component> = [.hour]
+                let timeDifference = userCalendar.dateComponents(requestedComponent, from: dateGetTokenTime, to: now)
+                //                        print(timeDifference.hour)
+                let hour = timeDifference.hour
+                if(hour! < 1){
+                    //                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
+                    let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
+                    if(loginState == "login" && GIDSignIn.sharedInstance().hasAuthInKeychain()){
+                        print("get file")
+                        getFileDict = fileDict
+                        googleSignInSegueState = .loginForSend
+                        GIDSignIn.sharedInstance().signInSilently()
+                        
+                        
+                    } else {
+                        
+                        print("login called")
+                        googleSignInSegueState = .loginForSend
+                        googleSignInAlertShow()
+                    }
                     
                 } else {
-                    
-                    print("login called")
+                    print("token time expired")
                     googleSignInSegueState = .loginForSend
                     googleSignInAlertShow()
                 }
-                
-            } else {
-                print("token time expired")
-                googleSignInSegueState = .loginForSend
-                googleSignInAlertShow()
             }
+           
         } else {
             print("google email")
             googleSignInSegueState = .loginForSend
@@ -926,6 +962,14 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 mimeType = getMimeType
             }
             
+            if let getEtsionNm = fileDict.userInfo?["etsionNm"] as? String {
+                etsionNm = getEtsionNm
+            }
+            
+            if let getDevNm = fileDict.userInfo?["fromDevNm"] as? String {
+                deviceName = getDevNm
+            }
+            
             switch getToState {
                 case "nas":
                     storageKind = .nas
@@ -947,11 +991,14 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     @objc func dismissContainerView(){
       
-        dismiss(animated: false, completion: nil)
+        dismiss(animated: false, completion: {
+            
+            NotificationCenter.default.post(name: Notification.Name("clearInputLogin"), object: nil)
+        })
         
     }
     
-    func getMultiFolderArray(getArray:[App.FolderStruct], toStorage:String, fromUserId:String, fromOsCd:String,fromDevUuid:String){
+    func getMultiFolderArray(getArray:[App.FolderStruct], toStorage:String, fromUserId:String, fromOsCd:String,fromDevUuid:String, foldrWholePathNm:String){
         print("getArray : \(getArray)")
         multiCheckedfolderArray = getArray
         if toStorage == "nas_multi" {
@@ -969,7 +1016,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         self.fromOsCd = fromOsCd
         self.fromUserId = fromUserId
         self.fromDevUuid = fromDevUuid
-        
+        self.foldrWholePathNm = foldrWholePathNm
         performSegue(withIdentifier: "nasFolderSelectSegue", sender: self)
     }
     func getGDriveMultiFolderArray(getArray:[App.DriveFileStruct], toStorage:String, fromUserId:String, fromOsCd:String,fromDevUuid:String){

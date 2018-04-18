@@ -37,7 +37,7 @@ class ToNasFromLocalFomGDriveFolder {
         multiCheckedfolderArray = getMultiArray
         nasSendFolderSelectVC = parent
         for folder in folders{
-            if folder.foldrWholePathNm.contains(oldFoldrWholePathNm) {
+            if folder.foldrWholePathNm == oldFoldrWholePathNm || folder.foldrWholePathNm.contains("\(oldFoldrWholePathNm)/") {
                 print(folder.foldrWholePathNm)
                 var path = folder.foldrWholePathNm
                 print("local path : \(path)")
@@ -150,7 +150,7 @@ class ToNasFromLocalFomGDriveFolder {
     func sendToNasFromLocal(url:URL, name:String, toOsCd:String, originalFileId:Int, files:[App.Files], newFoldrWholePathNm:String){
         
         let userId = toUserId
-        let password = "1234"
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         
         let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])

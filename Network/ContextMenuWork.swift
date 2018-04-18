@@ -182,7 +182,7 @@ class ContextMenuWork {
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         let user = userId
-        let password = "1234"
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
@@ -232,7 +232,7 @@ class ContextMenuWork {
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         let user = userId
-        let password = "1234"
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
@@ -278,7 +278,7 @@ class ContextMenuWork {
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         let user = userId
-        let password = "1234"
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
@@ -328,42 +328,7 @@ class ContextMenuWork {
         }
     }
     
-    func downloadFromNasToSend(userId:String, fileNm:String, path:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
-        stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let user = userId
-        let password = "1234"
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
-        let base64Credentials = credentialData.base64EncodedString()
-        let headers = [
-            "Authorization": "Basic \(base64Credentials)"
-        ]
-        var saveFileNm = ""
-        saveFileNm = fileNm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        
-        print("stringUrl : \(stringUrl)")
-        let downloadUrl:URL = URL(string: stringUrl)!
-        let destination: DownloadRequest.DownloadFileDestination = { _, _ in
-            var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            documentsURL.appendPathComponent("\(saveFileNm)")
-            return (documentsURL, [.removePreviousFile])
-        }
-        
-        Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
-            .downloadProgress(closure: { (progress) in
-                print("download progress : \(progress.fractionCompleted)")
-                //                 completionHandler(progress.fractionCompleted, nil)
-            })
-            .response { response in
-                print("response : \(response)")
-                if response.destinationURL != nil {
-                    let stringDestinationUrl = response.destinationURL?.absoluteString
-                    print(stringDestinationUrl)
-                    completionHandler(stringDestinationUrl, nil)
-                }
-        }
-    }
-    
+  
     
     //remote 관련
     
@@ -371,10 +336,15 @@ class ContextMenuWork {
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         
-        let user = App.defaults.userId
-        let password = "1234"
+        let user:String = App.defaults.userId
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
+        let decodedData = Data(base64Encoded: base64Credentials)!
+        let decodedString = String(data: decodedData, encoding: .utf8)!
+        print("decodedString : \(decodedString)")
+
+        
         let headers = [
             "Authorization": "Basic \(base64Credentials)"
         ]
@@ -391,6 +361,7 @@ class ContextMenuWork {
             return (documentsURL, [.removePreviousFile])
         }
         
+//
         Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
             .downloadProgress(closure: { (progress) in
                 print("download progress : \(progress.fractionCompleted)")
@@ -402,13 +373,13 @@ class ContextMenuWork {
                     print(response.destinationURL!)
                     if let path = response.destinationURL?.path{
                         let path2 = "/private\(path)"
-                        
+
                         //                        DbHelper().localFileToSqlite(id: fileId, path: path2)
                         print("path2 : \(path2)" )
                         print("saved fileId : \(UserDefaults.standard.string(forKey: path2)), fileId : \(fileId)")
                         completionHandler("success", nil)
                     }
-                    
+
                 }
         }
     }
@@ -418,7 +389,7 @@ class ContextMenuWork {
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         
         let user = App.defaults.userId
-        let password = "1234"
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
@@ -464,7 +435,7 @@ class ContextMenuWork {
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         
         let user = App.defaults.userId
-        let password = "1234"
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
@@ -479,7 +450,7 @@ class ContextMenuWork {
         let downloadUrl:URL = URL(string: stringUrl)!
         let destination: DownloadRequest.DownloadFileDestination = { _, _ in
             var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            documentsURL.appendPathComponent("\(saveFileNm)")
+            documentsURL.appendPathComponent("tmp/\(saveFileNm)")
             return (documentsURL, [.removePreviousFile])
         }
         
@@ -585,17 +556,9 @@ class ContextMenuWork {
         folderIdsToUp.append(foldrId)
         
         getFolderIdsToDownload(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:selectedDevUuid,deviceName:deviceName, dwldFoldrNm:dwldFoldrNm)
-//        callGetFolderIdsToDownload(getArray: folderIdsToDownLoad, userId:userId, devUuid:selectedDevUuid,deviceName:deviceName, dwldFoldrNm:dwldFoldrNm)
     }
     
-    func callGetFolderIdsToDownload(getArray:[Int], userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String) {
-        
-        for id in getArray {
-            self.getFolderIdsToDownload(foldrId: id, foldrWholePathNm: rootFoldrWholePathNm, userId:userId, devUuid:selectedDevUuid,deviceName:deviceName, dwldFoldrNm:dwldFoldrNm)
-            return
-        }
-        
-    }
+    
     
     func getFolderIdsToDownload(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String) {
         var foldrLevel = 0
@@ -640,7 +603,6 @@ class ContextMenuWork {
             }
         }
         print("upFoldersToDelete : \(upFoldersToDelete)")
-        var localPathArray:[URL] = []
         for name in folderPathToDownLoad {
             let fullName = name.replacingOccurrences(of: upFoldersToDelete, with: "")
             print("fullName : \(fullName)")
@@ -655,7 +617,6 @@ class ContextMenuWork {
 //            }
 //            print("folderName : \(folderName)")
             let createdPath:URL = self.createLocalFolder(folderName: fullName)!
-            localPathArray.append(createdPath)
         }
 
         getFilesFromFolder()

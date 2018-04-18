@@ -111,6 +111,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var bottomListOneViewSortKey = [DbHelper.sortByEnum.none, DbHelper.sortByEnum.asc, DbHelper.sortByEnum.desc]
     
     var bottomListDevice = ["홈으로"]
+    var bottomListSearch = ["GiGA NAS로 보내기"]
     
     enum searchStepEnum {
         case all
@@ -161,6 +162,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     @IBOutlet weak var flickView: UIStackView!
     
+    let navView:UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.white
+        view.translatesAutoresizingMaskIntoConstraints = false
+        
+        return view;
+    }()
     
     let navBarTitle:UIButton = {
         let button = UIButton(type: .system)
@@ -244,6 +252,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     let sBar:UISearchBar = {
         let bar = UISearchBar()
+        
         bar.placeholder = "Search in all Storage"
         bar.backgroundImage = UIImage()
         bar.setImage(UIImage(), for: .clear, state: .normal)
@@ -257,7 +266,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             }
         }
         bar.translatesAutoresizingMaskIntoConstraints = false
-        
+        bar.textField.clearButtonMode = .never
         return bar
     }()
     
@@ -357,6 +366,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var oneViewSortState:DbHelper.sortByEnum = DbHelper.sortByEnum.none
     var containerViewTopAnchor:NSLayoutConstraint?
     var containerViewBottomAnchor:NSLayoutConstraint?
+    var searchViewBottomAnchor:NSLayoutConstraint?
     
     
     override func viewDidLoad() {
@@ -370,12 +380,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         sBar.delegate = self
         documentController.delegate = self
          
-        customNavBar.layer.shadowColor = UIColor.lightGray.cgColor
-        customNavBar.layer.shadowOffset = CGSize(width:0,height: 2.0)
-        customNavBar.layer.shadowRadius = 1.0
-        customNavBar.layer.shadowOpacity = 1.0
-        customNavBar.layer.masksToBounds = false;
-        customNavBar.layer.shadowPath = UIBezierPath(roundedRect:customNavBar.bounds, cornerRadius:customNavBar.layer.cornerRadius).cgPath
         
 //        setupNavBar()
        
@@ -431,7 +435,24 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         tableView.delegate = self
         tableView.dataSource = self
         tableView.reloadData()
-        self.setHomeView()
+        self.tableView.isHidden = true
+        print("homeViewController called")
+        setHomeView()
+    }
+    
+    override func viewDidAppear(_ animated: Bool) {
+        customNavBar.layer.shadowColor = UIColor.lightGray.cgColor
+        customNavBar.layer.shadowOffset = CGSize(width:0,height: 2.0)
+        customNavBar.layer.shadowRadius = 1.0
+        customNavBar.layer.shadowOpacity = 1.0
+        customNavBar.layer.masksToBounds = false;
+        customNavBar.layer.shadowPath = UIBezierPath(roundedRect:customNavBar.bounds, cornerRadius:customNavBar.layer.cornerRadius).cgPath
+        
+//        self.setHomeView()
+    }
+    
+    override func viewDidLayoutSubviews() {
+    
     }
     
     func setHomeView(){
@@ -443,6 +464,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         for view in self.customNavBar.subviews {
             view.removeFromSuperview()
         }
+        
         SetupHomeView.setupMainNavbar(View: customNavBar, navBarTitle: navBarTitle, hamburgerButton: hamburgerButton, listButton: listButton, downArrowButton: downArrowButton, title:"GiGA Stroage")
         
         
@@ -455,9 +477,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         oneViewSortState = DbHelper.sortByEnum.none
      
-        self.setupDeviceListView(sortBy: oneViewSortState,multiCheckd: multiButtonChecked)
+        
         hideKeyboard()
         tableView.reloadData()
+        
+        self.setupDeviceListView(sortBy: oneViewSortState,multiCheckd: multiButtonChecked)
         
     }
     
@@ -471,10 +495,12 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             previous.view.removeFromSuperview()
             previous.removeFromParentViewController()
         }
-        child = storyboard!.instantiateViewController(withIdentifier: "HomeDeviceCollectionVC") as! HomeDeviceCollectionVC
+        child = storyboard!.instantiateViewController(withIdentifier: "HomeDeviceCollectionVC") as? HomeDeviceCollectionVC
+        self.DeviceArray.removeAll()
+        self.driveFileArray.removeAll()
         self.DeviceArray = DbHelper().listSqlite(sortBy: sortBy)
         self.driveFileArray = DbHelper().googleDrivelistSqlite(sortBy: sortBy)
-//        print("table deviceList: \(DeviceArray)")
+        print("table deviceList: \(DeviceArray.count)")
         
         
         child?.DeviceArray = self.DeviceArray
@@ -502,28 +528,38 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         for containerSubview in oneViewListView.subviews {
             containerSubview.removeFromSuperview()
         }
-        containerViewTopAnchor?.isActive = false
-        containerViewBottomAnchor?.isActive = false
+        
+        
         oneViewListView.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
-        oneViewListView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+//        oneViewListView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
+        oneViewListView.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
+        
+        
+        
         containerViewTopAnchor =  oneViewListView.topAnchor.constraint(equalTo: searchView.bottomAnchor, constant: 0)
+        containerViewTopAnchor?.isActive = false
         containerViewTopAnchor?.isActive = true
         containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+        containerViewBottomAnchor?.isActive = false
         containerViewBottomAnchor?.isActive = true
-        self.willMove(toParentViewController: nil)
-        child?.willMove(toParentViewController: parent)
+//        self.willMove(toParentViewController: nil)
+//        child?.willMove(toParentViewController: parent)
         self.addChildViewController(child!)
         oneViewListView.addSubview((child?.view)!)
-        
         child?.didMove(toParentViewController: parent)
         
         let w = oneViewListView.frame.size.width;
         let h = oneViewListView.frame.size.height;
         child?.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
         
-        print("containerA setting called")
+        print("containerA setting called height : \(h)")
+        let tableViewHeight = tableView.frame.size.height
+        let tableViewHeightAnchor = tableView.heightAnchor
+        let flickViewHeight = flickView.frame.size.height
+        print("flickViewHeight : \(flickViewHeight), viewHeight : \(App.Size.screenHeight), tableViewHeight : \(tableViewHeight), tableViewHeightAnchor : \(tableViewHeightAnchor)")
         
-        
+       
+//        tableView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant : -300).isActive = true
     }
     
     @objc func subNavClicked() {
@@ -533,10 +569,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     func setupSearchListView(sortBy: DbHelper.sortByEnum, multiCheckd:Bool){
         
-        child2 = storyboard!.instantiateViewController(withIdentifier: "HomeDeviceCollectionVC") as! HomeDeviceCollectionVC
+        child2 = storyboard!.instantiateViewController(withIdentifier: "HomeDeviceCollectionVC") as? HomeDeviceCollectionVC
         self.DeviceArray = DbHelper().listSqlite(sortBy: sortBy)
         child2?.DeviceArray = self.DeviceArray
         child2?.listViewStyleState = self.listViewStyleState
+        child2?.cellStyle = 2
         child2?.mainContentState = self.mainContentState
         child2?.flickState = self.flickState
         child2?.LatelyUpdatedFileArray = self.LatelyUpdatedFileArray
@@ -547,7 +584,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         child2?.containerViewController = containerViewController
         child2?.viewState = viewStateEnum.search
         
-        print("called")
+        print("search view called")
         self.view.addSubview(searchListView)
         for containerSubview in searchListView.subviews {
             containerSubview.removeFromSuperview()
@@ -556,12 +593,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         searchListView.leadingAnchor.constraint(equalTo: view.leadingAnchor).isActive = true
 //        searchListView.topAnchor.constraint(equalTo: view.topAnchor, constant: 300).isActive = true
         searchListView.topAnchor.constraint(equalTo: searchCountLabel.bottomAnchor, constant: 2).isActive = true
-        searchListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0).isActive = true
-        self.willMove(toParentViewController: nil)
-        child2?.willMove(toParentViewController: parent)
+        
+        searchViewBottomAnchor = searchListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+        searchViewBottomAnchor?.isActive = false
+        searchViewBottomAnchor?.isActive = true
+        
         self.addChildViewController(child2!)
         searchListView.addSubview((child2?.view)!)
-        
         child2?.didMove(toParentViewController: parent)
         
         let w = searchListView.frame.size.width;
@@ -583,7 +621,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     func searchBarTextDidBeginEditing(_ searchBar: UISearchBar) {
         print("begin")
-        
+        flickView.isHidden = true // 추가
 //        sBar.endEditing(true)
 //        performSegue(withIdentifier: "showSearchViewSegue", sender: self)
         if(!searchbarTextStarted){
@@ -616,7 +654,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self)
         
         showSearchCategory()
-        SetupSearchView.showFileCountLabel(count:0, view:self.view, searchCountLabel:searchCountLabel, searchCategoryView: searchCategoryView)
+        SetupSearchView.showFileCountLabel(count:0, view:self.view, searchCountLabel:searchCountLabel, searchCategoryView: searchCategoryView, multiButton:multiButton, multiButtonChecked:multiButtonChecked, selectAllButton:selectAllButton)
         oneViewListView.isHidden = true
 //        setupSearchListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
         
@@ -639,6 +677,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         } else {
             searchInGoogleDrive(fileNm: searchedText)
         }
+        cellStyle = 2
+        child2?.cellStyle = 2
+        child2?.viewState = .search
     }
     
     func searchInAllCategory(){
@@ -660,7 +701,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     //                    print("searchFile : \(file), fileStruct : \(fileStruct)")
                 }
                 print("file count : \(self.SearchedFileArray.count)")
-                SetupSearchView.showFileCountLabel(count: self.SearchedFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView)
+                SetupSearchView.showFileCountLabel(count: self.SearchedFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView, multiButton: self.multiButton, multiButtonChecked:self.multiButtonChecked, selectAllButton:self.selectAllButton)
+                
                 
                 //                self.setupDeviceListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
                 self.setupSearchListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
@@ -685,7 +727,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             GoogleWork().getFilesByName(accessToken: accessToken, fileNm: fileNm) { responseObject, error in
                 let json = JSON(responseObject!)
                 print("json : \(json)")
-                if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
+                if let serverList:[AnyObject] = json["files"].arrayObject as? [AnyObject] {
                     for file in serverList {
                         if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 && file["mimeType"] as? String != Util.getGoogleMimeType(etsionNm: "folder"){
                             let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
@@ -695,7 +737,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     }
                 }
                 print("file count : \(self.driveFileArray.count)")
-                SetupSearchView.showFileCountLabel(count: self.driveFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView)
+                SetupSearchView.showFileCountLabel(count: self.driveFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView, multiButton: self.multiButton, multiButtonChecked:self.multiButtonChecked, selectAllButton:self.selectAllButton)
                 
                 //                self.setupDeviceListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
                 self.setupSearchListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
@@ -871,6 +913,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     @objc func bottomStateFromContainer(stateInfo: NSNotification){
+        
         if let bottomState = stateInfo.userInfo?["bottomState"] as? String, let getFileId = stateInfo.userInfo?["fileId"] as? String, let getFoldrWholePathNm = stateInfo.userInfo?["foldrWholePathNm"] as? String, let getDeviceName = stateInfo.userInfo?["deviceName"] as? String, let getDevUuid = stateInfo.userInfo?["selectedDevUuid"] as? String, let getFileNm = stateInfo.userInfo?["fileNm"] as? String, let getUserId = stateInfo.userInfo?["userId"] as? String, let getFoldrId = stateInfo.userInfo?["foldrId"] as? String, let getFomOsCd = stateInfo.userInfo?["fromOsCd"] as? String, let getCurrentFolderId = stateInfo.userInfo?["currentFolderId"] as? String{
             
             flickView.isHidden = true
@@ -987,6 +1030,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     @objc func btnMulticlicked(){
+        print("btnMulticlicked called")
         var style = "nas"
         if fromOsCd == "S" || fromOsCd == "G"{
             bottomListState = .bottomMultiListNas
@@ -1005,16 +1049,34 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         if(multiButtonChecked){
             multiButtonChecked = false
             multiButton.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            containerViewBottomAnchor?.isActive = false
-            containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
-            containerViewBottomAnchor?.isActive = true
-            
+            if(viewState == .home) {
+                containerViewBottomAnchor?.isActive = false
+                containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+                containerViewBottomAnchor?.isActive = true
+            } else {
+                searchViewBottomAnchor?.isActive = false
+                searchViewBottomAnchor = searchListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+                searchViewBottomAnchor?.isActive = true
+                
+                SetupSearchView.showFileCountLabel(count: self.driveFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView, multiButton: self.multiButton, multiButtonChecked:self.multiButtonChecked, selectAllButton:self.selectAllButton)
+                
+                
+            }
         } else {
             multiButtonChecked = true
             multiButton.setImage(#imageLiteral(resourceName: "multi_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            containerViewBottomAnchor?.isActive = false
-            containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
-            containerViewBottomAnchor?.isActive = true
+            
+            if(viewState == .home) {
+                containerViewBottomAnchor?.isActive = false
+                containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+                containerViewBottomAnchor?.isActive = true
+            } else {
+                searchViewBottomAnchor?.isActive = false
+                searchViewBottomAnchor = searchListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+                searchViewBottomAnchor?.isActive = true
+                
+                SetupSearchView.showFileCountLabel(count: self.driveFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView, multiButton: self.multiButton, multiButtonChecked:self.multiButtonChecked, selectAllButton:self.selectAllButton)
+            }
             
         }
         if(style == "local"){
@@ -1023,12 +1085,18 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
       
         setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
         stringBool = String(multiButtonChecked)
-        print("stringBool :\(stringBool), style : \(style)")
+        print("stringBool :\(stringBool), style : \(style), cellstyle : \(cellStyle)")
 //        let fileIdDict = ["multiChecked":stringBool]
 //        NotificationCenter.default.post(name: Notification.Name("multiSelectActive"), object: self, userInfo: fileIdDict)
         
         tableView.reloadData()
-        child?.multiSelectActive(multiButtonActive: multiButtonChecked)
+        if(viewState == .home) {
+            child?.multiSelectActive(multiButtonActive: multiButtonChecked)
+        } else if viewState == .search {
+            child2?.multiSelectActive(multiButtonActive: multiButtonChecked)
+        }
+        
+        
         
     }
     
@@ -1099,12 +1167,24 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         }
     }
     
+    func showBottomIndicator(){
+        containerViewBottomAnchor?.isActive = false
+        containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+        containerViewBottomAnchor?.isActive = true
+        flickView.isHidden = false
+    }
     
     func inActiveMultiCheck(){
+        print("cellstyle : \(cellStyle)")
         multiButtonChecked = false
         multiButton.setImage(#imageLiteral(resourceName: "multi_off-1").withRenderingMode(.alwaysOriginal), for: .normal)
         containerViewBottomAnchor?.isActive = false
+        if cellStyle == 2 {
         containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+        } else {
+            containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+        }
+        
         containerViewBottomAnchor?.isActive = true
         if self.view.contains(multiCheckBottomView){
             for view in multiCheckBottomView.subviews {
@@ -1137,6 +1217,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
  
     @objc func toggleBottomMenu(sortInfo: NSNotification) {
+        tableView.scrollToRow(at: IndexPath(row:0, section:0), at: .top, animated: false)
         if let getInfo = sortInfo.userInfo?["fileId"] as? String {
             fileId = getInfo
             print("getFileId: \(fileId)")
@@ -1144,8 +1225,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         print("local list count :\(bottomListLocalFileInfo.count)")
         
         if bottomMenuOpen {
+            
             UIView.animate(withDuration: 0.2, animations: {
-                self.tableBottomConstant.constant = 260
+                self.tableBottomConstant.constant = -260
                 self.bottomMenuOpen = false
                 self.view.layoutIfNeeded()
                 print("animation duration")
@@ -1154,10 +1236,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 print("animation finished")
                 self.backgroundView.removeGestureRecognizer(self.tapGesture)
                 self.backgroundView.removeFromSuperview()
-                
+                self.tableView.isHidden = true
             })
             
         }else{
+            self.tableView.isHidden = false
             UIView.animate(withDuration: 0.2, animations: {
                 self.tableBottomConstant.constant = 0
                 self.bottomMenuOpen = true
@@ -1166,6 +1249,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             }, completion:{
                 (finished: Bool) in
                 print("animation finished")
+                
                 
             })
             
@@ -1249,35 +1333,36 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             print("DeviceArray.count : \(DeviceArray.count)")
             return DeviceArray.count + 1
         } else {
-            switch bottomListState {
-            case .nasFileInfo:
-                return bottomListFileInfo.count
-            case .localFileInfo:
-                return bottomListLocalFileInfo.count
-                
-            case .remoteFileInfo:
-                return bottomListRemoteFileInfo.count
-            case .sort:
-                return bottomListSort.count
-                
-            case .oneView:
-                return bottomListOneViewSort.count
-                
-            case .bottomMultiListNas:
-                return bottomMultiListNas.count
-            case .bottomMultiListRemote:
-                return bottomMultiListRemote.count
-            case .bottomMultiListLocal:
-                return bottomMultiListLocal.count
-            case .googleDrive:
-                return bottomGoogleDrive.count
-            case .bottomMultiListGDrive:
-                return bottomMultiListGDrive.count
+            if(viewState == .home) {
+                switch bottomListState {
+                case .nasFileInfo:
+                    return bottomListFileInfo.count
+                case .localFileInfo:
+                    return bottomListLocalFileInfo.count
+                    
+                case .remoteFileInfo:
+                    return bottomListRemoteFileInfo.count
+                case .sort:
+                    return bottomListSort.count
+                    
+                case .oneView:
+                    return bottomListOneViewSort.count
+                    
+                case .bottomMultiListNas:
+                    return bottomMultiListNas.count
+                case .bottomMultiListRemote:
+                    return bottomMultiListRemote.count
+                case .bottomMultiListLocal:
+                    return bottomMultiListLocal.count
+                case .googleDrive:
+                    return bottomGoogleDrive.count
+                case .bottomMultiListGDrive:
+                    return bottomMultiListGDrive.count
+                }
+            } else {
+                return bottomListSearch.count
             }
         }
-      
-       
-        
     }
     
   
@@ -1311,60 +1396,67 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             }
         } else {
             print("tableview bottomstate : \(bottomListState)")
-            switch bottomListState {
-            case .nasFileInfo:
-                cell.ivIcon.isHidden = false
-                let imageString = Util.getContextImageString(context: bottomListFileInfo[indexPath.row])
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomListFileInfo[indexPath.row]
-                break
+            if viewState == .home {
+                switch bottomListState {
+                case .nasFileInfo:
+                    cell.ivIcon.isHidden = false
+                    let imageString = Util.getContextImageString(context: bottomListFileInfo[indexPath.row])
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblTitle.text = bottomListFileInfo[indexPath.row]
+                    break
+                    
+                case .localFileInfo:
+                    cell.ivIcon.isHidden = false
+                    let imageString = Util.getContextImageString(context: bottomListLocalFileInfo[indexPath.row])
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblTitle.text = bottomListLocalFileInfo[indexPath.row]
+                    break
+                case .remoteFileInfo:
+                    cell.ivIcon.isHidden = false
+                    let imageString = Util.getContextImageString(context: bottomListRemoteFileInfo[indexPath.row])
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblTitle.text = bottomListRemoteFileInfo[indexPath.row]
+                    break
+                case .sort:
+                    cell.ivIcon.isHidden = true
+                    cell.lblTitle.text = bottomListSort[indexPath.row]
+                    break
+                    
+                case .oneView:
+                    cell.ivIcon.isHidden = true
+                    cell.lblTitle.text = bottomListOneViewSort[indexPath.row]
+                    break
+                    
+                case .bottomMultiListNas:
+                    cell.ivIcon.isHidden = false
+                    let imageString = Util.getContextImageString(context: bottomMultiListNas[indexPath.row])
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblTitle.text = bottomMultiListNas[indexPath.row]
+                    break
+                case .bottomMultiListRemote:
+                    cell.ivIcon.isHidden = false
+                    let imageString = Util.getContextImageString(context: bottomMultiListRemote[indexPath.row])
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblTitle.text = bottomMultiListRemote[indexPath.row]
+                case .bottomMultiListLocal:
+                    cell.ivIcon.isHidden = false
+                    let imageString = Util.getContextImageString(context: bottomMultiListLocal[indexPath.row])
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblTitle.text = bottomMultiListLocal[indexPath.row]
+                case .googleDrive:
+                    let imageString = Util.getContextImageString(context: bottomGoogleDrive[indexPath.row])
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblTitle.text = bottomGoogleDrive[indexPath.row]
+                case .bottomMultiListGDrive:
+                    let imageString = Util.getContextImageString(context: bottomMultiListGDrive[indexPath.row])
+                    cell.ivIcon.image = UIImage(named: imageString)
+                    cell.lblTitle.text = bottomMultiListGDrive[indexPath.row]
+                }
                 
-            case .localFileInfo:
-                cell.ivIcon.isHidden = false
-                let imageString = Util.getContextImageString(context: bottomListLocalFileInfo[indexPath.row])
+            } else {
+                let imageString = Util.getContextImageString(context: bottomListSearch[indexPath.row])
                 cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomListLocalFileInfo[indexPath.row]
-                break
-            case .remoteFileInfo:
-                cell.ivIcon.isHidden = false
-                let imageString = Util.getContextImageString(context: bottomListRemoteFileInfo[indexPath.row])
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomListRemoteFileInfo[indexPath.row]
-                break
-            case .sort:
-                cell.ivIcon.isHidden = true
-                cell.lblTitle.text = bottomListSort[indexPath.row]
-                break
-          
-            case .oneView:
-                cell.ivIcon.isHidden = true
-                cell.lblTitle.text = bottomListOneViewSort[indexPath.row]
-                break
-                
-            case .bottomMultiListNas:
-                cell.ivIcon.isHidden = false
-                let imageString = Util.getContextImageString(context: bottomMultiListNas[indexPath.row])
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomMultiListNas[indexPath.row]
-                break
-            case .bottomMultiListRemote:
-                cell.ivIcon.isHidden = false
-                let imageString = Util.getContextImageString(context: bottomMultiListRemote[indexPath.row])
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomMultiListRemote[indexPath.row]
-            case .bottomMultiListLocal:
-                cell.ivIcon.isHidden = false
-                let imageString = Util.getContextImageString(context: bottomMultiListLocal[indexPath.row])
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomMultiListLocal[indexPath.row]
-            case .googleDrive:
-                let imageString = Util.getContextImageString(context: bottomGoogleDrive[indexPath.row])
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomGoogleDrive[indexPath.row]
-            case .bottomMultiListGDrive:
-                let imageString = Util.getContextImageString(context: bottomMultiListGDrive[indexPath.row])
-                cell.ivIcon.image = UIImage(named: imageString)
-                cell.lblTitle.text = bottomMultiListGDrive[indexPath.row]
+                cell.lblTitle.text = bottomListSearch[indexPath.row]
             }
             
         }
@@ -1416,16 +1508,16 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 
                 break
             case .nasFileInfo:
-                NasFileCellController().nasFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
+                NasFileCellController().nasFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
                 break
                 
             case .localFileInfo:
 //                print("localFileInfo folderArray : \(folderArray), indexpathrow : \(intFolderArrayIndexPathRow)")
-                LocalFileListCellController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
+                LocalFileListCellController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
                 break
             case .remoteFileInfo:
                 
-                RemoteFileListCellController().remoteFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
+                RemoteFileListCellController().remoteFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
                 break
                 
            
@@ -1435,7 +1527,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 break
             case .googleDrive:
-                GDriveFileListCellController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: "Google Drive", parentView: "deviceView", deviceView: self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:driveFileArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
+                GDriveFileListCellController().ContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: "Google Drive", parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:driveFileArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
                 
                 break            
             case .bottomMultiListNas:
@@ -1534,12 +1626,19 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             print("folderName : \(self.folderName)")
             setupFileCollectionView(getFolerName: getInfo, getDeviceName:getDeviceName, getDevUuid:getDevUuid)
             
-            
+            containerViewBottomAnchor?.isActive = false
+            if cellStyle == 2 {
+                containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: 0)
+            } else {
+                containerViewBottomAnchor = oneViewListView.bottomAnchor.constraint(equalTo: view.bottomAnchor, constant: -60)
+            }            
+            containerViewBottomAnchor?.isActive = true
         }
     }
     
     func setupFileCollectionView(getFolerName:String, getDeviceName:String, getDevUuid:String){
-        SetupFolderInsideCollectionView.searchView(searchView: searchView, searchButton: searchButton, sortButton: sortButton, customNavBar: customNavBar, hamburgerButton: hamburgerButton, listButton: listButton, multiButton:multiButton,navBarTitle: navBarTitle, getFolerName: getFolerName, getDeviceName: getDeviceName, listStyle: listViewStyleState, getDevUuid:getDevUuid, localRefreshButton:localRefreshButton, multiButtonChecked:multiButtonChecked, selectAllButton:selectAllButton, lblSubNav:lblSubNav)
+       SetupFolderInsideCollectionView.searchView(searchView: searchView, searchButton: searchButton, sortButton: sortButton, customNavBar: customNavBar, hamburgerButton: hamburgerButton, listButton: listButton, multiButton:multiButton,navBarTitle: navBarTitle, getFolerName: getFolerName, getDeviceName: getDeviceName, listStyle: listViewStyleState, getDevUuid:getDevUuid, localRefreshButton:localRefreshButton, multiButtonChecked:multiButtonChecked, selectAllButton:selectAllButton, lblSubNav:lblSubNav, downArrowButton:downArrowButton)
+        
         
     }
     
@@ -1635,12 +1734,15 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 if let statusCode = json["statusCode"].int, statusCode == 100 {
                     DispatchQueue.main.async {
                         self.homeViewToggleIndicator()
-                        NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self)
+                        let fileDict = ["foldrId":self.currentFolderId]
+                        NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo :fileDict)
                         let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                         
                         let fileIdDict = ["fileId":"0"]
                         NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+                        
+                        
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
                     }
@@ -1691,6 +1793,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             documentController.delegate = self
 //            documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
             documentController.presentPreview(animated: true)
+            
+            
+
         }
     }
     
@@ -1707,10 +1812,17 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     func documentInteractionControllerWillBeginPreview(_ controller: UIDocumentInteractionController) {
         print("documentInteractionControllerWillBeginPreview")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+            if(self.indicatorAnimating){
+                self.homeViewToggleIndicator()
+            }
+        })
     }
+    
+
     func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
         print("documentInteractionControllerDidEndPreview")
-        homeViewToggleIndicator()
+//        homeViewToggleIndicator()
         let fileIdDict = ["fileId":"0"]
         if (listViewStyleState == .grid) {
 //            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
@@ -1727,11 +1839,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         
         
     }
-    
+  
     override func viewWillAppear(_ animated: Bool) {
             print("viewWillAppear")
         
-        renewDeviceList()
+//        renewDeviceList()
        
     }
     override func viewWillDisappear(_ animated: Bool) {

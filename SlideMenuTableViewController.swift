@@ -65,16 +65,24 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(tableScrollTop),
+                                               name: NSNotification.Name("tableScrollTop"),
+                                               object: nil)
+        
         print("slide view called")
         screenSize = self.view.bounds
         screenWidth = screenSize.width
         screenHeight = screenSize.height
         
-        UserDefaults.standard.string(forKey: "userId")
+        lblUserId.text = UserDefaults.standard.string(forKey: "userId")
         let swipeLeft = UISwipeGestureRecognizer(target: self,
                                                  action: #selector(SlideMenuViewController.swipedLeft))
         swipeLeft.direction = UISwipeGestureRecognizerDirection.left
         self.view.addGestureRecognizer(swipeLeft)
+        
+        tableView.backgroundColor = HexStringToUIColor().getUIColor(hex: "333333")
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -133,7 +141,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
                                  print("message : \(String(describing: message))")
                                  
                                 NotificationCenter.default.post(name: NSNotification.Name("dismissContainerView"), object: nil)
-                              
+                                UserDefaults.standard.set(false, forKey: "autoLoginCheck")
                                 break
                             case .failure(let error):
                                 
@@ -256,12 +264,18 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         if(indexPath.section == 2 && indexPath.row == 2) {
             NotificationCenter.default.post(name: NSNotification.Name("openLicenseSegue"), object: nil)
         }
+        tableScrollTop()
     }
     func showVersionInfo(){
-        let alertController = UIAlertController(title: "App Version : 5.7 v",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        var version = "1.0"
+        if let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
+            version = ver
+        }
+        let alertController = UIAlertController(title: "App Version : \(version)",message: "", preferredStyle: UIAlertControllerStyle.alert)
         let cancelButton = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel, handler: nil)
         alertController.addAction(cancelButton)
         self.present(alertController,animated: true,completion: nil)
+
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -304,7 +318,9 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         
     }
 
-  
+    @objc func tableScrollTop() {
+        tableView.setContentOffset(CGPoint.zero, animated: true)
+    }
 
   
 }

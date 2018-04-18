@@ -11,7 +11,7 @@ import Alamofire
 import SwiftyJSON
 import GoogleSignIn
 
-class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableViewDelegate {
+class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableViewDelegate, UIDocumentInteractionControllerDelegate {
     let g = DispatchGroup()
     let q1 = DispatchQueue(label: "queue1")
     let q2 = DispatchQueue(label: "queue2")
@@ -52,18 +52,20 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var folderArray:[App.FolderStruct] = []
     var currentFolderId = ""
     var sortBy = ""
-    
+    var loginUserId = UserDefaults.standard.string(forKey: "userId")
     var toUserId = ""
     var fromUserId = ""
     var currentDevUuId = ""
     var fromOsCd = ""
     var toOsCd = ""
     var googleDriveFileIdPath = ""
+    var googleDriveWholeFoldrNmPath = ""
     var amdDate = ""
     var fromDevUuid = ""
     var fromFoldr = ""
     var fromFoldrId = ""
     var mimeType = ""
+    var etsionNm = ""
     enum toStorageKind:String {
         case nas = "nas"
         case nas_multi = "nas_multi"
@@ -94,7 +96,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var gDriveMultiCheckedfolderArray:[App.DriveFileStruct] = []
     var remoteMultiFileDownloadedCount = 0
     var driveFolderIdArray:[String] = ["root"] // 0eun
-    
+    var driveFolderNameArray:[String] = ["root"] // 0eun
+    var checkedButtonRow = 0
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -155,7 +158,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
         
         
-        print("originalFileId : \(originalFileId), oldFoldrWholePathNm: \(oldFoldrWholePathNm)")
+//        print("originalFileId : \(originalFileId), oldFoldrWholePathNm: \(oldFoldrWholePathNm)")
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -224,8 +227,9 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     cell.checkButton.isHidden = false
                     if(indexPath.row == 0){
                         cell.checkButton.isHidden = true
+                    } else {
+                        cell.checkButton.isHidden = false
                     }
-                    cell.checkButton.isHidden = false
                     cell.checkButton.tag = indexPath.row
                     cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
                     cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
@@ -233,9 +237,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 case .folder:
                     cell.ivIcon.image = UIImage(named: "ico_folder")
                     cell.lblMain.text = folderArray[indexPath.row].foldrNm
-                    cell.checkButton.isHidden = false
                     if(indexPath.row == 0){
                         cell.checkButton.isHidden = true
+                    } else {
+                        cell.checkButton.isHidden = false
                     }
                     cell.checkButton.tag = indexPath.row
                     cell.btnChecked = 0
@@ -262,11 +267,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 
                 cell.ivIcon.image = UIImage(named: "ico_folder")
                 cell.lblMain.text = driveFileArray[indexPath.row].name
-                cell.checkButton.isHidden = false
                 if(indexPath.row == 0){
                     cell.checkButton.isHidden = true
+                } else {
+                    cell.checkButton.isHidden = false
                 }
-                cell.checkButton.isHidden = false
                 cell.checkButton.tag = indexPath.row
                 cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
                 cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
@@ -274,9 +279,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             case .folder:
                 cell.ivIcon.image = UIImage(named: "ico_folder")
                 cell.lblMain.text = folderArray[indexPath.row].foldrNm
-                cell.checkButton.isHidden = false
                 if(indexPath.row == 0){
                     cell.checkButton.isHidden = true
+                } else {
+                    cell.checkButton.isHidden = false
                 }
                 cell.checkButton.tag = indexPath.row
                 cell.btnChecked = 0
@@ -300,11 +306,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             case .deviceRoot:
                 cell.ivIcon.image = UIImage(named: "ico_folder")
                 cell.lblMain.text = folderNameArray[indexPath.row]
-                cell.checkButton.isHidden = false
                 if(indexPath.row == 0){
                     cell.checkButton.isHidden = false
+                } else {
+                    cell.checkButton.isHidden = true
                 }
-                cell.checkButton.isHidden = false
                 cell.checkButton.tag = indexPath.row
                 cell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
                 cell.checkButton.addTarget(self, action: #selector(btnChekced(sender:)), for: .touchUpInside)
@@ -312,9 +318,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             case .folder:
                 cell.ivIcon.image = UIImage(named: "ico_folder")
                 cell.lblMain.text = folderArray[indexPath.row].foldrNm
-                cell.checkButton.isHidden = false
                 if(indexPath.row == 0){
                     cell.checkButton.isHidden = true
+                } else {
+                    cell.checkButton.isHidden = false
                 }
                 cell.checkButton.tag = indexPath.row
                 cell.btnChecked = 0
@@ -332,6 +339,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     @objc func btnChekced(sender:UIButton){
         let buttonRow = sender.tag
+        checkedButtonRow = buttonRow
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
       
@@ -340,8 +348,9 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             switch listState {
                 case .deviceSelect :
                     googleDriveFileIdPath = "root"
-//                    newFoldrId = String(driveFileArray[sender.tag].fileId)
-//                    newFoldrWholePathNm = driveFileArray[sender.tag].name
+                    googleDriveWholeFoldrNmPath = "root"
+                    print("googleDriveFileIdPath : \(googleDriveFileIdPath)")
+                    print("googleDriveWholeFoldrNmPath : \(googleDriveWholeFoldrNmPath)")
                     newFoldrId = "root"
                     newFoldrWholePathNm = "root"
                     print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
@@ -362,7 +371,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     }
                     break
                 default:
-                    googleDriveFileIdPath = "\(driveFileArray[buttonRow].fileId)"
+                    
                     if(cell.btnChecked == 0){
                         for index in 0..<driveFileArray.count{
                             let indexPath = IndexPath(row: index, section: 0)
@@ -385,6 +394,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             switch listState {
             case .deviceSelect :
                 googleDriveFileIdPath = "root"
+                googleDriveWholeFoldrNmPath = "root"
                 newFoldrId = "root"
                 newFoldrWholePathNm = "root"
                 print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
@@ -406,6 +416,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 break
             default:
                 googleDriveFileIdPath = "\(driveFileArray[buttonRow].fileId)"
+                googleDriveWholeFoldrNmPath += "/\(driveFileArray[buttonRow].name)"
                 if(cell.btnChecked == 0){
                     for index in 0..<driveFileArray.count{
                         let indexPath = IndexPath(row: index, section: 0)
@@ -454,10 +465,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     print("newId : \(newFoldrId), newPath : \(newFoldrWholePathNm)")
                     if(cell.btnChecked == 0){
                     for index in 0..<folderArray.count{
-                    let indexPath = IndexPath(row: index, section: 0)
-                    let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
-                    removeCheckCell.btnChecked = 0
-                    removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
+                        let indexPath = IndexPath(row: index, section: 0)
+                        print("array count : \(folderArray.count), index: \(index)")
+                        let removeCheckCell = tableView.cellForRow(at: indexPath) as! SendFolderSelectCell
+                        removeCheckCell.btnChecked = 0
+                        removeCheckCell.checkButton.setImage(#imageLiteral(resourceName: "ico_24dp_done_disable").withRenderingMode(.alwaysOriginal), for: .normal)
                     }
                     sender.setImage(#imageLiteral(resourceName: "ico_24dp_done").withRenderingMode(.alwaysOriginal), for: .normal)
                     cell.btnChecked = 1
@@ -475,31 +487,43 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     }
     
     func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        
+        
         switch storageState {
         case .googleDrive:
             switch listState {
             case .deviceSelect:
+                tableView.deselectRow(at: indexPath, animated: true)
                 self.driveFolderIdArray.removeAll()
                 self.driveFolderIdArray.append("root") // 0eun
+                self.driveFolderNameArray.removeAll()
+                self.driveFolderNameArray.append("root") // 0eun
                 self.listState = .deviceRoot
-                self.deviceName = nasArray[indexPath.row]
+//                self.deviceName = nasArray[indexPath.row]
                 self.getFilesFromGoogleDrive(accessToken: accessToken, root: "root", parent: "root")
                 break
             default:
+                tableView.deselectRow(at: indexPath, animated: true)
                 var root = driveFileArray[indexPath.row].fileId
+                var rootFolder = driveFileArray[indexPath.row].name
+                print("rootFolder : \(rootFolder)")
                 var parent = "root"
                 if driveFileArray[indexPath.row].name == ".." {
                     if(driveFolderIdArray[driveFolderIdArray.count - 1] == "root") {
                         self.listState = .deviceSelect
                         root = "root"
+                        
                         parent = "root"
                     } else {
                         root = driveFolderIdArray[driveFolderIdArray.count - 2]
                         parent = driveFileArray[indexPath.row].parents
                         driveFolderIdArray.remove(at: driveFolderIdArray.count-1)
+                        driveFolderNameArray.remove(at: driveFolderNameArray.count-1)
                     }
                 } else {
                     self.driveFolderIdArray.append(root)
+                    self.driveFolderNameArray.append(rootFolder)
+                    
                 }
                 
                 print("root : \(root), idArray : \(driveFolderIdArray)")
@@ -513,25 +537,33 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             case .deviceSelect:
                 self.driveFolderIdArray.removeAll()
                 self.driveFolderIdArray.append("root") // 0eun
+                self.driveFolderNameArray.removeAll()
+                self.driveFolderNameArray.append("root") // 0eun
+                
                 self.listState = .deviceRoot
-                self.deviceName = nasArray[indexPath.row]
+//                self.deviceName = nasArray[indexPath.row]
                 self.getFilesFromGoogleDrive(accessToken: accessToken, root: "root", parent: "root")
                 break
             default:
                 var root = driveFileArray[indexPath.row].fileId
+                var rootFolder = driveFileArray[indexPath.row].name
                 var parent = "root"
                 if driveFileArray[indexPath.row].name == ".." {
                     if(driveFolderIdArray[driveFolderIdArray.count - 1] == "root") {
                         self.listState = .deviceSelect
                         root = "root"
+                        
                         parent = "root"
                     } else {
                         root = driveFolderIdArray[driveFolderIdArray.count - 2]
                         parent = driveFileArray[indexPath.row].parents
                         driveFolderIdArray.remove(at: driveFolderIdArray.count-1)
+                        driveFolderNameArray.remove(at: driveFolderNameArray.count-1)
                     }
                 } else {
                     self.driveFolderIdArray.append(root)
+                    self.driveFolderNameArray.append(rootFolder)
+                    
                 }
                 
                 print("root : \(root), idArray : \(driveFolderIdArray)")
@@ -599,51 +631,39 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     @IBAction func selectFinish(_ sender: UIButton) {
         toOsCd = "G"
-        if(toUserId != App.defaults.userId){
+        if(toUserId != UserDefaults.standard.string(forKey: "userId")){
             toOsCd = "S"
         }
         if(folderChecked == 1){
             switch storageState {
             case .nas:
-                
                 if(fromDevUuid == Util.getUuid()){
                     // local to Nas
-                    if(fromFoldrId.isEmpty){
-                        toOsCd = "G"
-                        if(toUserId != App.defaults.userId){
-                        toOsCd = "S"
-                        }
-                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-                        sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd, fileId: originalFileId)
-                    } else {
-                        // local 폴더 업로드 to nas
-                        print("upload path : \(newFoldrWholePathNm), oldFoldrWholePathNm: \(oldFoldrWholePathNm)")
-                        ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm, getMultiArray:multiCheckedfolderArray, parent:self)
-                       
-                    }
-                } else if (fromOsCd == "S" || fromOsCd == "G"){
+                    SelectFilnishController().sendToNas(parent: self, getToOsCd: toOsCd, getToUserId: toUserId, getOriginalFileName: originalFileName, getAmdDate: amdDate, getOriginalFileId: originalFileId, oldFoldrWholePathNm: oldFoldrWholePathNm, newFoldrWholePathNm: newFoldrWholePathNm, multiCheckedfolderArray: multiCheckedfolderArray, etsionNm:etsionNm, storageState:storageState, listState: listState, driveFileArray: driveFileArray, checkedButtonRow: checkedButtonRow, driveFolderNameArray: driveFolderNameArray, driveFolderIdArray: driveFolderIdArray, fromOsCd: fromOsCd, fromDevUuid: fromDevUuid, accessToken: accessToken, googleDriveFileIdPath: googleDriveFileIdPath, deviceName:deviceName, fromUserId:fromUserId)
+            } else if (fromOsCd == "S" || fromOsCd == "G"){
                     var booCheck1 = (fromOsCd != "G")
                     var booCheck2 = (fromOsCd != "S")
                     var booCheck3 = (booCheck1 || booCheck2)
                     print("fromOsCd:\(fromOsCd), booCheck1:\(booCheck1), booCheck2:\(booCheck2), booCheck3:\(booCheck3)")
-                    
+                    print("etsionNm : \(etsionNm)")
                     // nas to nas or share nas
-                    if(fromFoldrId.isEmpty){
+                    if(!etsionNm.isEmpty){
                         // nas 보내기 파일
                         if(fromOsCd == "G"){
                             print("deviceName : \(deviceName)")
-                            if(toUserId != App.defaults.userId){
+                            // nas -> nas 또는 share nas
+                            if(toUserId != UserDefaults.standard.string(forKey: "userId")){
                                 let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"G","toOsCd":"S"]
                                 print("from g to s param : \(param)")
                                 self.sendNasToShareNas(params: param)
                             } else {
                                 let param = ["userId":toUserId, "devUuid": currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName,"foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm]
-                                print("from s to s param : \(param), \(deviceName)")
+                                print("from g to g param : \(param), \(deviceName)")
                                 self.sendNasToNas(params: param)
                             }
                             
                         } else if (fromOsCd == "S") {
-                            if(toUserId != App.defaults.userId){
+                            if(toUserId != UserDefaults.standard.string(forKey: "userId")){
                                 let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"S"]
                                 print("param : \(param)")
                                 //shared to shared
@@ -661,7 +681,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     } else {
                         // nas 보내기 폴더
                         toOsCd = "G"
-                        if(toUserId != App.defaults.userId){
+                        if(toUserId != UserDefaults.standard.string(forKey: "userId")){
                             toOsCd = "S"
                         }
                         let param = ["userId":fromUserId,"toUserId":toUserId, "foldrId":fromFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":fromOsCd,"toOsCd":toOsCd]
@@ -680,13 +700,25 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     //gdrive to nas
                     print("gdrive to nas")
                     if(fromFoldrId.isEmpty){
+                        print("download from gdrive")
                         activityIndicator.startAnimating()
-                        GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: originalFileName) { responseObject, error in
+                        GoogleWork().downloadGDriveFile(fileId: originalFileId, mimeType: mimeType, name: originalFileName) { responseObject, error in
                             if let fileUrl = responseObject {
                                 print("fileUrl : \(fileUrl), name : \(self.originalFileName), toOsCd : \(self.toOsCd), fileId : \(self.originalFileId)")
+                                
+                                if(!fileUrl.absoluteString.isEmpty){
+                                    print("download end")
+                                    //sync -> get file id > upload to nas from local
                                     print("sync start")
-                                //sync -> get file id > upload to nas from local
-                                    SyncLocalFilleToNas().callSyncFomNasSend(view: "NasSendFolderSelectVC", parent: self)
+                                    DispatchQueue.main.asyncAfter(deadline: .now()+0.5, execute: {
+                                        SyncLocalFilleToNas().callSyncFomNasSend(view: "NasSendFolderSelectVC", parent: self)
+                                    })
+                                    
+                                    
+                                    
+                                }
+                                
+                                
                             }
                             return
                         }
@@ -699,62 +731,15 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 } else {
                     
                     // remote to nas
-                    print("remote to nas")
-                    remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: fromOsCd, fromFoldr: fromFoldrId, fromFileNm: originalFileName, fromFileId: originalFileId)
+                    print("remote to nas , oldFoldrWholePathNm : \(oldFoldrWholePathNm)")
+                    remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: fromOsCd, fromFoldr: oldFoldrWholePathNm, fromFileNm: originalFileName, fromFileId: originalFileId)
                     
                    
                 }
                 break
             case .googleDrive:
-                print("googleDriveFileIdPath : \(googleDriveFileIdPath)")
-                if(fromDevUuid == Util.getUuid()){
-                    if(fromFoldrId.isEmpty){
-                        let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-                        self.sendToDriveFromLocal(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath, fileURL:fileURL)
-                    } else {
-                        print("upload folder from local to gDrive")
-                        GoogleWork().readyCreatFolders(getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent: self)
-                    }
-                    
-                    
-                } else if fromOsCd == "gDrive" {
-                    //gdrive to gdrive
-                    print("gdrive to gdrive")
-                    activityIndicator.startAnimating()
-                    print("fileId : \(originalFileId), name : \(self.originalFileName), googleDriveFileIdPath : \(googleDriveFileIdPath)")
-                    GoogleWork().copyGdriveFile(name: originalFileName, fileId: originalFileId, parents: googleDriveFileIdPath) { responseObject, error in
-                        if let fileUrl = responseObject {
-                            DispatchQueue.main.async {
-                                let alertController = UIAlertController(title: nil, message: "파일 복사에 성공했습니다.", preferredStyle: .alert)
-                                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                                    UIAlertAction in
-                                    //Do you Success button Stuff here
-                                    self.activityIndicator.stopAnimating()
-                                    Util().dismissFromLeft(vc: self)
-                                }
-                                alertController.addAction(yesAction)
-                                self.present(alertController, animated: true)
-                                
-                            }
-                            
-                        }
-                        
-                        return
-                    }
-                    
-                } else {
-                    if(fromFoldrId.isEmpty){
-                        // from nas to gdrive
-                        print("downloadFromNasToDrive")
-                        self.downloadFromNasToDrive(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath)
-                    } else {
-                        // from nas to gdrive folder
-                        let inFoldrId = Int(fromFoldrId)
-                        GoogleWork().downloadFolderFromNas(foldrId: inFoldrId!, foldrWholePathNm: foldrWholePathNm, userId:fromUserId, devUuid:fromDevUuid, deviceName:deviceName, getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent:self)
-                       
-                    }
-                    
-                }
+                SelectFilnishController().sendToNas(parent: self, getToOsCd: toOsCd, getToUserId: toUserId, getOriginalFileName: originalFileName, getAmdDate: amdDate, getOriginalFileId: originalFileId, oldFoldrWholePathNm: oldFoldrWholePathNm, newFoldrWholePathNm: newFoldrWholePathNm, multiCheckedfolderArray: multiCheckedfolderArray, etsionNm:etsionNm, storageState:storageState, listState: listState, driveFileArray: driveFileArray, checkedButtonRow: checkedButtonRow, driveFolderNameArray: driveFolderNameArray, driveFolderIdArray: driveFolderIdArray, fromOsCd: fromOsCd, fromDevUuid: fromDevUuid, accessToken: accessToken, googleDriveFileIdPath: googleDriveFileIdPath, deviceName:deviceName, fromUserId:fromUserId)
+
                 break
             case .nas_multi:
                 
@@ -764,14 +749,16 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 break
             case .remote_nas_multi:
                 print("multi remote to nas")
-                print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
+                print("multiCheckedfolderArray : \(multiCheckedfolderArray), oldFoldrWholePathNm : \(oldFoldrWholePathNm)")
+                
 //                startMultiFolderNasToNas()
-                MultiCheckFileListController().remoteMultiDownloadRequestToSend(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:fromUserId, devUuid: fromDevUuid, deviceName: deviceName, devFoldrId:fromFoldrId, fromOsCd:fromOsCd)
+                MultiCheckFileListController().remoteMultiDownloadRequestToSend(getFolderArray: multiCheckedfolderArray, parent: self, fromUserId:fromUserId, fromDevUuid: fromDevUuid, deviceName: deviceName, devFoldrId:fromFoldrId, fromOsCd:fromOsCd, toUserId:toUserId, toOsCd:toOsCd, toDevUuid: currentDevUuId, toFoldr:newFoldrWholePathNm, fromFoldr:oldFoldrWholePathNm)
                 break
             case .local_nas_multi:
                 print("multi local to nas")
+                NasSendFolderSelectVCToggleIndicator()
                 startMultiLocalToNas()
-
+                
 //                print("multiCheckedfolderArray : \(multiCheckedfolderArray)")
                 break
             case .multi_nas_multi:
@@ -799,7 +786,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let oldFoldrWholePathNm = gDriveMultiCheckedfolderArray[index].foldrWholePath
             let mimeType = gDriveMultiCheckedfolderArray[index].mimeType
             var toOsCd = "G"
-            if(toUserId != App.defaults.userId){
+            if(toUserId != UserDefaults.standard.string(forKey: "userId")){
                 toOsCd = "S"
             }
             if(mimeType != Util.getGoogleMimeType(etsionNm: "folder")){
@@ -832,14 +819,26 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
         
     }
+    func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
+        return self
+    }
+    func documentInteractionControllerViewForPreview(_ controller: UIDocumentInteractionController) -> UIView? {
+        return self.view
+    }
     
+    func documentInteractionControllerRectForPreview(_ controller: UIDocumentInteractionController) -> CGRect {
+        
+        return self.view.frame
+    }
+  
     
     //get noti from sync
     func notifiedSyncFinish(rootFolder:String){
-        GetListFromServer().getMobileFileLIst(devUuid: Util.getUuid(), userId:App.defaults.userId, deviceName:"sdf"){ responseObject, error in
+        GetListFromServer().getMobileFileLIst(devUuid: Util.getUuid(), userId:loginUserId!, deviceName:"sdf"){ responseObject, error in
             let json = JSON(responseObject!)
             if(json["listData"].exists()){
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
+                print("serverList : \(serverList)")
                 for serverFile in serverList{
                     let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
                     let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
@@ -847,11 +846,11 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     print("serverFileNm : \(serverFileNm), serverFilePath : \(serverFilePath)")
                     print("fromFoldrId : \(self.fromFoldrId)")
                     self.toOsCd = "G"
-                    if(self.toUserId != App.defaults.userId){
+                    if(self.toUserId != self.loginUserId){
                         self.toOsCd = "S"
                     }
                     if(rootFolder.isEmpty){
-                        if(serverFileNm == self.originalFileName){
+                        if(serverFileNm == self.originalFileName && serverFilePath == "/Mobile"){
                             print("fromFoldrId : \(self.fromFoldrId), originalFileName:\(self.originalFileName)")
                             if(self.fromFoldrId.isEmpty){
                                 //파일 업로드 to nas
@@ -859,15 +858,29 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                     if(serverFilePath == "/Mobile"){
                                         let getFileID = serverFile["fileId"] as? Int ?? 0
                                         print("getFileID : \(getFileID)")
-                                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: self.originalFileName, amdDate: self.amdDate)!
+//                                        let fileUrl:URL = FileUtil().getFileUrl(fileNm: self.originalFileName, amdDate: self.amdDate)!
+                                        let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: self.originalFileName, foldrWholePathNm: "/Mobile", amdDate: self.amdDate)!
+                                        
+                                        
                                         self.sendToNasFromLocal(url: fileUrl, name: self.originalFileName, toOsCd:self.toOsCd, fileId: String(getFileID))
+                                        break
                                     }
                                     
                                 } else {
                                     let getFileID = serverFile["fileId"] as? Int ?? 0
-                                    print("getFileID : \(getFileID)")
-                                    let fileUrl:URL = FileUtil().getFileUrl(fileNm: self.originalFileName, amdDate: self.amdDate)!
-                                    self.sendToNasFromLocal(url: fileUrl, name: self.originalFileName, toOsCd:self.toOsCd, fileId: String(getFileID))
+//                                      let fileUrl:URL = FileUtil().getFileUrl(fileNm: self.originalFileName, amdDate: self.amdDate)!
+                                    let filePath:String = FileUtil().getFilePathWithFoldr(fileNm: self.originalFileName, foldrWholePathNm: "/Mobile", amdDate: self.amdDate)
+                                    
+                                    
+                                    if(FileManager.default.fileExists(atPath: filePath)){
+                                        let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: self.originalFileName, foldrWholePathNm: "/Mobile", amdDate: self.amdDate)!
+                                        print("getFileID : \(getFileID), self.originalFileName: \(self.originalFileName), self.toOsCd: \(self.toOsCd)")
+                                        print("fileUrl : \(fileUrl)")
+                                        
+                                        self.sendToNasFromLocal(url: fileUrl, name: self.originalFileName, toOsCd:self.toOsCd, fileId: String(getFileID))
+                                        break
+                                    }
+                               
                                 }
                                 
                                 
@@ -902,7 +915,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
     }
     
-    
+
     
     func startMultiLatelyToNas(){
         if(multiCheckedfolderArray.count > 0){
@@ -917,7 +930,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let currentDevUuId = multiCheckedfolderArray[index].devUuid
             let fromUserId = multiCheckedfolderArray[index].userId
             var toOsCd = "G"
-            if(toUserId != App.defaults.userId){
+            if(toUserId != loginUserId){
                 toOsCd = "S"
             }
             
@@ -928,7 +941,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             } else if (fromOsCdFromMultiArray == "S" || fromOsCdFromMultiArray == "G") {
                 if(fromOsCdFromMultiArray == "G"){
                     print("deviceName : \(deviceName)")
-                    if(toUserId != App.defaults.userId){
+                    if(toUserId != loginUserId){
                         let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"G","toOsCd":"S"]
                         print("from g to s param : \(param)")
                         self.sendNasToShareNas(params: param)
@@ -939,7 +952,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     }
                     
                 } else if (fromOsCdFromMultiArray == "S") {
-                    if(toUserId != App.defaults.userId){
+                    if(toUserId != loginUserId){
                         let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"S"]
                         print("param : \(param)")
                         //shared to shared
@@ -981,12 +994,15 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let etsionNm = multiCheckedfolderArray[index].etsionNm
             let amdDate = multiCheckedfolderArray[index].amdDate
             var toOsCd = "G"
-            if(toUserId != App.defaults.userId){
+            if(toUserId != loginUserId){
                 toOsCd = "S"
             }
+            print("originalFileName : \(originalFileName), etsionNm: \(etsionNm)")
+            
             if(originalFileName != "nil"){
-                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
-                sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd,fileId: originalFileId)
+//                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+                let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: originalFileName, foldrWholePathNm: "/Mobile", amdDate: self.amdDate)!
+                sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd, fileId: originalFileId)
             } else {
                 ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm, getMultiArray:multiCheckedfolderArray, parent:self)
             }
@@ -1017,7 +1033,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let amdDate = multiCheckedfolderArray[index].amdDate
            
             if(originalFileName != "nil"){
-                let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+//                let fileURL:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+                let fileURL:URL = FileUtil().getFileUrlWithFoldr(fileNm: originalFileName, foldrWholePathNm: "/Mobile", amdDate: self.amdDate)!
                 self.sendToDriveFromLocal(name: originalFileName, path: oldFoldrWholePathNm, fileId: googleDriveFileIdPath, fileURL:fileURL)
             } else {
                 GoogleWork().readyCreatFolders(getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent: self)
@@ -1049,14 +1066,14 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             let oldFoldrWholePathNm = multiCheckedfolderArray[index].foldrWholePathNm
             let etsionNm = multiCheckedfolderArray[index].etsionNm
             var toOsCd = "G"
-            if(toUserId != App.defaults.userId){
+            if(toUserId != loginUserId){
                 toOsCd = "S"
             }
             if(etsionNm != "nil"){
                 // nas 보내기 파일
                 if(fromOsCd == "G"){
                     print("deviceName : \(deviceName)")
-                    if(toUserId != App.defaults.userId){
+                    if(toUserId != loginUserId){
                         let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"G","toOsCd":"S"]
                         print("from g to s param : \(param)")
                         self.sendNasToShareNas(params: param)
@@ -1067,7 +1084,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     }
                     
                 } else if (fromOsCd == "S") {
-                    if(toUserId != App.defaults.userId){
+                    if(toUserId != loginUserId){
                         let param = ["userId":fromUserId,"toUserId":toUserId,"devUuid":currentDevUuId,"fileId":originalFileId,"fileNm":originalFileName, "foldrId":newFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":"S","toOsCd":"S"]
                         print("param : \(param)")
                         //shared to shared
@@ -1085,7 +1102,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
             } else {
                 // nas 보내기 폴더
                 var toOsCd = "G"
-                if(toUserId != App.defaults.userId){
+                if(toUserId != loginUserId){
                     toOsCd = "S"
                 }
                 let param = ["userId":fromUserId,"toUserId":toUserId, "foldrId":fromFoldrId,"foldrWholePathNm":newFoldrWholePathNm,"oldfoldrWholePathNm":oldFoldrWholePathNm,"osCd":fromOsCd,"toOsCd":toOsCd]
@@ -1119,7 +1136,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     func downloadFromNasToDrive(name:String, path:String, fileId:String){
         activityIndicator.startAnimating()
-        ContextMenuWork().downloadFromNasToSend(userId:fromUserId, fileNm:name, path:path){ responseObject, error in
+        SendFolderToGdriveFromNAS().downloadFromNasToSend(userId:fromUserId, fileNm:name, path:path){ responseObject, error in
             if let success = responseObject {
                 if(success.isEmpty){
                 } else {
@@ -1166,21 +1183,23 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 upload.responseJSON { response in
                                     print("response:: \(response)")
                                     let fileManager = FileManager.default
-                                    do {
-                                        try fileManager.removeItem(atPath: fileURL.path)
-                                        let alertController = UIAlertController(title: nil, message: "파일 업로드에 성공 하였습니다.", preferredStyle: .alert)
-                                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)  {
-                                            UIAlertAction in
-                                            self.activityIndicator.stopAnimating()
-                                            Util().dismissFromLeft(vc: self)
-                                        }
-                                        alertController.addAction(yesAction)
-                                        self.present(alertController, animated: true)
+                                    let pathForRemove:String = FileUtil().getFilePath(fileNm: "tmp", amdDate: "amdDate")
+                                    print("pathForRemove : \(pathForRemove)")
+                                    if(pathForRemove.isEmpty){
+                                        
+                                    } else {
+                                        FileUtil().removeFile(path: pathForRemove)
                                     }
-                                    catch let error as NSError {
+                                    let alertController = UIAlertController(title: nil, message: "파일 업로드에 성공 하였습니다.", preferredStyle: .alert)
+                                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)  {
+                                        UIAlertAction in
+                                        
                                         self.activityIndicator.stopAnimating()
-                                        print("Ooops! Something went wrong: \(error)")
+                                        Util().dismissFromLeft(vc: self)
                                     }
+                                    alertController.addAction(yesAction)
+                                    self.present(alertController, animated: true)
+                                   
                                     
                                 }
                                 break
@@ -1303,13 +1322,13 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 case .success(let value):
                     let json = JSON(value)
 //                    print("json : \(json)")
-                    let responseData = value as! NSDictionary
+//                    let responseData = value as! NSDictionary
                     if(json["files"].exists()){
-                        let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject]
+                        let serverList:[AnyObject] = json["files"].arrayObject! as [AnyObject]
                         if (serverList.count > 0) {
                             self.driveFileArray.removeAll()
                             //        var upFolder = App.DriveFileStruct(fileId: "root", kind: "d", mimeType: "d", name: "..")
-                            var upFolder = App.DriveFileStruct(fileId : root, kind : "d", mimeType : "d", name : "..", createdTime:"String", modifiedTime:"String", parents:parent, fileExtension:"String", size:"String", foldrWholePath:"String")
+                            let upFolder = App.DriveFileStruct(fileId : root, kind : "d", mimeType : "d", name : "..", createdTime:"String", modifiedTime:"String", parents:parent, fileExtension:"String", size:"String", foldrWholePath:"String")
                             self.driveFileArray.append(upFolder)
                             
                             for file in serverList {
@@ -1328,6 +1347,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 DispatchQueue.main.async {
                                     if(self.driveFolderIdArray.count > 1){
                                         self.driveFolderIdArray.remove(at: self.driveFolderIdArray.count - 1)
+                                        self.driveFolderNameArray.remove(at: self.driveFolderNameArray.count - 1)
                                     } else {
                                         self.listState = .deviceSelect
                                     }
@@ -1335,6 +1355,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                     self.activityIndicator.stopAnimating()
                                     let alertController = UIAlertController(title: nil, message: "더 이상 하위폴더가 없습니다.", preferredStyle: .alert)
                                     let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                                    
                                     alertController.addAction(yesAction)
                                     
                                     self.present(alertController, animated: true)
@@ -1412,7 +1433,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
                 print("insideList \(serverList)" )
                 for list in serverList{
-                    let folder = App.FolderStruct(data: list as AnyObject)
+                    let folder = App.FolderStruct(data: (list as AnyObject) as! [String : Any])
                     self.folderArray.append(folder)
                 }
             }
@@ -1617,11 +1638,18 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     func sendToNasFromLocal(url:URL, name:String, toOsCd:String, fileId:String){
         
-        let userId = toUserId
-        let password = "1234"
+        let userId:String = toUserId
+        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         
-        let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
+        
+        print("loginUserId : \(String(describing: loginUserId!))")
+        let credentialData = "gs-\(String(describing: loginUserId!)):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
+        
+        let decodedData = Data(base64Encoded: base64Credentials)!
+        let decodedString = String(data: decodedData, encoding: .utf8)!
+        print("decodedString : \(decodedString)")
+
         var headers = [
             "Authorization": "Basic \(base64Credentials)",
             "x-isi-ifs-target-type":"object"
@@ -1648,13 +1676,14 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         
       //되는 거
         print("fileId : \(fileId)")
+
         Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
             .uploadProgress { progress in // main queue by default
                 print("Upload Progress: \(progress.fractionCompleted)")
-                
+
             }
             .downloadProgress { progress in // main queue by default
-                print("Download Progress: \(progress.fractionCompleted)")
+//                print("Download Progress: \(progress.fractionCompleted)")
             }
             .responseString { response in
                 print("Success: \(response.result.isSuccess)")
@@ -1664,9 +1693,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     let statusCode = (response.response?.statusCode)!
                 } else { //no errors
                     let statusCode = (response.response?.statusCode)! //example : 200
-                    
-                    self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, fileId:fileId)
-                    
+                    print("statusCode : \(statusCode)")
+                    if(statusCode == 200) {
+                        self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, fileId:fileId)
+                    }
                 }
         }
     }
@@ -1694,11 +1724,13 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                 if(self.storageState == .remote_nas_multi) {
                                     self.countRemoteDownloadFinished()
                                 } else if self.storageState == .local_nas_multi {
+                                    
                                     let lastIndex = self.multiCheckedfolderArray.count - 1
                                     self.multiCheckedfolderArray.remove(at: lastIndex)
                                     self.startMultiLocalToNas()
                                     
                                 } else if self.storageState == .multi_nas_multi {
+                                    
                                     let lastIndex = self.multiCheckedfolderArray.count - 1
                                     self.multiCheckedfolderArray.remove(at: lastIndex)
                                     self.startMultiLatelyToNas()
@@ -1707,6 +1739,16 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                                     self.gDriveMultiCheckedfolderArray.remove(at: lastIndex)
                                     self.startMultiGdriveToNas()
                                 } else {
+                                    // 보내기용 다운 파일 삭제
+                                    if(self.storageState == .nas && self.fromOsCd != "S" && self.fromOsCd != "G" && self.fromOsCd == "gDrive") {
+                                        let pathForRemove:String = FileUtil().getFilePath(fileNm: "tmp", amdDate: "amdDate")
+                                        print("pathForRemove : \(pathForRemove)")
+                                        if(pathForRemove.isEmpty){
+                                            
+                                        } else {
+                                            FileUtil().removeFile(path: pathForRemove)
+                                        }
+                                    }
                                     DispatchQueue.main.async {
                                         let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
                                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
@@ -1765,55 +1807,66 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
 
     
     func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
-        
+        activityIndicator.startAnimating()
         let urlString = App.URL.server+"reqFileDown.do"
         var comnd = "R\(fromOsCd)L\(toOsCd)"
-        switch fromOsCd {
-        case "W":
-            comnd = "R\(fromOsCd)L\(toOsCd)"
-        case "A":
-            comnd = "RALI"
-        default:
-            comnd = "RILI"
-            break
-        }
+//        var comnd = "R\(fromOsCd)L"
+        
         print("comnd : \(comnd)")
-        let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
-        print("notifyNasUploadFinish param : \(paramas)")
+        
+        var finalFromUserId = fromUserId
+//        var paramas:[String : Any] = ["fromUserId":finalFromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":oldFoldrWholePathNm,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":currentDevUuId,"toOsCd":toOsCd,"toFoldr":newFoldrWholePathNm,"toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":Util.getUuid(),"comnd":comnd]
+//        if(toOsCd == "S") {
+           var paramas = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":oldFoldrWholePathNm,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toUserId":toUserId,"toDevUuid":currentDevUuId,"toOsCd":toOsCd,"toFoldr":newFoldrWholePathNm,"toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":Util.getUuid(),"comnd":comnd]
+//        }
+        
+        
+        print("param : \(paramas)")
         Alamofire.request(urlString,
                           method: .post,
                           parameters: paramas,
                           encoding : JSONEncoding.default,
                           headers: jsonHeader).responseJSON { response in
                             switch response.result {
-                            case .success(let JSON):
-                                
+                            case .success(let responseObject):
                                 print(response.result.value)
-                                let responseData = JSON as! NSDictionary
+                                let responseData = responseObject as! NSDictionary
                                 let message = responseData.object(forKey: "message")
-                                print("remoteDownloadRequest : \(message)")
-                                if(self.storageState == .multi_nas_multi){
+                                let json = JSON(responseObject)
+                                let data = json["data"]
+                                let queId = String(describing: data["queId"])
                                 
+                                print("json : \(json)")
+                                
+                                print("remoteDownloadRequest : \(message), queId: \(queId), data: \(data)")
+                               
+//                                self.notifyNasUploadFinishToRemoteDownload(name: fromFileNm, queId: queId)
+                                if self.storageState == .multi_nas_multi {
+                                    let lastIndex = self.multiCheckedfolderArray.count - 1
+                                    self.multiCheckedfolderArray.remove(at: lastIndex)
+                                    self.startMultiLatelyToNas()
                                 } else {
                                     DispatchQueue.main.async {
-                                        let alertController = UIAlertController(title: nil, message: "\(message!)", preferredStyle: .alert)
+                                        let alertController = UIAlertController(title: nil, message: "NAS 보내기 요청 성공", preferredStyle: .alert)
                                         let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                                             UIAlertAction in
                                             
+                                            Util().dismissFromLeft(vc: self)
                                         }
                                         alertController.addAction(yesAction)
                                         self.present(alertController, animated: true, completion: nil)
                                     }
                                 }
-                                
-                                
                                 break
                             case .failure(let error):
-                                
+
                                 print(error.localizedDescription)
                             }
         }
     }
+    
+    
+
     
     @objc func downloadFromRemoteToNas(fileDict:NSNotification){
         if let getFromUserId = fileDict.userInfo?["fromUserId"] as? String, let getFromFileId = fileDict.userInfo?["fromFileId"] as? String, let getFromFoldr = fileDict.userInfo?["fromFoldr"] as? String, let getFromFileNm = fileDict.userInfo?["fromFileNm"] as? String, let getFromDevUuid = fileDict.userInfo?["fromDevUuid"] as? String{

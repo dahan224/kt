@@ -27,9 +27,10 @@ class SetupSearchView {
         navBarTitle.centerXAnchor.constraint(equalTo: View.centerXAnchor).isActive = true
     }
     
-    class func showFileCountLabel(count:Int, view:UIView, searchCountLabel:UILabel,searchCategoryView:UIStackView ){
+    class func showFileCountLabel(count:Int, view:UIView, searchCountLabel:UILabel,searchCategoryView:UIStackView, multiButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton){
         
         view.addSubview(searchCountLabel)
+        view.addSubview(multiButton)
         searchCountLabel.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
         searchCountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         searchCountLabel.heightAnchor.constraint(equalToConstant: 60.0).isActive = true
@@ -50,6 +51,22 @@ class SetupSearchView {
         
         searchCountLabel.attributedText = attributedString1
         
+        multiButton.widthAnchor.constraint(equalToConstant: 30.0).isActive = true
+        multiButton.heightAnchor.constraint(equalToConstant: 30.0).isActive = true
+        multiButton.centerYAnchor.constraint(equalTo: searchCountLabel.centerYAnchor).isActive = true
+        multiButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -15).isActive = true
+        
+        if(multiButtonChecked){
+            view.addSubview(selectAllButton)
+            selectAllButton.widthAnchor.constraint(equalToConstant: 80.0).isActive = true
+            selectAllButton.heightAnchor.constraint(equalToConstant: 30.0).isActive = true
+            selectAllButton.centerYAnchor.constraint(equalTo: searchCountLabel.centerYAnchor).isActive = true
+            selectAllButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: 20).isActive = true
+        } else {
+            if(view.subviews.contains(selectAllButton)){
+                selectAllButton.removeFromSuperview()
+            }
+        }
         
     }
     

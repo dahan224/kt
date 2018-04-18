@@ -70,7 +70,7 @@ class SendMultiToNasFromGDrive {
                                 if(json["error"].exists()){
                                     print("error: \(json["error"])")
                                 } else {
-                                    if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
+                                    if let serverList:[AnyObject] = json["files"].arrayObject as? [AnyObject] {
                                         if serverList.count > 0 {
                                             for file in serverList {
                                                 let fileStruct = App.DriveFileStruct(device:file, foldrWholePaths:["sd"])
@@ -116,7 +116,7 @@ class SendMultiToNasFromGDrive {
                                     print("error: \(json["error"])")
                                     completion(0)
                                 } else {
-                                    if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
+                                    if let serverList:[AnyObject] = json["files"].arrayObject as? [AnyObject] {
                                         if serverList.count > 0 {
                                             completion(serverList.count)
                                         }
@@ -187,9 +187,9 @@ class SendMultiToNasFromGDrive {
         }
     }
     func downloadFileFromGDriveFolder(){
-        for file in driveFileArray {
+//        for file in driveFileArray {
             //            print("count : \(driveFileArray.count), download file : \(file)")
-        }
+//        }
         print("driveFileArray.count  :\(driveFileArray.count)")
         if(driveFileArray.count > 0){
             let index = driveFileArray.count - 1

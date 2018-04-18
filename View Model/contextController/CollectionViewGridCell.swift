@@ -31,6 +31,12 @@ class CollectionViewGridCell: UICollectionViewCell {
         return view;
     }()
     
+    var ivFlagNew:UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+        
+    }()
     
     let lblMain:UILabel = {
         let label = UILabel()
@@ -78,7 +84,7 @@ class CollectionViewGridCell: UICollectionViewCell {
         addSubview(ivMain)
         addSubview(bottomView)
         addSubview(btnMultiCheck)
-        
+        addSubview(ivFlagNew)
         
         btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
         btnMultiCheck.heightAnchor.constraint(equalToConstant:  36).isActive = true
@@ -121,9 +127,19 @@ class CollectionViewGridCell: UICollectionViewCell {
         lblSub.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 8).isActive = true
         lblSub.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor).isActive = true
         
+        ivFlagNew.topAnchor.constraint(equalTo: topAnchor).isActive = true
+        ivFlagNew.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
+        ivFlagNew.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        ivFlagNew.heightAnchor.constraint(equalToConstant: 30).isActive = true
+        ivFlagNew.image = UIImage(named: "new_img")
+        ivFlagNew.isHidden = true
         
         
         
+    }
+    func resetMultiCheck(){
+        btnMultiChecked = false
+        btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
     }
     
     

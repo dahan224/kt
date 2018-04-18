@@ -144,8 +144,8 @@ class FileListCell: UICollectionViewCell {
         
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         ivSub.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 25).isActive = true
-        ivSub.widthAnchor.constraint(equalToConstant: 20).isActive = true
-        ivSub.heightAnchor.constraint(equalToConstant: 20).isActive = true
+        ivSub.widthAnchor.constraint(equalToConstant: 30).isActive = true
+        ivSub.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: ivSub.centerYAnchor).isActive = true
         btnMultiCheck.widthAnchor.constraint(equalToConstant: 48).isActive = true

@@ -10,7 +10,7 @@ import UIKit
 
 class SetupFolderInsideCollectionView {
     
-    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton, lblSubNav:UILabel) {
+    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton, lblSubNav:UILabel, downArrowButton:UIButton) {
         
         for view in searchView.subviews {
             view.removeFromSuperview()
@@ -99,6 +99,12 @@ class SetupFolderInsideCollectionView {
         customNavBar.addSubview(hamburgerButton)
         customNavBar.addSubview(navBarTitle)
         customNavBar.addSubview(listButton)
+        customNavBar.addSubview(downArrowButton)
+        
+        downArrowButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
+        downArrowButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        downArrowButton.topAnchor.constraint(equalTo: navBarTitle.topAnchor).isActive = true
+        downArrowButton.leadingAnchor.constraint(equalTo: navBarTitle.trailingAnchor).isActive = true
         
         hamburgerButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         hamburgerButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
@@ -115,7 +121,12 @@ class SetupFolderInsideCollectionView {
         navBarTitle.centerYAnchor.constraint(equalTo: customNavBar.centerYAnchor).isActive = true
         navBarTitle.centerXAnchor.constraint(equalTo: customNavBar.centerXAnchor).isActive = true
         
-        lblSubNav.text = "\(getFolerName)"
+//        lblSubNav.text = "\(getFolerName)"
+        var navTxt = "> "
+        if getFolerName.contains("..") {
+            navTxt = ""
+        }
+        lblSubNav.text = "\(navTxt)\(getFolerName)"
         navBarTitle.setTitle(getDeviceName, for: .normal)
         
     }

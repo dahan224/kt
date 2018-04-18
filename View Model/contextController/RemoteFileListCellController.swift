@@ -40,12 +40,10 @@ class RemoteFileListCellController {
             cell.lblDevice.isHidden = false
             cell.lblDevice.text = folderArray[indexPath.row].devNm
         } else {
-            cell.lblDevice.isHidden = true
+            cell.lblDevice.isHidden = false
+            let size = FileUtil().covertFileSize(getSize: folderArray[indexPath.row].fileSize)
+            cell.lblDevice.text = size
         }
-        
-//        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellSwipeToLeft(sender:)))
-//        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-//        cell.btnOption.addGestureRecognizer(swipeLeft)
         
         
         cell.btnOption.isHidden = false
@@ -89,14 +87,14 @@ class RemoteFileListCellController {
         switch sender {
         case cell.btnShow:
             btn = "show"
-            dv?.showRemoteFileOption(tag: sender.tag)
+            dv?.hideSelectedOptions(tag: sender.tag)
             let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
             print("fileIdDict : \(fileIdDict)")
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
             break
         case cell.btnDwnld:
-            self.dv?.showRemoteFileOption(tag: sender.tag)
+            dv?.hideSelectedOptions(tag: sender.tag)
             let remoteDownLoadStyle = "remoteDownLoad"
             UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
@@ -108,8 +106,6 @@ class RemoteFileListCellController {
                 UIAlertAction in
                 self.remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
                 
-                
-                
             }
             let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
             alertController.addAction(yesAction)
@@ -119,7 +115,7 @@ class RemoteFileListCellController {
             
         case cell.btnNas:
             
-            self.dv?.showRemoteFileOption(tag: sender.tag)
+            dv?.hideSelectedOptions(tag: sender.tag)
             let remoteDownLoadStyle = "remoteDownLoadToNas"
             UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
@@ -194,18 +190,10 @@ class RemoteFileListCellController {
     
     
     func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
+        print("remoteDownloadRequest called")
         
         let urlString = App.URL.server+"reqFileDown.do"
-        var comnd = "RALI"
-        switch fromOsCd {
-        case "W":
-            comnd = "RWLI"
-        case "A":
-            comnd = "RALI"
-        default:
-            comnd = "RILI"
-            break
-        }
+        var comnd = "R\(fromOsCd)LI"
         let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
         print("notifyNasUploadFinish param : \(paramas)")
         Alamofire.request(urlString,
@@ -243,5 +231,5 @@ class RemoteFileListCellController {
         }
     }
     
-  
+   
 }

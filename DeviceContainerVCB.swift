@@ -67,7 +67,8 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
     func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
         let cell = tableView.dequeueReusableCell(withIdentifier: "DeviceContainerBCell") as! DeviceContainerBCell
         
-        let imageString = Util.getDeviceImageString(osNm: DeviceArray[indexPath.row].osNm, onoff: DeviceArray[indexPath.row].onoff)
+        //let imageString = Util.getDeviceImageString(osNm: DeviceArray[indexPath.row].osNm, onoff: DeviceArray[indexPath.row].onoff)
+        let imageString = getImageString(osNm: DeviceArray[indexPath.row].osNm)
         cell.ivIcon.image = UIImage(named: imageString)
         cell.lblMain.text = DeviceArray[indexPath.row].devNm
         cell.lblMain2.text = DeviceArray[indexPath.row].devNm
