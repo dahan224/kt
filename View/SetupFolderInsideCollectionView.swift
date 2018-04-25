@@ -15,6 +15,8 @@ class SetupFolderInsideCollectionView {
         for view in searchView.subviews {
             view.removeFromSuperview()
         }
+        multiButton.removeFromSuperview()
+        
         
         //let label = UILabel()
         searchView.addSubview(lblSubNav)
@@ -57,10 +59,12 @@ class SetupFolderInsideCollectionView {
         
         //        if(listStyle == .list) {
         multiButton.isHidden = false
+        
         multiButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         multiButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         multiButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         multiButton.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -5.0).isActive = true
+        
         //        } else {
         //            multiButton.isHidden = true
         //        }

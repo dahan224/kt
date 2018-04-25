@@ -18,10 +18,14 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     var homeViewController:HomeViewController?
     var contextMenuWork:ContextMenuWork?
     var latelyUpdatedFileViewController:LatelyUpdatedFileViewController?
+    var slideMenuViewController:SlideMenuViewController?
     let g = DispatchGroup()
     let q1 = DispatchQueue(label: "queue1")
     let q2 = DispatchQueue(label: "queue2")
     
+    
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
+    var indicatorAnimating = false
     
     private let scopes = [kGTLRAuthScopeDriveFile, kGTLRAuthScopeDrive, kGTLRAuthScopeDriveReadonly ]
     private let service = GTLRDriveService()
@@ -224,6 +228,9 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         self.addChildViewController(homeViewController!)
         containerView.addSubview(homeViewController!.view)
         homeViewController?.didMove(toParentViewController: parent)
+        if let slideMenuViewController = self.childViewControllers.first as? SlideMenuViewController {
+            slideMenuViewController.containViewController = self
+        }
         
         
     }
@@ -241,7 +248,17 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     override func viewDidLayoutSubviews() {
         
     }
-    
+    func toggleIndicator(){
+        view.bringSubview(toFront: activityIndicator)
+        if(indicatorAnimating){
+            activityIndicator.stopAnimating()
+            indicatorAnimating = false
+        } else {
+            print("activityIndicator")
+            activityIndicator.startAnimating()
+            indicatorAnimating = true
+        }
+    }
     func setupDeviceListView(container: UIView){
       
      
@@ -281,10 +298,12 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     }
     
     @objc func removeLatelyView(){
-        let previous = storyboard!.instantiateViewController(withIdentifier: "LatelyUpdatedFileViewController") as! LatelyUpdatedFileViewController
-        previous.willMove(toParentViewController: nil)
-        previous.view.removeFromSuperview()
-        previous.removeFromParentViewController()
+        if let previous = storyboard!.instantiateViewController(withIdentifier: "LatelyUpdatedFileViewController") as? LatelyUpdatedFileViewController {
+            previous.willMove(toParentViewController: nil)
+            previous.view.removeFromSuperview()
+            previous.removeFromParentViewController()
+        }
+        
         
         homeViewController = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
         homeViewController?.containerViewController = self
@@ -309,6 +328,20 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     }
     
+    func clickDeviceFromSlideMenu(indexPath:IndexPath){
+        activityIndicator.startAnimating()
+        if let previous = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as? HomeViewController {
+            previous.willMove(toParentViewController: nil)
+            previous.view.removeFromSuperview()
+            previous.removeFromParentViewController()
+        }
+        
+        removeLatelyView()
+        
+        let indexPathRow = ["indexPathRow":"\(indexPath.row)"]
+        NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
+    }
+    
    
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {
         if segue.identifier == "showFileInfoSegue" {
@@ -330,6 +363,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             }
         } else if segue.identifier == "nasFolderSelectSegue" {
             if let vc = segue.destination as? NasSendFolderSelectVC{
+                vc.containerViewController = self
                 vc.oldFoldrWholePathNm = self.foldrWholePathNm
                 vc.originalFileId = self.fileId
                 vc.originalFileName = self.fileNm
@@ -415,8 +449,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         }
         let cancelButton = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
             self.halfBlackView.removeFromSuperview()
-            if(self.homeViewController?.indicatorAnimating)!{
-                self.homeViewController?.homeViewToggleIndicator()
+            if(self.activityIndicator?.isAnimating)!{
+                self.activityIndicator?.stopAnimating()
             }
             self.homeViewController?.cellStyle = 1
             self.homeViewController?.showBottomIndicator()
@@ -433,9 +467,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         ]
         
         print("headers : \(headers)")
+        let userId:String = App.defaults.userId
         Alamofire.request(App.URL.server+"selectCloudId.json"
             , method: .post
-            , parameters:["userId":App.defaults.userId,"cloudKind":"D"]
+            , parameters:["userId":userId,"cloudKind":"D"]
             , encoding : JSONEncoding.default
             , headers: headers
             ).responseJSON { response in
@@ -449,14 +484,20 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                         let data = listData as! NSDictionary
                         let cloudId = data.object(forKey: "cloudId") as! String
                         print("cloudId : \(cloudId)")
-                        
                         self.showPreviousSyncEmail(email:cloudId)
-                        
+                    } else {
+                        self.showRadioAlert()
                     }
                     
                     break
                 case .failure(let error):
                     NSLog(error.localizedDescription)
+                    self.halfBlackView.removeFromSuperview()
+                    if(self.activityIndicator?.isAnimating)!{
+                        self.activityIndicator?.stopAnimating()
+                    }
+                    self.homeViewController?.cellStyle = 1
+                    self.homeViewController?.showBottomIndicator()
                     
                     break
                 }
@@ -536,8 +577,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         }
         let cancelAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
             self.halfBlackView.removeFromSuperview()
-            if(self.homeViewController?.indicatorAnimating)!{
-                self.homeViewController?.homeViewToggleIndicator()
+            if(self.activityIndicator?.isAnimating)!{
+                self.activityIndicator?.stopAnimating()
             }
             self.homeViewController?.cellStyle = 1
             self.homeViewController?.showBottomIndicator()
@@ -651,8 +692,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 self.showAlert(title: "Authentication Error", message: "재 시도 부탁 드립니다.")
                 
             }
-            if(self.homeViewController?.indicatorAnimating)!{
-                self.homeViewController?.homeViewToggleIndicator()
+            if(self.activityIndicator?.isAnimating)!{
+                self.activityIndicator?.stopAnimating()
             }
             self.homeViewController?.cellStyle = 1
             self.homeViewController?.showBottomIndicator()
@@ -707,8 +748,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                         
                         let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
                             self.halfBlackView.removeFromSuperview()
-                            if(self.homeViewController?.indicatorAnimating)!{
-                                self.homeViewController?.homeViewToggleIndicator()
+                            if(self.activityIndicator?.isAnimating)!{
+                                self.activityIndicator?.stopAnimating()
                             }
                             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
                         }
@@ -716,8 +757,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                         self.present(alertController,animated: true,completion: nil)
                         return
                     } else {
-                        if(self.homeViewController?.indicatorAnimating)!{
-                            self.homeViewController?.homeViewToggleIndicator()
+                        if(self.activityIndicator?.isAnimating)!{
+                            self.activityIndicator?.stopAnimating()
                         }
                         NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
                     }
@@ -767,15 +808,15 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                     } else {
                                         print("error: \(json["errors"])")
                                         self.googleSignIn()
-                                        if(self.homeViewController?.indicatorAnimating)!{
-                                            self.homeViewController?.homeViewToggleIndicator()
+                                        if(self.activityIndicator?.isAnimating)!{
+                                            self.activityIndicator?.stopAnimating()
                                         }
                                     }
                                 }
                                 
                             case .failure(let error):
                                 NSLog(error.localizedDescription)
-                                self.homeViewController?.homeViewToggleIndicator()
+                                self.activityIndicator?.stopAnimating()
                             }
                             
         }
@@ -861,8 +902,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                 // 0eun - start'
                                 print("googleSignInSegueState : \(self.googleSignInSegueState)")
                                 if (self.googleSignInSegueState == .loginForList){
-                                    if(self.homeViewController?.indicatorAnimating)!{
-                                        self.homeViewController?.homeViewToggleIndicator()
+                                    if(self.activityIndicator.isAnimating){
+                                        self.activityIndicator.stopAnimating()
                                     }
                                     let cellStyle = ["cellStyle":3]
                                       let folderName = ["folderName":"Google Drive","deviceName":"Google Drive", "devUuid":"googleDrive"]
@@ -871,8 +912,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                     NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self, userInfo: cellStyle)
 //                                     0eun - end
                                 } else {
-                                    if(self.homeViewController?.indicatorAnimating)!{
-                                        self.homeViewController?.homeViewToggleIndicator()
+                                    if(self.activityIndicator.isAnimating){
+                                        self.activityIndicator.stopAnimating()
                                     }
                                     NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
                                 }
@@ -891,7 +932,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             GIDSignIn.sharedInstance().delegate = self
             GIDSignIn.sharedInstance().uiDelegate = self
             GIDSignIn.sharedInstance().scopes = scopes
-            homeViewController?.homeViewToggleIndicator()
+            activityIndicator.startAnimating()
             var accessToken = DbHelper().getAccessToken(email: googleEmail)
             var getTokenTime =  ""
             if !accessToken.isEmpty {
@@ -1046,24 +1087,24 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     @objc func finishAlamofire(){
         
-        if(self.homeViewController?.indicatorAnimating)!{
-            self.homeViewController?.homeViewToggleIndicator()
+        if(self.activityIndicator.isAnimating){
+            self.activityIndicator.stopAnimating()
         }
         halfBlackView.removeGestureRecognizer(tapGesture)
         self.halfBlackView.removeFromSuperview()
-        contextMenuWork?.cancelAamofire()
+//        contextMenuWork?.cancelAamofire()
         
-        let alertController = UIAlertController(title: "작업이 취소되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
-        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
-            
-        }
-        alertController.addAction(okAction)
-        self.present(alertController,animated: true,completion: nil)
+//        let alertController = UIAlertController(title: "작업이 취소되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+//        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+//
+//        }
+//        alertController.addAction(okAction)
+//        self.present(alertController,animated: true,completion: nil)
         
     }
     func alamofireCompleted(){
         halfBlackView.removeGestureRecognizer(tapGesture)
         self.halfBlackView.removeFromSuperview()
-        contextMenuWork?.cancelAamofire()
+//        contextMenuWork?.cancelAamofire()
     }
 }

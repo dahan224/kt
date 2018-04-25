@@ -15,7 +15,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     let g = DispatchGroup()
     let q1 = DispatchQueue(label: "queue1")
     let q2 = DispatchQueue(label: "queue2")
-    
+    var containerViewController:ContainerViewController?
+    var contextMenuWork:ContextMenuWork?
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var indicatorAnimating = false
     var jsonHeader:[String:String] = [
@@ -98,11 +99,22 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var driveFolderIdArray:[String] = ["root"] // 0eun
     var driveFolderNameArray:[String] = ["root"] // 0eun
     var checkedButtonRow = 0
+    let halfBlackView:UIView = {
+        let view = UIView()
+        view.backgroundColor = UIColor.black
+        //        view.alpha = 0.5
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view;
+    }()
+    
+    var tapGesture:UITapGestureRecognizer = UITapGestureRecognizer()
+    var request: Alamofire.Request?
     
     override func viewDidLoad() {
         super.viewDidLoad()
         print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm), originalFileId : \(originalFileId), storageState : \(storageState)")
         
+        contextMenuWork = ContextMenuWork()
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(callSendToNasFromLocal(fileDict:)),
                                                name: NSNotification.Name("callSendToNasFromLocal"),
@@ -1327,8 +1339,9 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                         let serverList:[AnyObject] = json["files"].arrayObject! as [AnyObject]
                         if (serverList.count > 0) {
                             self.driveFileArray.removeAll()
-                            //        var upFolder = App.DriveFileStruct(fileId: "root", kind: "d", mimeType: "d", name: "..")
-                            let upFolder = App.DriveFileStruct(fileId : root, kind : "d", mimeType : "d", name : "..", createdTime:"String", modifiedTime:"String", parents:parent, fileExtension:"String", size:"String", foldrWholePath:"String")
+                            
+                            let upFolder = App.DriveFileStruct(fileId : root, kind : "d", mimeType : "d", name : "..", createdTime:"String", modifiedTime:"String", parents:parent, fileExtension:"String", size:"String", foldrWholePath:"String", thumbnailLink:"String")
+                            
                             self.driveFileArray.append(upFolder)
                             
                             for file in serverList {
@@ -1446,6 +1459,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     func sendNasToNas(params:[String:Any]){
         activityIndicator.startAnimating()
+        self.showHalfBlackView()
          ContextMenuWork().fromNasToNas(parameters: params){ responseObject, error in
             if let obj = responseObject {
                 let json = JSON(obj)
@@ -1638,6 +1652,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     func sendToNasFromLocal(url:URL, name:String, toOsCd:String, fileId:String){
         
+        self.showHalfBlackView()
         let userId:String = toUserId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         
@@ -1676,29 +1691,56 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         
       //되는 거
         print("fileId : \(fileId)")
-
-        Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
-            .uploadProgress { progress in // main queue by default
-                print("Upload Progress: \(progress.fractionCompleted)")
-
-            }
-            .downloadProgress { progress in // main queue by default
-//                print("Download Progress: \(progress.fractionCompleted)")
-            }
-            .responseString { response in
-                print("Success: \(response.result.isSuccess)")
-                print("Response String: \(response)")
-                if let alamoError = response.result.error {
-                    let alamoCode = alamoError._code
-                    let statusCode = (response.response?.statusCode)!
-                } else { //no errors
-                    let statusCode = (response.response?.statusCode)! //example : 200
-                    print("statusCode : \(statusCode)")
-                    if(statusCode == 200) {
-                        self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, fileId:fileId)
+        do {
+            let data = try Data(contentsOf: url as URL)
+            
+        Alamofire.upload(multipartFormData: { multipartFormData in
+                multipartFormData.append(data, withName: name)
+                
+            }, usingThreshold: UInt64.init(), to: stringUrl, method: .put, headers: headers,
+               encodingCompletion: { encodingResult in
+                switch encodingResult {
+                case .success(let upload, _, _):
+                    self.request = upload.responseJSON { response in
+                        let statusCode = (response.response?.statusCode)! //example : 200
+                        if(statusCode == 200) {
+                            self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, fileId:fileId)
+                        }
                     }
+                    break
+                case .failure(let encodingError):
+                    print(encodingError.localizedDescription)
+                    self.activityIndicator.stopAnimating()
+                    break
                 }
+            })
+        } catch {
+            print("Unable to load data: \(error)")
+            self.activityIndicator.stopAnimating()
         }
+        
+//        Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
+//            .uploadProgress { progress in // main queue by default
+//                print("Upload Progress: \(progress.fractionCompleted)")
+//
+//            }
+//            .downloadProgress { progress in // main queue by default
+////                print("Download Progress: \(progress.fractionCompleted)")
+//            }
+//            .responseString { response in
+//                print("Success: \(response.result.isSuccess)")
+//                print("Response String: \(response)")
+//                if let alamoError = response.result.error {
+//                    let alamoCode = alamoError._code
+//                    let statusCode = (response.response?.statusCode)!
+//                } else { //no errors
+//                    let statusCode = (response.response?.statusCode)! //example : 200
+//                    print("statusCode : \(statusCode)")
+//                    if(statusCode == 200) {
+//                        self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, fileId:fileId)
+//                    }
+//                }
+//        }
     }
     
  
@@ -1920,5 +1962,39 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
         }
         
     }
-
+    func showHalfBlackView(){
+        view.addSubview(self.halfBlackView)
+        halfBlackView.alpha = 0.3
+        halfBlackView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        tapGesture = UITapGestureRecognizer(target: self, action: #selector(finishAlamofire))
+        tapGesture.cancelsTouchesInView = false
+        halfBlackView.addGestureRecognizer(tapGesture)
+        
+    }
+    
+    @objc func finishAlamofire(){
+        
+        if(self.activityIndicator.isAnimating){
+            self.activityIndicator.stopAnimating()
+        }
+        halfBlackView.removeGestureRecognizer(tapGesture)
+        self.halfBlackView.removeFromSuperview()
+//        request?.cancel()
+//
+//        let alertController = UIAlertController(title: "작업이 취소되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+//        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+//
+//        }
+//        alertController.addAction(okAction)
+//        self.present(alertController,animated: true,completion: nil)
+        
+    }
+    func alamofireCompleted(){
+        halfBlackView.removeGestureRecognizer(tapGesture)
+        self.halfBlackView.removeFromSuperview()
+//        request?.cancel()
+    }
 }

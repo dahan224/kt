@@ -100,7 +100,7 @@ class ContextMenuWork {
         }
     }
     func fromNasToNas(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
-        Alamofire.request(App.URL.server+"nasFileCopy.do"
+        request = Alamofire.request(App.URL.server+"nasFileCopy.do"
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
@@ -181,7 +181,7 @@ class ContextMenuWork {
     func downloadFromNas(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let user = userId
+        let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
@@ -224,14 +224,15 @@ class ContextMenuWork {
     }
     
     func cancelAamofire(){
-        self.request?.cancel()
+//        self.request?.cancel()
+        
         print("canceld")
     }
     
     func downloadFromNasToExcute(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let user = userId
+        let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
@@ -277,7 +278,7 @@ class ContextMenuWork {
     func downloadFromNasFolder(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
         var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let user = userId
+        let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
@@ -774,6 +775,7 @@ class ContextMenuWork {
                 }
         }
     }
+ 
     
     
     

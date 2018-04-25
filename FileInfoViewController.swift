@@ -20,6 +20,7 @@ class FileInfoViewController: UIViewController {
     @IBOutlet weak var customNavBar: UIView!
     @IBOutlet weak var ivMain: UIImageView!
     
+    @IBOutlet weak var firsrDivider: UIView!
     
     
     @IBOutlet weak var contentViewHeight: NSLayoutConstraint!
@@ -47,8 +48,26 @@ class FileInfoViewController: UIViewController {
     var tagAddedHeight:CGFloat = 10
     var fileSavedPath = ""
     
+    @IBOutlet weak var ivInfo: UIImageView!    
+    @IBOutlet weak var ivInfoTopConstraint: NSLayoutConstraint!
+    
+    var ivEmail:UIImageView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+        
+    }()
+    
+    var divider:UIView = {
+        let imageView = UIImageView()
+        imageView.translatesAutoresizingMaskIntoConstraints = false
+        return imageView
+        
+    }()
+    
     override func viewDidLoad() {
         super.viewDidLoad()
+        ivInfo.translatesAutoresizingMaskIntoConstraints = false
         customNavBar.layer.shadowColor = UIColor.lightGray.cgColor
         customNavBar.layer.shadowOffset = CGSize(width:0,height: 2.0)
         customNavBar.layer.shadowRadius = 1.0
@@ -95,6 +114,8 @@ class FileInfoViewController: UIViewController {
         Util().dismissFromLeft(vc:self)
     }
     
+    
+    
     @objc func showFileInfo(){
         self.fileTagArray.removeAll()
         ContextMenuWork().getFileDetailInfo(fileId: fileId){ responseObject, error in
@@ -112,14 +133,31 @@ class FileInfoViewController: UIViewController {
                     self.lblDevice.text = self.deviceName
                 }
             }
+            if(json["listData2"].exists()){
+                var fileData = json["listData3"]
+                print("fileData : \(fileData["fileNm"])")
+                DispatchQueue.main.async {
+                    let emailSbjt = fileData["emailSbjt"].rawString()
+                    let sendDate = fileData["sendDate"].rawString()
+                    let emailFrom = fileData["emailFrom"].rawString()
+                    self.showEmailView()
+                }
+            } else {
+                
+            }
+            
             if(json["listData3"].exists()){
                 var fileData = json["listData3"]
                 print("tag update listData3 : \(fileData["listData3"])")
                 let serverList:[AnyObject] = json["listData3"].arrayObject! as [AnyObject]
                 for server in serverList {
                     let fileTag = server["fileTag"] as? String  ?? "nil"
-                    let tagStruct = App.FileTagStruct(fileId: self.fileId, fileTag: fileTag)
-                    self.fileTagArray.append(tagStruct)
+                    if(fileTag != "nil" && !fileTag.isEmpty){
+                        let tagStruct = App.FileTagStruct(fileId: self.fileId, fileTag: fileTag)
+                        print("tagStruct : \(tagStruct)")
+                        self.fileTagArray.append(tagStruct)
+                    }
+                    
                 }
                 self.resetTagVIew()
 //                }
@@ -128,6 +166,23 @@ class FileInfoViewController: UIViewController {
         }
     }
   
+    func showEmailView(){
+        ivEmail.image = UIImage(named: "ico_24dp_email")
+        scrollView.addSubview(ivEmail)
+        ivEmail.widthAnchor.constraint(equalToConstant: 24).isActive = true
+        ivEmail.heightAnchor.constraint(equalToConstant: 24).isActive = true
+        ivEmail.topAnchor.constraint(equalTo: firsrDivider.bottomAnchor, constant: 15).isActive = true
+        ivEmail.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 25).isActive = true
+        
+//        ivInfoTopConstraint.isActive = false
+        ivInfoTopConstraint.constant = 100
+        
+    }
+    
+    func thumbnailCheck(){
+        
+    }
+    
     func resetTagVIew(){
         print("resetTagVIew called")
         
@@ -139,7 +194,7 @@ class FileInfoViewController: UIViewController {
             self.tagAddedHeight = 10
             self.tagAddedWidth = 0
             
-            for (index, _) in self.fileTagArray.enumerated(){
+            for (index, fileTag) in self.fileTagArray.enumerated(){
                 
                 let tagView:UIView = {
                     let view = UIView()
@@ -154,38 +209,42 @@ class FileInfoViewController: UIViewController {
                     label.translatesAutoresizingMaskIntoConstraints = false
                     return label
                 }()
-                
-                self.tagAddView.addSubview(tagView)
-                let stringTag = self.fileTagArray[index].fileTag
-                let Font =  UIFont.systemFont(ofSize: 17.0)
-                let labelWidth = stringTag.witdthOfString(font: Font)
-                let totalWidth = self.tagAddView.frame.size.width
-                if(totalWidth <= self.tagAddedWidth + labelWidth + 30){
-                    self.tagAddedWidth = 0
-                    self.tagAddedHeight += 30
+                if(fileTag.fileTag.isEmpty) {
+                    
+                } else {
+                    self.tagAddView.addSubview(tagView)
+                    let stringTag = self.fileTagArray[index].fileTag
+                    let Font =  UIFont.systemFont(ofSize: 17.0)
+                    let labelWidth = stringTag.witdthOfString(font: Font)
+                    let totalWidth = self.tagAddView.frame.size.width
+                    if(totalWidth <= self.tagAddedWidth + labelWidth + 30){
+                        self.tagAddedWidth = 0
+                        self.tagAddedHeight += 30
+                    }
+                    
+                    tagView.topAnchor.constraint(equalTo: self.tagAddView.topAnchor, constant: self.tagAddedHeight).isActive = true
+                    tagView.leadingAnchor.constraint(equalTo: self.tagAddView.leadingAnchor, constant: self.tagAddedWidth).isActive = true
+                    tagView.widthAnchor.constraint(equalToConstant: labelWidth + 20).isActive = true
+                    tagView.heightAnchor.constraint(equalToConstant: 30).isActive = true
+                    tagView.tag = index
+                    
+                    tagView.addSubview(tagLabel)
+                    
+                    tagLabel.textAlignment = .left
+                    tagLabel.text = "#\(stringTag)"
+                    tagLabel.widthAnchor.constraint(equalToConstant: labelWidth+20).isActive = true
+                    tagLabel.leftAnchor.constraint(equalTo: tagView.leftAnchor).isActive = true
+                    tagLabel.centerYAnchor.constraint(equalTo: tagView.centerYAnchor).isActive = true
+                    tagLabel.heightAnchor.constraint(equalTo: tagView.heightAnchor).isActive = true
+                    
+                    
+                    self.tagAddedWidth += (labelWidth + 30)
+                    self.scrollView.frame = CGRect(x: 0, y: 0, width: App.Size.screenWidth, height: App.Size.screenHeight)
+                    
+                    self.scrollView.contentSize = CGSize(width: App.Size.screenWidth, height: App.Size.screenHeight + self.tagAddedHeight - 100)
+                    print("totalWidth: \(totalWidth), \(self.tagAddedWidth)")
                 }
                 
-                tagView.topAnchor.constraint(equalTo: self.tagAddView.topAnchor, constant: self.tagAddedHeight).isActive = true
-                tagView.leadingAnchor.constraint(equalTo: self.tagAddView.leadingAnchor, constant: self.tagAddedWidth).isActive = true
-                tagView.widthAnchor.constraint(equalToConstant: labelWidth + 20).isActive = true
-                tagView.heightAnchor.constraint(equalToConstant: 30).isActive = true
-                tagView.tag = index
-                
-                tagView.addSubview(tagLabel)
-                
-                tagLabel.textAlignment = .left
-                tagLabel.text = "#\(stringTag)"
-                tagLabel.widthAnchor.constraint(equalToConstant: labelWidth+20).isActive = true
-                tagLabel.leftAnchor.constraint(equalTo: tagView.leftAnchor).isActive = true
-                tagLabel.centerYAnchor.constraint(equalTo: tagView.centerYAnchor).isActive = true
-                tagLabel.heightAnchor.constraint(equalTo: tagView.heightAnchor).isActive = true
-                
-               
-                self.tagAddedWidth += (labelWidth + 30)
-                self.scrollView.frame = CGRect(x: 0, y: 0, width: App.Size.screenWidth, height: App.Size.screenHeight)
-                
-                self.scrollView.contentSize = CGSize(width: App.Size.screenWidth, height: App.Size.screenHeight + self.tagAddedHeight - 100)
-                print("totalWidth: \(totalWidth), \(self.tagAddedWidth)")
             }
             self.tagAddViewHeight.constant = self.tagAddedHeight
 //            self.contentViewHeight.constant = App.Size.screenHeight + self.tagAddedHeight

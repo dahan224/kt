@@ -14,7 +14,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
   
     @IBOutlet weak var lblUserId: UILabel!
     let hexStringToUIColor = HexStringToUIColor()
-    
+    var containViewController:ContainerViewController?
     @IBOutlet weak var collectionViewHeightConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var collectionVIew: UICollectionView!
@@ -97,6 +97,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         self.sortData()
         self.tableView.reloadData()
         
+      
     }
     
     
@@ -118,6 +119,43 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         self.present(alertController,animated: true,completion: nil)
 
     }
+    
+    func deviceOff(){
+        let cookie:String = UserDefaults.standard.string(forKey: "cookie")!
+        let token:String = UserDefaults.standard.string(forKey: "token")!
+        let urlString = App.URL.server+"devStatusUpdate.do"
+        let headers = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": token,
+            "Cookie": cookie
+        ]
+        let params:[String:Any] = ["userId": App.defaults.userId, "devUuid":Util.getUuid(), "onoff":"N"]
+        print("cookie: \(cookie), token : \(token)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters : params,
+                          encoding : JSONEncoding.default,
+                          headers: headers).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+                                
+                                print(response.result.value as Any)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("message : \(String(describing: message))")
+                                
+                                NotificationCenter.default.post(name: NSNotification.Name("dismissContainerView"), object: nil)
+                                UserDefaults.standard.set(false, forKey: "autoLoginCheck")
+                                break
+                            case .failure(let error):
+                                
+                                print(error)
+                            }
+        }
+        
+
+    }
+    
     func logout(){
         let cookie:String = UserDefaults.standard.string(forKey: "cookie")!
         let token:String = UserDefaults.standard.string(forKey: "token")!
@@ -134,14 +172,12 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
                           headers: headers).responseJSON { response in
                             switch response.result {
                             case .success(let JSON):
-                              
                                 print(response.result.value as Any)
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
                                  print("message : \(String(describing: message))")
-                                 
-                                NotificationCenter.default.post(name: NSNotification.Name("dismissContainerView"), object: nil)
-                                UserDefaults.standard.set(false, forKey: "autoLoginCheck")
+                                //기기 상태 off
+                                self.deviceOff()
                                 break
                             case .failure(let error):
                                 
@@ -231,7 +267,9 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
                 cell2.lblManage.text = data["title"]
                 cell2.btnManage.setImage(UIImage(named: data["button"]!), for: .normal)
                 cell2.btnManage.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
-                
+                cell2.btnManage.tag = indexPath.row
+                cell2.btnManage.addTarget(self, action: #selector(clickBtn(_:)), for: .touchUpInside)
+
                 break
                 
             case (2) :
@@ -313,13 +351,25 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         NotificationCenter.default.post(name: NSNotification.Name("toggleSideMenu"), object: nil)
-        let indexPathRow = ["indexPathRow":"\(indexPath.row)"]
-        NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
+        
+        containViewController?.clickDeviceFromSlideMenu(indexPath: indexPath)
         
     }
 
     @objc func tableScrollTop() {
         tableView.setContentOffset(CGPoint.zero, animated: true)
+    }
+    
+    
+    @objc func clickBtn(_ sender: UIButton) {
+        switch sender.tag {
+        case 0:
+            NotificationCenter.default.post(name: NSNotification.Name("deviceManageSegue"), object: nil)
+        case 1:
+            NotificationCenter.default.post(name: NSNotification.Name("showSettingSegue"), object: nil)
+        default:
+            break
+        }
     }
 
   

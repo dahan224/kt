@@ -43,7 +43,7 @@ class SetupHomeView {
     
     
     
-    class func setupMainSearchView(View:UIView, sortButton:UIButton, sBar:UISearchBar, searchDownArrowButton:UIButton, parentViewContoller:UIViewController){
+    class func setupMainSearchView(View:UIView, sortButton:UIButton, sBar:UISearchBar, searchDownArrowButton:UIButton, parentViewContoller:UIViewController, sBarTitle:String){
 //        var previous = parentViewContoller.childViewControllers.first
 //        if let previous = previous {
 //            previous.willMove(toParentViewController: nil)
@@ -67,6 +67,8 @@ class SetupHomeView {
         sBar.heightAnchor.constraint(equalTo: View.heightAnchor).isActive = true
         sBar.leadingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: 20.0).isActive = true
         sBar.trailingAnchor.constraint(equalTo: View.trailingAnchor).isActive = true
+        sBar.placeholder = "Search in \(sBarTitle)"
+        
         
         
         searchDownArrowButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true

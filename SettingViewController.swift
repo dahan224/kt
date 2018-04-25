@@ -310,7 +310,10 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
     @objc func changePasswordButton(){
         let alert = UIAlertController(title: "비밀번호 변경", message: "", preferredStyle: .alert)
         
-        //2. Add the text field. You can configure it however you need.
+        alert.addTextField { (textField) in
+            textField.placeholder = "현재 비밀번호"
+        }
+        
         alert.addTextField { (textField) in
             textField.placeholder = "비밀번호 입력"
         }
@@ -323,7 +326,8 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
         alert.addAction(UIAlertAction(title: "OK", style: .destructive, handler: { [weak alert] (_) in
             let textField = alert?.textFields![0] // Force unwrapping because we know it exists.
             let textField1 = alert?.textFields![1] // Force unwrapping because we know it exists.
-            self.checkPassword(pwd: (textField?.text)!, pwd2: (textField1?.text)!)
+            let textField2 = alert?.textFields![2]
+            self.checkPassword(oldPwd: (textField?.text)!, pwd: (textField1?.text)!, pwd2: (textField2?.text)!)
         }))
         let cancelButton = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel, handler: nil)
         alert.addAction(cancelButton)
@@ -333,25 +337,32 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
         
     }
     
-    func checkPassword(pwd:String, pwd2:String) {
+    func checkPassword(oldPwd:String, pwd:String, pwd2:String) {
         var check:Bool = true
         var title = ""
         let orgPwd = UserDefaults.standard.string(forKey: "userPassword")
+        let pwdRegEx = "^(?=.*[a-zA-Z])(?=.*[!@#$%^*+=-])(?=.*[0-9]).{8,15}$"
+        let pwdTest = NSPredicate(format:"SELF MATCHES %@", pwdRegEx)
         
-        if pwd.count < 4 {
-            title = "4자 이상의 비밀번호를 입력해주세요."
-            check = false
-        } else if Util.checkSpace(pwd) {
-            title = "비밀번호에 공백을 제거해 주세요."
-            check = false
-        } else if pwd2 == "" {
+        if pwd2 == "" {
             title = "비밀번호를 확인해 주세요."
             check = false
-        } else if pwd != pwd2 {
+        } else if orgPwd != oldPwd {
+            title = "현재 비밀번호를 확인해주세요."
+        }  else if pwd != pwd2 {
             title = "비밀번호가 동일하지 않습니다."
             check = false
         } else if pwd == orgPwd {
             title = "현재 비밀번호와 동일합니다."
+            check = false
+        } else if pwd.count < 8 {
+            title = "8자 이상의 비밀번호를 입력해주세요."
+            check = false
+        } else if Util.checkSpace(pwd) {
+            title = "비밀번호에 공백을 제거해 주세요."
+            check = false
+        } else if !pwdTest.evaluate(with: pwd) {
+            title = "숫자,문자,특수문자를 포함하여 8~15를 입력해주세요."
             check = false
         }
         
@@ -504,6 +515,7 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
     
     
     @IBAction func backToHome(_ sender: UIButton) {
+        NotificationCenter.default.post(name: NSNotification.Name("toggleSideMenu"), object: nil)
         dismiss(animated: false, completion: nil)
     }
     

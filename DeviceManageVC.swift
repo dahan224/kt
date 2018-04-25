@@ -161,6 +161,11 @@ class DeviceManageVC: UIViewController  {
 
         
         btnBack.addTarget(self, action: #selector(fnBack), for: .touchUpInside)
+        changeButton.tag = 0
+        changeButton.addTarget(self, action: #selector(menuTapped(sender:)), for: .touchUpInside)
+        
+        deleteButton.tag = 2
+        deleteButton.addTarget(self, action: #selector(menuTapped(sender:)), for: .touchUpInside)
     }
     
     func addLeftLabel(view:UIView, label:UILabel, text:String){
@@ -180,6 +185,14 @@ class DeviceManageVC: UIViewController  {
             deviceManageStyle = viewTag
             performSegue(withIdentifier: "deviceDetailSegue", sender: self)
         }
+    }
+    
+    @objc func menuTapped(sender:UIButton){
+        let viewTag = sender.tag
+        
+        print("viewTag : \(viewTag)")
+        deviceManageStyle = viewTag
+        performSegue(withIdentifier: "deviceDetailSegue", sender: self)
     }
     
     override func prepare(for segue: UIStoryboardSegue, sender: Any?) {

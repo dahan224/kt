@@ -16,5 +16,9 @@ class HomeDeviceCollectionViewCell: UICollectionViewCell {
     
     @IBOutlet weak var lblSub: UILabel!
     
+    @IBOutlet weak var ivFlagNew: UIImageView!
+    
+    
+    
     
 }

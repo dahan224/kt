@@ -23,7 +23,7 @@ class PopupView: UIView {
     @IBOutlet weak var btnCancel: UIButton!
     
     var countDownTimer:Timer!
-    var totalTime = 180
+    var totalTime = 179
     
     var devBas:App.DeviceStruct!
     var data:App.smsInfo!
@@ -49,9 +49,16 @@ class PopupView: UIView {
     // Only override draw() if you perform custom drawing.
     // An empty implementation adversely affects performance during animation.
     override func draw(_ rect: CGRect) {
+        
+        txtSmsNum.borderStyle = UITextBorderStyle.none
+        txtSmsNum.addBorderBottom(height: 1, color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder))
+        
         btnReSend.addTarget(self, action: #selector(fnReSendSms), for: .touchUpInside) // 추가
         lblTop.textColor = HexStringToUIColor().getUIColor(hex: "ffffff")
-        lblInfo.text = "- 발송된 인증번호를 유효시간 안에 입력하세요.\n- 인증번호를 입력 후 확인 버튼을 클릭하세요.\n- 인증번호가 수신이 안된 경우 재발송 버튼을 클릭하세요."
+        lblTop.font = lblTop.font.withSize(24)
+        lblInfo.text = "- 발송된 인증번호를 유효시간 안에 입력하세요.\n- 인증번호를 입력 후 확인 버튼을 클릭하세요.\n- 인증번호 미 수신시 재발송 버튼을 클릭하세요."
+        lblInfo.font = lblInfo.font.withSize(13)
+        lblInfo.setLineHeight(lineHeight: 8)
         btnReSend.backgroundColor = HexStringToUIColor().getUIColor(hex: "717171")
         lblTimer.textColor = HexStringToUIColor().getUIColor(hex: "f39c12")
         
@@ -75,7 +82,7 @@ class PopupView: UIView {
         
         if lblTimer.text == "00:00" {
             
-            let alertView = UIAlertController(title: nil, message: "안증 시간이 만료되었습니다. 재발송 버튼을 눌러주세요.", preferredStyle: .alert)
+            let alertView = UIAlertController(title: nil, message: "인증 시간이 만료되었습니다. 재발송 버튼을 눌러주세요.", preferredStyle: .alert)
             let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
             alertView.addAction(confirmAction)
             
@@ -140,8 +147,8 @@ class PopupView: UIView {
     @objc func fnReSendSms() {
         
         let userId:String = UserDefaults.standard.string(forKey: "userId")!
+        let uuid:String = Util.getUuid()
         
-        /*
          let urlString = App.URL.server+"smsReSend.do"
          Alamofire.request(urlString,
          method: .post,
@@ -150,31 +157,35 @@ class PopupView: UIView {
          headers: jsonHeader).responseJSON{ (response) in
          switch response.result {
          case .success(let value):
-         print(value)
-         let json = JSON(value)
-         let responseData = value as! NSDictionary
-         let message = responseData.object(forKey: "message")
-         print("smsAuth message : \(message)")
-         if let statusCode = json["statusCode"].int, statusCode != 100 {
-         
-         } else {
-         if let listData = responseData.object(forKey: "data") as? NSDictionary {
-         self.data = App.smsInfo(sms: listData as! AnyObject)*/
-        let alertView = UIAlertController(title: nil, message: "재발송 되었습니다.", preferredStyle: .alert)
-        let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
-        alertView.addAction(confirmAction)
-        UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
-        /*} else {
-         let alertView = UIAlertController(title: nil, message: "실패하였습니다. 다시 시도해주세요.", preferredStyle: .alert)
-         let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
-         alertView.addAction(confirmAction)
-         UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
-         }
-         }
+             print(value)
+             let json = JSON(value)
+             let responseData = value as! NSDictionary
+             let message = responseData.object(forKey: "message")
+             print("smsAuth message : \(message)")
+             if let statusCode = json["statusCode"].int, statusCode != 100 {
+             
+             } else {
+                if let listData = responseData.object(forKey: "data") as? NSDictionary {
+                    self.data = App.smsInfo(sms: listData as! AnyObject)
+                    let alertView = UIAlertController(title: nil, message: "재발송 되었습니다.", preferredStyle: .alert)
+                    let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) { UIAlertAction in
+                        self.lblTimer.text = "\(self.timeFormatted(180))"
+                        self.totalTime = 179
+                        self.startTimer()
+                    }
+                    alertView.addAction(confirmAction)
+                    UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
+                } else {
+                    let alertView = UIAlertController(title: nil, message: "실패하였습니다. 다시 시도해주세요.", preferredStyle: .alert)
+                    let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                    alertView.addAction(confirmAction)
+                    UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
+                }
+             }
          case .failure(let error):
-         NSLog(error.localizedDescription)
-         }
-         }*/
+            NSLog(error.localizedDescription)
+        }
+        }
     }
     
     func startTimer() {
@@ -184,15 +195,11 @@ class PopupView: UIView {
     @objc func updateTime() {
         lblTimer.text = "\(timeFormatted(totalTime))"
         
-        if totalTime != 0 {
+        if totalTime > 0 {
             totalTime -= 1
         } else {
-            endTimer()
+            countDownTimer.invalidate()
         }
-    }
-    
-    func endTimer() {
-        countDownTimer.invalidate()
     }
     
     func timeFormatted(_ totalSeconds: Int) -> String {

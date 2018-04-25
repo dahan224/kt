@@ -71,14 +71,14 @@
       "scale" : "2x"
     },
     {
-      "size" : "40x40",
       "idiom" : "ipad",
-      "filename" : "App_ico_iPad_80(40@2x).png",
+      "size" : "40x40",
       "scale" : "1x"
     },
     {
-      "idiom" : "ipad",
       "size" : "40x40",
+      "idiom" : "ipad",
+      "filename" : "App_ico_iPad_80(40@2x)-1.png",
       "scale" : "2x"
     },
     {

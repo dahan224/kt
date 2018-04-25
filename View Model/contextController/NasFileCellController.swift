@@ -20,6 +20,13 @@ class NasFileCellController {
             cell.btnOption.isHidden = true
         }
         let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
+        let fileThumbYn = folderArray[indexPath.row].fileThumbYn
+        if fileThumbYn == "Y" {
+            
+        } else {
+            
+        }
+        
         
         cell.ivSub.image = UIImage(named: imageString)
         cell.optionSHowCheck = 0
@@ -53,26 +60,24 @@ class NasFileCellController {
     }
 
     
-    func nasContextMenuCalled(cell:NasFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String, containerView:ContainerViewController){
+    func nasContextMenuCalled(cell:NasFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, currentFolderId:String, containerView:ContainerViewController){
         dv = deviceView
-        var fromDevUuid = currentDevUuid
-        let fileNm = folderArray[indexPath.row].fileNm
+         let fileNm = folderArray[indexPath.row].fileNm
         let etsionNm = folderArray[indexPath.row].etsionNm
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
         let foldrId = String(folderArray[indexPath.row].foldrId)
         let amdDate = folderArray[indexPath.row].amdDate
-        var devNm = folderArray[indexPath.row].devNm
-        if(folderArray[indexPath.row].devUuid != "nil"){
-            fromDevUuid = folderArray[indexPath.row].devUuid
-        }
-        
+        let devNm = folderArray[indexPath.row].devNm
+        let fromOsCd = folderArray[indexPath.row].osCd
+        let fromDevUuid = folderArray[indexPath.row].devUuid
+       
         switch sender {
         case cell.btnShow:
 //            dv?.showNasFileOption(tag: sender.tag)
             dv?.hideSelectedOptions(tag: sender.tag)
             print("nas btnShow clicked")
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
             
@@ -93,7 +98,7 @@ class NasFileCellController {
         case cell.btnGDrive:
             dv?.hideSelectedOptions(tag: sender.tag)
 //            dv?.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
             print("fileDict : \(fileDict)")
             
             //                deviceView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
@@ -121,25 +126,29 @@ class NasFileCellController {
         }
     }
     
-    func nasFileContextMenuCalledFromGrid(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:HomeViewController, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int, containerView:ContainerViewController){
+    func nasFileContextMenuCalledFromGrid(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:HomeViewController, userId:String, fromOsCd:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int, containerView:ContainerViewController){
         let fileNm = folderArray[intFolderArrayIndexPathRow].fileNm
         let etsionNm = folderArray[intFolderArrayIndexPathRow].etsionNm
         let amdDate = folderArray[intFolderArrayIndexPathRow].amdDate
         let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePathNm
         let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
         let foldrId = String(folderArray[intFolderArrayIndexPathRow].foldrId)
+        let devNm = folderArray[intFolderArrayIndexPathRow].devNm
+        let fromOsCd = folderArray[intFolderArrayIndexPathRow].osCd
+        let fromDevUuid = folderArray[intFolderArrayIndexPathRow].devUuid
         
         hv = deviceView
         switch indexPath.row {
             case 0 :
                 //파일 상세보기
-                let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+                let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
                 NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 break
             case 1:
                 
                 //다운로드
+                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 hv?.downloadFromNas(name: fileNm, path: foldrWholePathNm, fileId:fileId)
                 break
             
@@ -147,7 +156,7 @@ class NasFileCellController {
                 
                 // nas로 보내기
                 
-                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"etsionNm":etsionNm]
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":fromDevUuid,"etsionNm":etsionNm]
                 
                 print("fileDict : \(fileDict)")
                 NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
@@ -161,7 +170,7 @@ class NasFileCellController {
                 let fileIdDict = ["fileId":"0"]
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
                 
-                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
                 print("fileDict : \(fileDict)")
                 
                 containerView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
@@ -174,7 +183,7 @@ class NasFileCellController {
                 let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                     UIAlertAction in
                     //Do you Success button Stuff here
-                    let params = ["userId":userId,"devUuid":currentDevUuid,"fileId":fileId,"fileNm":fileNm,"foldrWholePathNm": foldrWholePathNm]
+                    let params = ["userId":userId,"devUuid":fromDevUuid,"fileId":fileId,"fileNm":fileNm,"foldrWholePathNm": foldrWholePathNm]
                     
                     self.hv?.deleteNasFile(param: params, foldrId: foldrId)
                     

@@ -41,6 +41,7 @@ class DbHelper{
     let fileExtension = Expression<String>("fileExtension")
     let foldrWholePath = Expression<String>("foldrWholePath")
     let size = Expression<String>("size")
+    let thumbnailLink = Expression<String>("thumbnailLink")
     
     let googleEmail = Expression<String>("googleEmail")
     let accessToken = Expression<String>("accessToken")
@@ -189,6 +190,7 @@ class DbHelper{
             table.column(fileExtension)
             table.column(foldrWholePath)
             table.column(size)
+            table.column(thumbnailLink)
             
         }
         do {
@@ -313,7 +315,7 @@ class DbHelper{
         do {
             try self.database.transaction {
                 for (index,device) in getArray.enumerated() {
-                    try self.database.run(self.googleDriveFileListTable.insert(fileId <- getArray[index].fileId, kind <- getArray[index].kind, mimeType <- getArray[index].mimeType, name <- getArray[index].name, createdTime <- getArray[index].createdTime, modifiedTime <- getArray[index].modifiedTime, parents <- getArray[index].parents, fileExtension <- getArray[index].fileExtension, foldrWholePath <- getArray[index].foldrWholePath, size <- getArray[index].size))
+                    try self.database.run(self.googleDriveFileListTable.insert(fileId <- getArray[index].fileId, kind <- getArray[index].kind, mimeType <- getArray[index].mimeType, name <- getArray[index].name, createdTime <- getArray[index].createdTime, modifiedTime <- getArray[index].modifiedTime, parents <- getArray[index].parents, fileExtension <- getArray[index].fileExtension, foldrWholePath <- getArray[index].foldrWholePath, size <- getArray[index].size, thumbnailLink <- getArray[index].thumbnailLink))
                 }
             }
         } catch {
@@ -358,8 +360,9 @@ class DbHelper{
                 let fileExtension = "\(device[self.fileExtension])"
                 let foldrWholePath = "\(device[self.foldrWholePath])"
                 let size = device[self.size]
+                let thumbnailLink = device[self.thumbnailLink]
                 
-                let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath)
+                let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath, thumbnailLink:thumbnailLink)
                 
                 DriveFileArray.append(deviceStruct)
             }
@@ -408,8 +411,9 @@ class DbHelper{
                 let fileExtension = "\(device[self.fileExtension])"
                 let foldrWholePath = "\(device[self.foldrWholePath])"
                 let size = device[self.size]
+                let thumbnailLink = device[self.thumbnailLink]
                 if(name.contains(fileNm)){
-                    let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath)
+                    let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath, thumbnailLink:thumbnailLink)
                     DriveFileArray.append(deviceStruct)
                 }
                 

@@ -25,6 +25,7 @@ class GDriveFileListCellController:UIViewController {
 //        let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].mimeType)
         let etsionFromMimeType = Util.getEtsionFromMimetype(mimeType: folderArray[indexPath.row].mimeType)
         let imageString = Util.getFileImageString(fileExtension: etsionFromMimeType)
+        
         cell.lblDevice.isHidden = false
         let size = FileUtil().covertFileSize(getSize: folderArray[indexPath.row].size)
         cell.lblDevice.text = size
@@ -33,7 +34,7 @@ class GDriveFileListCellController:UIViewController {
         cell.optionSHowCheck = 0
         cell.optionHide()
         cell.lblMain.text = folderArray[indexPath.row].name
-        cell.lblSub.text = folderArray[indexPath.row].createdTime
+        cell.lblSub.text = folderArray[indexPath.row].modifiedTime.components(separatedBy: ".")[0].replacingOccurrences(of: "T", with: " ")
         
         cell.btnOption.isHidden = false
         cell.btnShow.tag = indexPath.row

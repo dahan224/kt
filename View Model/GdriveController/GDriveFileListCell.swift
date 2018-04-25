@@ -131,11 +131,11 @@ class GDriveFileListCell: UICollectionViewCell {
         addSubview(btnMultiCheck)
         addSubview(btnOption)
         addSubview(optionView)
-//        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
-//        view1.layer.masksToBounds = false
-//        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
-//        
-//        addSubview(view1)
+        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
+        view1.layer.masksToBounds = false
+        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
+        
+        addSubview(view1)
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
@@ -285,7 +285,7 @@ class GDriveFileListCell: UICollectionViewCell {
     
     func textToImage(drawText text: String, inImage image: UIImage) -> UIImage {
         let textColor = UIColor.lightGray
-        let textFont = UIFont(name: "Helvetica", size: 11)!
+        let textFont = UIFont(name: "Helvetica", size: 12)!
         let actionSize = CGSize(width: 60, height: 70)
         UIGraphicsBeginImageContextWithOptions(actionSize, false, 0.0)
         
@@ -296,12 +296,12 @@ class GDriveFileListCell: UICollectionViewCell {
             NSAttributedStringKey.foregroundColor: textColor,
             NSAttributedStringKey.paragraphStyle: paragraphStyle
             ] as [NSAttributedStringKey : Any]
-        let newSize = CGSize(width: 36, height: 36)
-        let imageX = (60-36) / 2
-        let imageY = (70-36) / 2
-        image.draw(in: CGRect(origin: CGPoint(x: imageX, y: imageY-5), size: newSize))
+        let newSize = CGSize(width: 20, height: 20)
+        let imageX = (60-20) / 2
+        let imageY = (70-20) / 2
+        image.draw(in: CGRect(origin: CGPoint(x: imageX, y: imageY-7), size: newSize))
         let textSize = CGSize(width: 60, height: 36)
-        let rect = CGRect(origin: CGPoint(x:0, y: imageY + 28), size: textSize)
+        let rect = CGRect(origin: CGPoint(x:0, y: imageY + 16), size: textSize)
         text.draw(in: rect, withAttributes: textFontAttributes)
         
         
@@ -313,7 +313,7 @@ class GDriveFileListCell: UICollectionViewCell {
     }
     func textToImage2(drawText text: String, inImage image: UIImage) -> UIImage {
         let textColor = UIColor.lightGray
-        let textFont = UIFont(name: "Helvetica", size: 9)!
+        let textFont = UIFont(name: "Helvetica", size: 10)!
         let actionSize = CGSize(width: 60, height: 70)
         UIGraphicsBeginImageContextWithOptions(actionSize, false, 0.0)
         
@@ -324,12 +324,12 @@ class GDriveFileListCell: UICollectionViewCell {
             NSAttributedStringKey.foregroundColor: textColor,
             NSAttributedStringKey.paragraphStyle: paragraphStyle
             ] as [NSAttributedStringKey : Any]
-        let newSize = CGSize(width: 36, height: 36)
-        let imageX = (60-36) / 2
-        let imageY = (70-36) / 2
-        image.draw(in: CGRect(origin: CGPoint(x: imageX, y: imageY-11), size: newSize))
+        let newSize = CGSize(width: 20, height: 20)
+        let imageX = (60-20) / 2
+        let imageY = (70-20) / 2
+        image.draw(in: CGRect(origin: CGPoint(x: imageX, y: imageY-13), size: newSize))
         let textSize = CGSize(width: 60, height: 36)
-        let rect = CGRect(origin: CGPoint(x:0, y: imageY + 25), size: textSize)
+        let rect = CGRect(origin: CGPoint(x:0, y: imageY + 11), size: textSize)
         text.draw(in: rect, withAttributes: textFontAttributes)
         
         

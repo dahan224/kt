@@ -82,13 +82,14 @@ class RemoteFileListCellController {
         let amdDate = folderArray[indexPath.row].amdDate
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
-        var devNm = folderArray[indexPath.row].devNm
+        let devNm = folderArray[indexPath.row].devNm
+        
         var btn = "show"
         switch sender {
         case cell.btnShow:
             btn = "show"
             dv?.hideSelectedOptions(tag: sender.tag)
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             print("fileIdDict : \(fileIdDict)")
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
@@ -141,13 +142,14 @@ class RemoteFileListCellController {
         let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePathNm
         let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
         let foldrId = String(folderArray[intFolderArrayIndexPathRow].foldrId)
+        let devNm = folderArray[intFolderArrayIndexPathRow].devNm
         hv = deviceView
         viewController = "homeView"
         switch indexPath.row {
         case 0 :
             //파일 상세보기
             
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)

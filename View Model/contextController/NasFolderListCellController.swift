@@ -49,6 +49,10 @@ class NasFolderListCellController {
         let foldrId = folderArray[indexPath.row].foldrId
         let upFoldrId = folderArray[indexPath.row].upFoldrId
         let foldrNm = folderArray[indexPath.row].foldrNm
+        let devNm = folderArray[indexPath.row].devNm
+        let fromOsCd = folderArray[indexPath.row].osCd
+        let fromDevUuid = folderArray[indexPath.row].devUuid
+        
         print("foldrId : \(foldrId)")
         
         switch sender {

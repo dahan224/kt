@@ -21,6 +21,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var containerViewController:ContainerViewController?
     var child : HomeDeviceCollectionVC?
     var child2 : HomeDeviceCollectionVC?
+    var contextMenuWork:ContextMenuWork?
     @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     var indicatorAnimating = false
     
@@ -368,10 +369,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     var containerViewBottomAnchor:NSLayoutConstraint?
     var searchViewBottomAnchor:NSLayoutConstraint?
     
+    var completeFolderNameForSearchView = ""
     
     override func viewDidLoad() {
         super.viewDidLoad()
-
+        contextMenuWork = ContextMenuWork()
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
         GIDSignIn.sharedInstance().scopes = scopes
@@ -466,21 +468,25 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         }
         
         SetupHomeView.setupMainNavbar(View: customNavBar, navBarTitle: navBarTitle, hamburgerButton: hamburgerButton, listButton: listButton, downArrowButton: downArrowButton, title:"GiGA Stroage")
-        
-        
-        
+
+
+
+    
         for view in self.searchView.subviews {
+            
             view.removeFromSuperview()
         }
-        SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self)
+        SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self, sBarTitle: "all Storage")
         print("setHomeView")
-        
+
         oneViewSortState = DbHelper.sortByEnum.none
-     
-        
+
+
         hideKeyboard()
-        tableView.reloadData()
-        
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
+
         self.setupDeviceListView(sortBy: oneViewSortState,multiCheckd: multiButtonChecked)
         
     }
@@ -624,8 +630,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         flickView.isHidden = true // 추가
 //        sBar.endEditing(true)
 //        performSegue(withIdentifier: "showSearchViewSegue", sender: self)
+        print("cellStyle : \(cellStyle)")
         if(!searchbarTextStarted){
-            if(deviceName.isEmpty){
+            if(deviceName.isEmpty || cellStyle == 1){
                 setSearchView(title: "GiGA Storage")
             } else {
                 setSearchView(title: deviceName)
@@ -643,6 +650,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         
     }
     func setSearchView(title:String){
+//        sBar.placeholder = "Search in all Storaged"
         navBarTitle.isUserInteractionEnabled = false
         
         for view in self.customNavBar.subviews {
@@ -650,8 +658,13 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         }
         
         SetupSearchView.setupSearchNavbar(View: customNavBar, navBarTitle: navBarTitle, backBUtton: backButton, title:title)
+        var sBarTitle = title
+        if cellStyle == 1 {
+            sBarTitle = "all Storage"
+        }
         
-        SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self)
+        SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self, sBarTitle:title)
+        
         
         showSearchCategory()
         SetupSearchView.showFileCountLabel(count:0, view:self.view, searchCountLabel:searchCountLabel, searchCategoryView: searchCategoryView, multiButton:multiButton, multiButtonChecked:multiButtonChecked, selectAllButton:selectAllButton)
@@ -809,6 +822,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         print("cellstyle when backToHome : \(cellStyle)")
         print("currentFolderId : \(currentFolderId)")
         print("folderArray : \(folderArray)")
+        
+      
         oneViewListView.isHidden = false
         navBarTitle.isUserInteractionEnabled = true
         for view in self.customNavBar.subviews {
@@ -819,11 +834,22 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             title = deviceName
         }
         SetupHomeView.setupMainNavbar(View: customNavBar, navBarTitle: navBarTitle, hamburgerButton: hamburgerButton, listButton: listButton, downArrowButton: downArrowButton, title:title)
+        
         for view in self.searchView.subviews {
             view.removeFromSuperview()
         }
-        SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self)
-        print("setHomeView")
+        
+        if(cellStyle == 2){
+            print("deviceName : \(deviceName) , selectedDevUuid : \(selectedDevUuid)")
+            let folderName = ["folderName":completeFolderNameForSearchView,"deviceName":deviceName, "devUuid":selectedDevUuid]
+            NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
+            
+        } else {
+            title = "all Storage"
+            SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self, sBarTitle: title)
+            print("setHomeView")
+            
+        }
         
         oneViewSortState = DbHelper.sortByEnum.none
         
@@ -851,7 +877,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         let now = Date()
         if(cellStyle == 1) {
             DeviceArray.removeAll()
-            homeViewToggleIndicator()
+//            homeViewToggleIndicator()
+            containerViewController?.activityIndicator.startAnimating()
             
             GetListFromServer().getDevice(){ responseObject, error in
                 let json = JSON(responseObject as Any)
@@ -884,7 +911,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     DbHelper().jsonToSqlite(getArray: self.DeviceArray)
                     DispatchQueue.main.async {
                         self.setHomeView()
-                        self.homeViewToggleIndicator()
+                        
+                        self.containerViewController?.activityIndicator.stopAnimating()
                     }
                     
                 }
@@ -943,7 +971,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 print("getCellStyle : \(getCellStyle)")
                 
                 ifNavBarClicked = true
-                tableView.reloadData()
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
             } else {
                 if let getFolderArray = stateInfo.userInfo?["folderArray"] as? [App.FolderStruct], let getIndexPath = stateInfo.userInfo?["selectedIndex"] as? IndexPath {
                     
@@ -959,7 +989,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     driveFileArray = getDriveFileArray
                     intFolderArrayIndexPathRow = getIndexPath.row
                 }
-                tableView.reloadData()
+                DispatchQueue.main.async {
+                    self.tableView.reloadData()
+                }
                 let fileIdDict = ["fileId":"\(fileId)"]
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
             }
@@ -1024,7 +1056,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         } else if cellStyle == 2 {
             bottomListState = .sort
         }
-        tableView.reloadData()
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
         NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
         
     }
@@ -1089,7 +1123,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
 //        let fileIdDict = ["multiChecked":stringBool]
 //        NotificationCenter.default.post(name: Notification.Name("multiSelectActive"), object: self, userInfo: fileIdDict)
         
-        tableView.reloadData()
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
         if(viewState == .home) {
             child?.multiSelectActive(multiButtonActive: multiButtonChecked)
         } else if viewState == .search {
@@ -1200,7 +1236,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         let fileIdDict = ["fileId":"0"]
         
         
-        tableView.reloadData()
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
         NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
     }
     
@@ -1210,7 +1248,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         ifNavBarClicked = true
         cellStyle = 1
         let fileIdDict = ["fileId":"0"]
-        tableView.reloadData()
+        DispatchQueue.main.async {
+            self.tableView.reloadData()
+        }
         
         NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
     }
@@ -1379,7 +1419,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             cell.ivIcon.isHidden = false
             if(indexPath.row == 0){
                 cell.lblTitle.text = "홈으로"
-                cell.ivIcon.image = UIImage(named: "ico_home")
+                cell.ivIcon.image = UIImage(named: "ico_home_r")
             } else {
                 if(indexPath.row < DeviceArray.count+1){
                     let imageString = Util.getDeviceImageString(osNm: DeviceArray[indexPath.row-1].osNm, onoff: DeviceArray[indexPath.row-1].onoff)
@@ -1473,145 +1513,164 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         print(indexPath.section)
         print(indexPath.row)
         print("fromOsCd : \(fromOsCd)")
-        
-        if(ifNavBarClicked){
-            inActiveMultiCheck()
-            if(indexPath.row == 0){
-                print("back to main")
-                self.flickView.isHidden = false
-                self.mainContentState = .oneViewList
-                backToHome()
-                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                
-            } else {
-                let indexPathRow = ["indexPathRow":"\(indexPath.row-1)"]
-                NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
-                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                
-                //                print(DeviceArray[indexPath.row].devNm)
-                
-            }
-            
-        } else {
-            switch bottomListState {
-            case .sort:
-                if(viewState == .search){
-                    sortBy = bottomListSortKey[indexPath.row]
-//                    searchInAllCategory()
+        if viewState == .home {
+            if(ifNavBarClicked){
+                inActiveMultiCheck()
+                if(indexPath.row == 0){
+                    print("back to main")
+                    self.flickView.isHidden = false
+                    self.mainContentState = .oneViewList
+                    backToHome()
+                    NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                     
                 } else {
-                    let sortState = ["sortState":"\(bottomListSortKey[indexPath.row])"]
-                    NotificationCenter.default.post(name: Notification.Name("sortFolderList"), object: self, userInfo: sortState)
+                    let indexPathRow = ["indexPathRow":"\(indexPath.row-1)"]
+                    NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
                     NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                }
-                
-                
-                break
-            case .nasFileInfo:
-                NasFileCellController().nasFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
-                break
-                
-            case .localFileInfo:
-//                print("localFileInfo folderArray : \(folderArray), indexpathrow : \(intFolderArrayIndexPathRow)")
-                LocalFileListCellController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
-                break
-            case .remoteFileInfo:
-                
-                RemoteFileListCellController().remoteFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
-                break
-                
-           
-            case .oneView:
-                oneViewSortState = bottomListOneViewSortKey[indexPath.row]
-                setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
-                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                break
-            case .googleDrive:
-                GDriveFileListCellController().ContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: "Google Drive", parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:driveFileArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
-                
-                break            
-            case .bottomMultiListNas:
-                switch indexPath.row {
-                case 0 :
-                    let fileDict = ["action":"download","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                    inActiveMultiCheck()
-                    break
-                case 1 :
-                    let fileDict = ["action":"nas","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                    inActiveMultiCheck()
-                    break
-                case 2 :
-                    let fileDict = ["action":"gDrive","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                    inActiveMultiCheck()
-                    break
-                case 3 :
-                    let fileDict = ["action":"delete","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                    inActiveMultiCheck()
-                    break
-                
-                default :
-                    break
-                }
-                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-                break
-            case .bottomMultiListRemote:
-                switch indexPath.row {
-                case 0 :
-                    let fileDict = ["action":"download","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                    break
-                case 1 :
-                    let fileDict = ["action":"nas","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                    break
-                default:
                     
-                    break
+                    //                print(DeviceArray[indexPath.row].devNm)
                     
                 }
-                break
-            case .bottomMultiListLocal:
-                switch indexPath.row {
-                case 0 :
-                    let fileDict = ["action":"nas","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                
+            } else {
+                switch bottomListState {
+                case .sort:
+                    if(viewState == .search){
+                        sortBy = bottomListSortKey[indexPath.row]
+                        //                    searchInAllCategory()
+                        
+                    } else {
+                        let sortState = ["sortState":"\(bottomListSortKey[indexPath.row])"]
+                        NotificationCenter.default.post(name: Notification.Name("sortFolderList"), object: self, userInfo: sortState)
+                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                    }
+                    
+                    
                     break
-                case 1 :
-                    let fileDict = ["action":"gDrive","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                    break
-                case 2 :
-                    let fileDict = ["action":"delete","fromOsCd":fromOsCd]
-                    NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                case .nasFileInfo:
+                    NasFileCellController().nasFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
                     break
                     
-                default :
+                case .localFileInfo:
+                    //                print("localFileInfo folderArray : \(folderArray), indexpathrow : \(intFolderArrayIndexPathRow)")
+                    LocalFileListCellController().localContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
                     break
-                }
-                NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-            case .bottomMultiListGDrive:
-                switch indexPath.row {
+                case .remoteFileInfo:
+                    
+                    RemoteFileListCellController().remoteFileContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: deviceName, parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:folderArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow)
+                    break
+                    
+                    
+                case .oneView:
+                    oneViewSortState = bottomListOneViewSortKey[indexPath.row]
+                    setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
+                    NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                    break
+                case .googleDrive:
+                    GDriveFileListCellController().ContextMenuCalledFromGrid(indexPath: indexPath, fileId: fileId, foldrWholePathNm: foldrWholePathNm, deviceName: "Google Drive", parentView: "deviceView", deviceView: self, userId: selectedDevUserId, fromOsCd: fromOsCd, currentDevUuid: currentDevUuid, currentFolderId: currentFolderId, folderArray:driveFileArray, intFolderArrayIndexPathRow: intFolderArrayIndexPathRow, containerView:containerViewController!)
+                    
+                    break
+                case .bottomMultiListNas:
+                    switch indexPath.row {
                     case 0 :
                         let fileDict = ["action":"download","fromOsCd":fromOsCd]
-                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        inActiveMultiCheck()
                         break
                     case 1 :
                         let fileDict = ["action":"nas","fromOsCd":fromOsCd]
-                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        inActiveMultiCheck()
+                        break
+                    case 2 :
+                        let fileDict = ["action":"gDrive","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        inActiveMultiCheck()
+                        break
+                    case 3 :
+                        let fileDict = ["action":"delete","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        inActiveMultiCheck()
+                        break
+                        
+                    default :
+                        break
+                    }
+                    NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                    break
+                case .bottomMultiListRemote:
+                    switch indexPath.row {
+                    case 0 :
+                        let fileDict = ["action":"download","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        break
+                    case 1 :
+                        let fileDict = ["action":"nas","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        break
+                    default:
+                        
+                        break
+                        
+                    }
+                    break
+                case .bottomMultiListLocal:
+                    switch indexPath.row {
+                    case 0 :
+                        let fileDict = ["action":"nas","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        break
+                    case 1 :
+                        let fileDict = ["action":"gDrive","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
                         break
                     case 2 :
                         let fileDict = ["action":"delete","fromOsCd":fromOsCd]
-                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
                         break
-                default:
-                    break
+                        
+                    default :
+                        break
+                    }
+                    NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+                case .bottomMultiListGDrive:
+                    switch indexPath.row {
+                    case 0 :
+                        let fileDict = ["action":"download","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+                        //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        break
+                    case 1 :
+                        let fileDict = ["action":"nas","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+//                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        break
+                    case 2 :
+                        let fileDict = ["action":"delete","fromOsCd":fromOsCd]
+                        child?.handleMultiCheckFolderArray(fileDict: fileDict)
+//                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
+                        break
+                    default:
+                        break
+                    }
                 }
             }
+        } else {
+            // send to nas from searchView
+            let fileDict = ["action":"nas","fromOsCd":fromOsCd]
+            child2?.handleMultiCheckFolderArray(fileDict: fileDict)
+//            NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
         }
+        
     }
  
    
@@ -1637,6 +1696,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func setupFileCollectionView(getFolerName:String, getDeviceName:String, getDevUuid:String){
+        
+        
        SetupFolderInsideCollectionView.searchView(searchView: searchView, searchButton: searchButton, sortButton: sortButton, customNavBar: customNavBar, hamburgerButton: hamburgerButton, listButton: listButton, multiButton:multiButton,navBarTitle: navBarTitle, getFolerName: getFolerName, getDeviceName: getDeviceName, listStyle: listViewStyleState, getDevUuid:getDevUuid, localRefreshButton:localRefreshButton, multiButtonChecked:multiButtonChecked, selectAllButton:selectAllButton, lblSubNav:lblSubNav, downArrowButton:downArrowButton)
         
         
@@ -1687,16 +1748,20 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
     
     func downloadFromNas(name:String, path:String, fileId:String){
-        homeViewToggleIndicator()
-        ContextMenuWork().downloadFromNas(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+//        homeViewToggleIndicator()
+        self.containerViewController?.activityIndicator.startAnimating()
+        containerViewController?.showHalfBlackView(getContextMenuWork:contextMenuWork!)
+//        
+        contextMenuWork?.downloadFromNas(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
                     
                     DispatchQueue.main.async {
                         let fileIdDict = ["fileId":"0"]
-                        NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
-                        self.homeViewToggleIndicator()
+                        
+                        self.containerViewController?.activityIndicator.stopAnimating()
+                        self.containerViewController?.finishAlamofire()
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){
                         UIAlertAction in
@@ -1709,7 +1774,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     
                     
                 } else {
-                    self.homeViewToggleIndicator()
+                    self.containerViewController?.activityIndicator.stopAnimating()
                     let fileIdDict = ["fileId":"0"]
                     NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
                 }
@@ -1724,7 +1789,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     
     func deleteNasFile(param:[String:Any], foldrId:String){
         print(param)
-        homeViewToggleIndicator()
+        containerViewController?.activityIndicator.startAnimating()
         ContextMenuWork().deleteNasFile(parameters:param){ responseObject, error in
             if let obj = responseObject {
                 print(obj)
@@ -1733,7 +1798,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                 print("\(message), \(json["statusCode"].int)")
                 if let statusCode = json["statusCode"].int, statusCode == 100 {
                     DispatchQueue.main.async {
-                        self.homeViewToggleIndicator()
+                        self.containerViewController?.activityIndicator.stopAnimating()
                         let fileDict = ["foldrId":self.currentFolderId]
                         NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo :fileDict)
                         let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
@@ -1747,7 +1812,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                         self.present(alertController, animated: true)
                     }
                 } else {
-                    self.homeViewToggleIndicator()
+                    self.containerViewController?.activityIndicator.stopAnimating()
+                    
                 }
             }
             
@@ -1786,13 +1852,18 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     @objc func openDocument(urlDict:NSNotification){
         
         if let getUrl = urlDict.userInfo!["url"] as? URL {
-            if(!indicatorAnimating){
-                homeViewToggleIndicator()
-            }            
+            containerViewController?.activityIndicator.startAnimating()
             documentController = UIDocumentInteractionController(url: getUrl)
             documentController.delegate = self
 //            documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
-            documentController.presentPreview(animated: true)
+            
+            if documentController.presentPreview(animated: true) {
+                print("present available")
+            } else {
+                print("present not available")
+                documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
+            }
+
             
             
 
@@ -1813,12 +1884,11 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     func documentInteractionControllerWillBeginPreview(_ controller: UIDocumentInteractionController) {
         print("documentInteractionControllerWillBeginPreview")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
-            if(self.indicatorAnimating){
-                self.homeViewToggleIndicator()
-            }
+           self.containerViewController?.activityIndicator.stopAnimating()
         })
     }
-    
+  
+
 
     func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
         print("documentInteractionControllerDidEndPreview")
@@ -1836,10 +1906,36 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         } else {
             FileUtil().removeFile(path: pathForRemove)
         }
-        
-        
     }
-  
+    
+    
+
+    func documentInteractionControllerWillPresentOptionsMenu(_ controller: UIDocumentInteractionController) {
+        print("documentInteractionControllerWillPresentOptionsMenu")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+            self.containerViewController?.activityIndicator.stopAnimating()
+        })
+    }
+    
+    func documentInteractionControllerDidDismissOptionsMenu(_ controller: UIDocumentInteractionController) {
+        print("documentInteractionControllerDidDismissOptionsMenu")
+        //        homeViewToggleIndicator()
+        let fileIdDict = ["fileId":"0"]
+        if (listViewStyleState == .grid) {
+            //            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+        }
+        
+        //remove appplay file
+        let pathForRemove:String = FileUtil().getFilePath(fileNm: "AppPlay", amdDate: "amdDate")
+        print("pathForRemove : \(pathForRemove)")
+        if(pathForRemove.isEmpty){
+            
+        } else {
+            FileUtil().removeFile(path: pathForRemove)
+        }
+    }
+   
+   
     override func viewWillAppear(_ animated: Bool) {
             print("viewWillAppear")
         

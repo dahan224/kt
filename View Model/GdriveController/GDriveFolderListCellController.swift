@@ -26,7 +26,7 @@ class GDriveFolderListCellController {
         cell.optionSHowCheck = 0
         cell.optionHide()
         cell.lblMain.text = folderArray[indexPath.row].name
-        cell.lblSub.text = folderArray[indexPath.row].createdTime
+        cell.lblSub.text = folderArray[indexPath.row].modifiedTime.components(separatedBy: ".")[0].replacingOccurrences(of: "T", with: " ")
         
         
         

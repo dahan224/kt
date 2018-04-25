@@ -21,7 +21,7 @@ struct App {
     struct URL {
         static let google: String = ""
         static let server: String = "https://araise.iptime.org/GIGA_Storage/webservice/rest/"
-        static let NAS:String = "https://araise.iptime.org/namespace/ifs/home/gs-araise3/araise3-gs/GIGA_NAS/"
+//        static let NAS:String = "https://araise.iptime.org/namespace/ifs/home/gs-araise3/araise3-gs/GIGA_NAS/"
         static let gDriveFileOption:String = "&orderBy=folder,createdTime desc&fields=nextPageToken,files(id, name, mimeType,size,createdTime,modifiedTime,parents,properties,fileExtension,fullFileExtension,trashed,shared,starred,thumbnailLink)"
     }
     
@@ -169,6 +169,7 @@ struct App {
         var fileSize:String
         var upFoldrId:Int
         var osCd: String
+        var fileThumbYn:String
         var checked:Bool
         init(data: AnyObject) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
@@ -199,6 +200,7 @@ struct App {
             self.devNm = data["devNm"] as? String ?? "nil"
             self.osCd = data["osCd"] as? String ?? "nil"
             self.checked = data["checked"] as? Bool ?? false
+            self.fileThumbYn = data["fileThumbYn"] as? String ?? "nil"
             
         }
         init(data: [String:Any]) {
@@ -219,6 +221,7 @@ struct App {
             self.upFoldrId = data["upFoldrId"] as? Int ?? 0
             self.osCd = data["osCd"] as? String ?? "nil"
             self.checked = data["checked"] as? Bool ?? false
+            self.fileThumbYn = data["fileThumbYn"] as? String ?? "nil"
         }
     }
   
@@ -566,6 +569,7 @@ struct App {
         var fileExtension:String
         var foldrWholePath:String
         var size:String
+        var thumbnailLink:String
         
         init(device: AnyObject, foldrWholePaths: [String]) {
             self.fileId = device["id"] as? String ?? "nil"
@@ -582,8 +586,9 @@ struct App {
                 self.foldrWholePath += "/" + foldr
             }
             self.size = device["size"] as? String ?? "0"
+            self.thumbnailLink = device["thumbnailLink"] as? String ?? "nil"
         }
-        init(fileId : String, kind : String, mimeType : String, name : String, createdTime:String, modifiedTime:String, parents:String, fileExtension:String, size:String, foldrWholePath:String) {
+        init(fileId : String, kind : String, mimeType : String, name : String, createdTime:String, modifiedTime:String, parents:String, fileExtension:String, size:String, foldrWholePath:String, thumbnailLink:String) {
             self.fileId   = fileId
             self.kind   = kind
             self.mimeType   = mimeType
@@ -594,6 +599,7 @@ struct App {
             self.fileExtension = fileExtension
             self.size = size
             self.foldrWholePath = foldrWholePath
+            self.thumbnailLink = thumbnailLink
         }
     }
 
@@ -615,5 +621,18 @@ struct App {
     struct Color {
         static let listBorder = "D1D2D4"
         static let navBorder = "666666"
+    }
+    func covertFileSize(getSize:String) -> String {
+        var convertedValue: Double = Double(getSize)!
+        var multiplyFactor = 0
+        let tokens = ["B", "KB", "MB", "GB", "TB", "PB",  "EB",  "ZB", "YB"]
+        while convertedValue > 1024 {
+            convertedValue /= 1024
+            multiplyFactor += 1
+        }
+        
+        let result = String(format: "%4.2f %@", convertedValue, tokens[multiplyFactor])
+        
+        return result.replacingOccurrences(of: ".00", with: "")
     }
 }

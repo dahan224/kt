@@ -52,7 +52,7 @@ class LocalFileListCellController:UIViewController{
         cell.btnDelete.addTarget(self, action: #selector(parentView.optionLocalFileShowClicked(sender:)), for: .touchUpInside)
         return cell
     }
-    func localContextMenuCalled(cell:LocalFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, viewState:HomeViewController.viewStateEnum, containerView:ContainerViewController){
+    func localContextMenuCalled(cell:LocalFileListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, currentFolderId:String, viewState:HomeViewController.viewStateEnum, containerView:ContainerViewController, deviceName:String){
         dv = deviceView
         let fileNm = folderArray[indexPath.row].fileNm
         let etsionNm = folderArray[indexPath.row].etsionNm
@@ -60,13 +60,15 @@ class LocalFileListCellController:UIViewController{
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
         let foldrId = folderArray[indexPath.row].foldrId
-        var devNm = folderArray[indexPath.row].devNm
+        let devNm = folderArray[indexPath.row].devNm
+        let fromOsCd = folderArray[indexPath.row].osCd
+        let fromDevUuid = folderArray[indexPath.row].devUuid
         switch sender {
         case cell.btnShow:
             print("fileId: \(fileId)")
             self.dv?.hideSelectedOptions(tag: sender.tag)
             
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
             break
@@ -81,7 +83,7 @@ class LocalFileListCellController:UIViewController{
             
         case cell.btnNas:
             self.dv?.hideSelectedOptions(tag: sender.tag)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"etsionNm":etsionNm]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":fromDevUuid,"etsionNm":etsionNm]
             
             print("fileDict : \(fileDict)")
             
@@ -95,7 +97,7 @@ class LocalFileListCellController:UIViewController{
                 self.dv?.hideSelectedOptions(tag: sender.tag)
                 
                 
-                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
                 
                 print("fileDict : \(fileDict)")
                 
@@ -153,19 +155,22 @@ class LocalFileListCellController:UIViewController{
     }
     
     
-    func localContextMenuCalledFromGrid(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:HomeViewController, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int, containerView:ContainerViewController){
+    func localContextMenuCalledFromGrid(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:HomeViewController, userId:String, fromOsCd:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int, containerView:ContainerViewController){
         let fileNm = folderArray[intFolderArrayIndexPathRow].fileNm
         let etsionNm = folderArray[intFolderArrayIndexPathRow].etsionNm
         let amdDate = folderArray[intFolderArrayIndexPathRow].amdDate
         let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePathNm
         let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
         let foldrId = folderArray[intFolderArrayIndexPathRow].foldrId
-        
+        let fromOsCd = folderArray[intFolderArrayIndexPathRow].osCd
+        let devNm = folderArray[intFolderArrayIndexPathRow].devNm
+        let fromDevUuid = folderArray[intFolderArrayIndexPathRow].devUuid
         
         switch indexPath.row {
         case 0:
 //            print("fileId: \(fileId)")
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName]
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             break
         case 1:
@@ -180,13 +185,13 @@ class LocalFileListCellController:UIViewController{
             
         case 2:
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"etsionNm":etsionNm]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":fromDevUuid,"etsionNm":etsionNm]
             print("fileDict : \(fileDict)")
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
             
             break
         case 3:
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
 //            print("fileDict : \(fileDict)")
 //            GoogleWork().googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)

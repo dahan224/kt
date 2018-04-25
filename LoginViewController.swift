@@ -84,6 +84,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             textFieldId.leftView = paddingView
             textFieldId.leftViewMode = .always
             textFieldId.placeholder = "아이디"
+            textFieldId.tag = 0
             textFieldId.layer.borderColor = hexToUIColor.getUIColor(hex: "d1d2d4").cgColor
             textFieldId.layer.borderWidth = 1.0
 //            textFieldId.addBorderBottom(height: 1.0, color: hexToUIColor.getUIColor(hex: "D1D2D4"))
@@ -102,6 +103,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             textFieldPw.leftView = paddingView
             textFieldPw.leftViewMode = .always
             textFieldPw.placeholder = "비밀번호"
+            textFieldPw.tag = 1
             textFieldPw.isSecureTextEntry = true
             textFieldPw.layer.borderColor = hexToUIColor.getUIColor(hex: "d1d2d4").cgColor
             textFieldPw.layer.borderWidth = 1.0
@@ -112,6 +114,11 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                   action: #selector(LoginViewController.textFieldChangeFinished),
                                   for: .editingDidEnd)
             textFieldPw.delegate = self
+            NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillShow(_:)), name: .UIKeyboardWillShow, object: nil)
+            NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
+            
+            
+
         }
 
     }
@@ -135,7 +142,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     
     func textFieldShouldReturn(_ textField: UITextField) -> Bool {
-        for textField in self.view.subviews where textField is UITextField {
+        switch textField.tag {
+        case 0:
+            self.textFieldPw.becomeFirstResponder()
+        case 1:
+            textField.resignFirstResponder()
+            self.btnLoginClicked(btnLogin)
+        default:
             textField.resignFirstResponder()
         }
         return true
@@ -232,7 +245,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     
+    @objc func keyboardWillShow(_ sender: Notification) {
+        self.view.frame.origin.y = -150
+    }
     
+    @objc func keyboardWillHide(_ sender: Notification) {
+        self.view.frame.origin.y = 0
+    }
     
     func login(){
         activityIndicator.startAnimating()
