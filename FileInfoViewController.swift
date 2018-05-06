@@ -58,12 +58,49 @@ class FileInfoViewController: UIViewController {
         
     }()
     
-    var divider:UIView = {
-        let imageView = UIImageView()
-        imageView.translatesAutoresizingMaskIntoConstraints = false
-        return imageView
+    let lblEmail:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 17)
+        label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    var emailUnderLine:UIView = {
+        let view = UIView()
+        view.backgroundColor =  HexStringToUIColor().getUIColor(hex: "4f4f4f")
+        view.translatesAutoresizingMaskIntoConstraints = false
+        return view
         
     }()
+    
+    let lblEmailSubj:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 17)
+        label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    let lblSendDate:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 17)
+        label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    let lblEmailFrom:UILabel = {
+        let label = UILabel()
+        label.textAlignment = .left
+        label.font = UIFont.systemFont(ofSize: 17)
+        label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        return label
+    }()
+    
+    var emailViewShowCheck = false
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -134,14 +171,19 @@ class FileInfoViewController: UIViewController {
                 }
             }
             if(json["listData2"].exists()){
-                var fileData = json["listData3"]
-                print("fileData : \(fileData["fileNm"])")
-                DispatchQueue.main.async {
-                    let emailSbjt = fileData["emailSbjt"].rawString()
-                    let sendDate = fileData["sendDate"].rawString()
-                    let emailFrom = fileData["emailFrom"].rawString()
-                    self.showEmailView()
+                let serverList:[AnyObject] = json["listData2"].arrayObject! as [AnyObject]
+                for server in serverList {
+                    let emailSbjt = server["emailSbjt"] as? String  ?? "nil"
+                    let sendDate = server["sendDate"] as? String  ?? "nil"
+                    let emailFrom = server["emailFrom"] as? String  ?? "nil"
+                    if(emailSbjt != "nil" && !emailSbjt.isEmpty){
+                        DispatchQueue.main.async {
+                            self.showEmailView(emailSbjt:emailSbjt, sendDate:sendDate, emailFrom:emailFrom)
+                        }
+                        
+                    }
                 }
+                
             } else {
                 
             }
@@ -166,17 +208,55 @@ class FileInfoViewController: UIViewController {
         }
     }
   
-    func showEmailView(){
+    func showEmailView(emailSbjt:String, sendDate:String, emailFrom:String){
         ivEmail.image = UIImage(named: "ico_24dp_email")
         scrollView.addSubview(ivEmail)
+        scrollView.addSubview(lblEmail)
+        scrollView.addSubview(emailUnderLine)
+        scrollView.addSubview(lblEmailSubj)
+        scrollView.addSubview(lblSendDate)
+        scrollView.addSubview(lblEmailFrom)
+        
         ivEmail.widthAnchor.constraint(equalToConstant: 24).isActive = true
         ivEmail.heightAnchor.constraint(equalToConstant: 24).isActive = true
         ivEmail.topAnchor.constraint(equalTo: firsrDivider.bottomAnchor, constant: 15).isActive = true
         ivEmail.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 25).isActive = true
         
-//        ivInfoTopConstraint.isActive = false
-        ivInfoTopConstraint.constant = 100
+        lblEmail.leadingAnchor.constraint(equalTo: ivEmail.trailingAnchor, constant: 10).isActive = true
+        lblEmail.widthAnchor.constraint(equalToConstant: 200).isActive = true
+        lblEmail.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        lblEmail.centerYAnchor.constraint(equalTo: ivEmail.centerYAnchor).isActive = true
+        lblEmail.text = "Email"
         
+        emailUnderLine.heightAnchor.constraint(equalToConstant: 1).isActive = true
+        emailUnderLine.leadingAnchor.constraint(equalTo: view.leadingAnchor, constant : 10).isActive = true
+        emailUnderLine.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant : 10).isActive = true
+        emailUnderLine.topAnchor.constraint(equalTo: ivEmail.bottomAnchor, constant: 3).isActive = true
+        
+        lblEmailSubj.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 70).isActive = true
+        lblEmailSubj.widthAnchor.constraint(equalToConstant: 200).isActive = true
+        lblEmailSubj.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        lblEmailSubj.topAnchor.constraint(equalTo: emailUnderLine.bottomAnchor, constant: 6).isActive = true
+        lblEmailSubj.text = emailSbjt
+        
+        lblSendDate.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 70).isActive = true
+        lblSendDate.widthAnchor.constraint(equalToConstant: 200).isActive = true
+        lblSendDate.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        lblSendDate.topAnchor.constraint(equalTo: lblEmailSubj.bottomAnchor, constant: 3).isActive = true
+        lblSendDate.text = sendDate
+        
+        lblEmailFrom.leadingAnchor.constraint(equalTo: scrollView.leadingAnchor, constant: 70).isActive = true
+        lblEmailFrom.widthAnchor.constraint(equalToConstant: 200).isActive = true
+        lblEmailFrom.heightAnchor.constraint(equalToConstant: 22).isActive = true
+        lblEmailFrom.topAnchor.constraint(equalTo: lblSendDate.bottomAnchor, constant: 3).isActive = true
+        lblEmailFrom.text = emailFrom
+        
+//        ivInfoTopConstraint.isActive = false
+        ivInfoTopConstraint.constant = 150
+        emailViewShowCheck = true
+        self.scrollView.frame = CGRect(x: 0, y: 0, width: App.Size.screenWidth, height: App.Size.screenHeight)
+        
+        self.scrollView.contentSize = CGSize(width: App.Size.screenWidth, height: App.Size.screenHeight + 150)
     }
     
     func thumbnailCheck(){
@@ -241,7 +321,12 @@ class FileInfoViewController: UIViewController {
                     self.tagAddedWidth += (labelWidth + 30)
                     self.scrollView.frame = CGRect(x: 0, y: 0, width: App.Size.screenWidth, height: App.Size.screenHeight)
                     
+                    if (self.emailViewShowCheck) {
+                    self.scrollView.contentSize = CGSize(width: App.Size.screenWidth, height: App.Size.screenHeight + self.tagAddedHeight - 100 + 150)
+                    } else {
                     self.scrollView.contentSize = CGSize(width: App.Size.screenWidth, height: App.Size.screenHeight + self.tagAddedHeight - 100)
+                    }
+                    
                     print("totalWidth: \(totalWidth), \(self.tagAddedWidth)")
                 }
                 

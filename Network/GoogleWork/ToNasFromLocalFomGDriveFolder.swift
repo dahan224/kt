@@ -18,7 +18,7 @@ class ToNasFromLocalFomGDriveFolder {
     var oldFoldrWholePathNm = ""
     var newPath = ""
     var style = ""
-    var nasSendFolderSelectVC:NasSendFolderSelectVC?
+    var containerViewController:ContainerViewController?
     var multiCheckedfolderArray:[App.DriveFileStruct] = []
     var loginCookie = UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     var loginToken = UserDefaults.standard.string(forKey: "token") ?? "nil"
@@ -27,15 +27,17 @@ class ToNasFromLocalFomGDriveFolder {
         "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
         "Cookie": UserDefaults.standard.string(forKey: "cookie")!
     ]
-    func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.DriveFileStruct], parent:NasSendFolderSelectVC){
-        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
+    func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.DriveFileStruct], parent:ContainerViewController){
+        
+        
         let folders:[App.Folders] = FileUtil().getFolderList()
         var foldersToCreate:[String] = []
         toUserId = getToUserId
         newFoldrWholePathNm = getNewFoldrWholePathNm
         oldFoldrWholePathNm = getOldFoldrWholePathNm
         multiCheckedfolderArray = getMultiArray
-        nasSendFolderSelectVC = parent
+        containerViewController = parent
+        containerViewController?.showIndicator()
         for folder in folders{
             if folder.foldrWholePathNm == oldFoldrWholePathNm || folder.foldrWholePathNm.contains("\(oldFoldrWholePathNm)/") {
                 print(folder.foldrWholePathNm)
@@ -135,13 +137,23 @@ class ToNasFromLocalFomGDriveFolder {
         if(multiCheckedfolderArray.count > 0){
             let lastIndex = multiCheckedfolderArray.count - 1
             multiCheckedfolderArray.remove(at: lastIndex)
-            nasSendFolderSelectVC?.gDriveMultiCheckedfolderArray = multiCheckedfolderArray
-            nasSendFolderSelectVC?.startMultiGdriveToNas()
+//            nasSendFolderSelectVC?.gDriveMultiCheckedfolderArray = multiCheckedfolderArray
+//            nasSendFolderSelectVC?.startMultiGdriveToNas()
             
         } else {
-            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
+//            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
             //            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCAlert"), object: self, userInfo: nil)
-            nasSendFolderSelectVC?.NasSendFolderSelectVCAlert(title: "NAS로 내보내기 성공")
+            DispatchQueue.main.async {
+                let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                    UIAlertAction in
+                    //Do you Success button Stuff here
+                    self.containerViewController?.finishLoading()
+                }
+                alertController.addAction(yesAction)
+                self.containerViewController?.present(alertController, animated: true)
+                
+            }
         }
         
         

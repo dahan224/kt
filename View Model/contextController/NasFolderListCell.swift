@@ -148,15 +148,15 @@ class NasFolderListCell: UICollectionViewCell {
         
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
-        btnMultiCheck.heightAnchor.constraint(equalToConstant:  36).isActive = true
+        btnMultiCheck.widthAnchor.constraint(equalToConstant: 25).isActive = true
+        btnMultiCheck.heightAnchor.constraint(equalToConstant:  25).isActive = true
         btnMultiCheckLeadingAnchor = btnMultiCheck.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 36)
         btnMultiCheckLeadingAnchor?.isActive = true
         
         btnMultiCheck.isHidden = true
         
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 25).isActive = true
+        ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 36).isActive = true
         ivSub.widthAnchor.constraint(equalToConstant: 30).isActive = true
         ivSub.heightAnchor.constraint(equalToConstant: 30).isActive = true
         

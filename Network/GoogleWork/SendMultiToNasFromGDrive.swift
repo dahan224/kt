@@ -19,7 +19,7 @@ class SendMultiToNasFromGDrive {
     var newPath = ""
     var style = ""
     var toSavePathParent = ""
-    var nasSendFolderSelectVC:NasSendFolderSelectVC?
+    var nasSendController:NasSendController?
     var multiCheckedfolderArray:[App.FolderStruct] = []
     var gdriveFolderIdDict:[String:String] = [:]
     var forSaveFolderId = ""
@@ -34,10 +34,8 @@ class SendMultiToNasFromGDrive {
     var folderPathToDownLoad:[String] = []
     var driveFileArray:[App.DriveFileStruct] = []
     var rootFolder = ""
-    func downloadFolderFromGDrive(foldrId:String, getAccessToken: String, fileId:String, downloadRootFolderName:String, parent:NasSendFolderSelectVC){
-        nasSendFolderSelectVC = parent
-        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-        
+    func downloadFolderFromGDrive(foldrId:String, getAccessToken: String, fileId:String, downloadRootFolderName:String, parent:NasSendController){
+        nasSendController = parent
         accessToken = getAccessToken
         print("oldFoldrWholePathNm : \(oldFoldrWholePathNm)")
         
@@ -226,7 +224,8 @@ class SendMultiToNasFromGDrive {
     }
     
     func finishGDriveFolderDownload(){
-        SyncLocalFilleToNas().callSyncFomGdriveToNasSendFolder(view: "NasSendFolderSelectVC", parent: nasSendFolderSelectVC!, rootFolder:  "/Mobile/\(rootFolder)")
+        
+        SyncLocalFilleToNas().callSyncToDownloadFronGDriveToSendToNas(view: "NasSendController", parent: nasSendController!)
        
         
     }

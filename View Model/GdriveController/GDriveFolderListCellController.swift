@@ -40,7 +40,7 @@ class GDriveFolderListCellController {
         return cell
     }
     
-    func GdriveFolderContextMenuCalled(cell:GDriveFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.DriveFileStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String){
+    func GdriveFolderContextMenuCalled(cell:GDriveFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.DriveFileStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String, containerViewController:ContainerViewController){
         dv = deviceView
         let fileNm = folderArray[indexPath.row].name
         let etsionNm = folderArray[indexPath.row].fileExtension
@@ -56,10 +56,13 @@ class GDriveFolderListCellController {
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-                    let accessToken = DbHelper().getAccessToken(email: googleEmail)
+//                    let accessToken = DbHelper().getAccessToken(email: googleEmail)
+                    let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
                     let downloadRootFolderName = fileNm
                     print("downloadRootFolderName : \(downloadRootFolderName), foldrWholePathNm : \(foldrWholePathNm)")
-                    GoogleWork().downloadFolderFromGDrive(foldrId: foldrId, getAccessToken: accessToken, fileId: fileId, downloadRootFolderName:downloadRootFolderName)
+                    containerViewController.showIndicator()
+                    GoogleWork().downloadFolderFromGDrive(foldrId: foldrId, getAccessToken: accessToken, fileId: fileId, downloadRootFolderName:downloadRootFolderName, containerViewController:containerViewController)
+                    
                 }
                 
             }
@@ -72,7 +75,7 @@ class GDriveFolderListCellController {
             dv?.hideSelectedOptions(tag: sender.tag)
             print(deviceName)
             
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":"gDrive","fromDevUuid":currentDevUuid, "fromFoldrId":String(foldrId)]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":"gDrive","fromDevUuid":currentDevUuid, "fromFoldrId":String(foldrId),"etsionNm":""]
             print("fileDict : \(fileDict)")
             
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
@@ -88,7 +91,11 @@ class GDriveFolderListCellController {
                 let pathForRemove:String = FileUtil().getFilePath(fileNm: foldrNm, amdDate: amdDate)
                 print("pathForRemove : \(pathForRemove)")
                 self.removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                    print("aleady Syncing")                    
+                } else {
+                    SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

@@ -37,7 +37,12 @@ class GridCellController {
         
         cell.lblMain.text = folderArray[indexPath.row].fileNm
         let editedDate = folderArray[indexPath.row].amdDate.components(separatedBy: " ")[0]
-        cell.lblSub.text = "\(editedDate) | \(deviceName)"
+        var devNm = deviceName
+        if devNm == "" {
+            devNm = folderArray[indexPath.row].devNm
+        }
+        
+        cell.lblSub.text = "\(editedDate) | \(devNm)"
         
         cell.ivSub.image = UIImage(named: imageString)
         

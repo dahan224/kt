@@ -102,7 +102,10 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                 for device in serverList {
                     let deviceStruct = App.DeviceStruct(device: device)
-                    self.DeviceArray.append(deviceStruct)
+                    
+                    if self.menuNum == 0 || (deviceStruct.osCd != "G" && deviceStruct.osCd != "S" && self.menuNum == 2) {
+                        self.DeviceArray.append(deviceStruct)
+                    }
                 }
                 self.tableView.reloadData()
             }

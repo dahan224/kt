@@ -51,14 +51,14 @@ class DeviceManageVC: UIViewController  {
         view.translatesAutoresizingMaskIntoConstraints = false
         return view
     }()
-    
+    /*
     let changeLabel:UILabel = {
         let label = UILabel()
         label.textAlignment = .left
         label.font = UIFont.systemFont(ofSize: 15)
         label.translatesAutoresizingMaskIntoConstraints = false
         return label
-    }()
+    }()*/
     
     let folderLabel:UILabel = {
         let label = UILabel()
@@ -115,7 +115,7 @@ class DeviceManageVC: UIViewController  {
         self.view.addSubview(changeView)
         self.view.addSubview(folderView)
         self.view.addSubview(deleteView)
-        
+        /*
         changeView.widthAnchor.constraint(equalTo: self.view.widthAnchor).isActive = true
         changeView.heightAnchor.constraint(equalToConstant: 70).isActive = true
         changeView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
@@ -130,12 +130,13 @@ class DeviceManageVC: UIViewController  {
         let gesture = UITapGestureRecognizer(target: self, action: #selector(menuTapped(recognizer:)))
         changeView.isUserInteractionEnabled = true
         changeView.tag = 0
-        changeView.addGestureRecognizer(gesture)
+        changeView.addGestureRecognizer(gesture)*/
 
         folderView.widthAnchor.constraint(equalTo: self.view.widthAnchor).isActive = true
         folderView.heightAnchor.constraint(equalToConstant: 70).isActive = true
         folderView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
-        folderView.topAnchor.constraint(equalTo: self.changeView.bottomAnchor, constant: 1).isActive = true
+        folderView.topAnchor.constraint(equalTo: self.customNavBar.bottomAnchor, constant: 5).isActive = true
+        //folderView.topAnchor.constraint(equalTo: self.changeView.bottomAnchor, constant: 1).isActive = true
         addLeftLabel(view: folderView, label: folderLabel, text: menuNms[1])
         folderView.addSubview(folderButton)
         folderButton.widthAnchor.constraint(equalToConstant: 36).isActive = true
@@ -210,6 +211,7 @@ class DeviceManageVC: UIViewController  {
     }
     
     @objc func fnBack() { // 뒤로가기
+        NotificationCenter.default.post(name: NSNotification.Name("backToOneView"), object: nil)
         NotificationCenter.default.post(name: NSNotification.Name("toggleSideMenu"), object: nil)
         dismiss(animated: true, completion: nil)
     }

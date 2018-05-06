@@ -52,7 +52,7 @@ class LocalFolderListCellController {
         case cell.btnNas:
             print(deviceName)
             dv?.hideSelectedOptions(tag: sender.tag)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId),"etsionNm":""]
             
             print("fileDict : \(fileDict)")
             NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
@@ -62,7 +62,7 @@ class LocalFolderListCellController {
             
         case cell.btnGDrive:
             dv?.hideSelectedOptions(tag: sender.tag)
-             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"fromFoldrId":String(foldrId)]
+             let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":currentDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"fromFoldrId":String(foldrId), "etsionNm":""]
             print("fileDict : \(fileDict)")
             
             containerView.googleSignInSegueState = .loginForSend
@@ -82,7 +82,12 @@ class LocalFolderListCellController {
                 let pathForRemove:String = FileUtil().getFolderPathWithFoldr(fileNm: foldrNm, foldrWholePathNm:foldrWholePathNm, amdDate: amdDate)
                 FileUtil().removeFile(path: pathForRemove)
 
-                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                    print("aleady Syncing")
+                    
+                } else {
+                    SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

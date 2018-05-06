@@ -98,10 +98,11 @@ class NasFileCellController {
         case cell.btnGDrive:
             dv?.hideSelectedOptions(tag: sender.tag)
 //            dv?.googleSignInCheck(name: fileNm, path: foldrWholePathNm)
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"etsionNm":etsionNm]
             print("fileDict : \(fileDict)")
             
             //                deviceView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
+            
             containerView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
             
             break
@@ -170,7 +171,7 @@ class NasFileCellController {
                 let fileIdDict = ["fileId":"0"]
                 NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
                 
-                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"etsionNm":etsionNm]
                 print("fileDict : \(fileDict)")
                 
                 containerView.googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)

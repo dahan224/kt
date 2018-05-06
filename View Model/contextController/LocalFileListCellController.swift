@@ -97,7 +97,7 @@ class LocalFileListCellController:UIViewController{
                 self.dv?.hideSelectedOptions(tag: sender.tag)
                 
                 
-                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"etsionNm":etsionNm]
                 
                 print("fileDict : \(fileDict)")
                 
@@ -119,7 +119,12 @@ class LocalFileListCellController:UIViewController{
                 {
                     print("pathForRemove : \(pathForRemove)")
                     self.removeFile(path: pathForRemove)
-                    SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                    if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                        print("aleady Syncing")
+                        
+                    } else {
+                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                    }
                     DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                         let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                         let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
@@ -191,7 +196,7 @@ class LocalFileListCellController:UIViewController{
             
             break
         case 3:
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":fromDevUuid, "toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"etsionNm":etsionNm]
 //            print("fileDict : \(fileDict)")
 //            GoogleWork().googleSignInCheck(name: fileNm, path: foldrWholePathNm, fileDict: fileDict)
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
@@ -207,7 +212,12 @@ class LocalFileListCellController:UIViewController{
                 let pathForRemove:String = FileUtil().getFilePathWithFoldr(fileNm: fileNm, foldrWholePathNm:foldrWholePathNm, amdDate: amdDate)
                 print("pathForRemove : \(pathForRemove)")
                 self.removeFile(path: pathForRemove)
-                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                    print("aleady Syncing")
+                    
+                } else {
+                    SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                }
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {

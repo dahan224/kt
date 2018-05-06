@@ -11,6 +11,7 @@ struct App {
     
     static let bundleID = Bundle.main.bundleIdentifier!
     
+    static let nasFoldrFrontNm = "gs-"
     
     struct Size {
         static let screenWidth = UIScreen.main.bounds.width
@@ -435,18 +436,34 @@ struct App {
             
         }
         var getParameter: [String: Any] {
-            return [
-                "cmd" : cmd,
-                "userId" : userId,
-                "devUuid" : devUuid,
-                "fileNm" : "\(fileNm).\(etsionNm)",
-                "etsionNm" : etsionNm,
-                "fileSize" : fileSize,
-                "cretDate" : cretDate,
-                "amdDate" : amdDate,
-                "foldrWholePathNm":foldrWholePathNm
-                
-            ]
+            if etsionNm.isEmpty {
+                return [
+                    "cmd" : cmd,
+                    "userId" : userId,
+                    "devUuid" : devUuid,
+                    "fileNm" : fileNm,
+                    "etsionNm" : etsionNm,
+                    "fileSize" : fileSize,
+                    "cretDate" : cretDate,
+                    "amdDate" : amdDate,
+                    "foldrWholePathNm":foldrWholePathNm
+                    
+                ]
+            } else {
+                return [
+                    "cmd" : cmd,
+                    "userId" : userId,
+                    "devUuid" : devUuid,
+                    "fileNm" : "\(fileNm).\(etsionNm)",
+                    "etsionNm" : etsionNm,
+                    "fileSize" : fileSize,
+                    "cretDate" : cretDate,
+                    "amdDate" : amdDate,
+                    "foldrWholePathNm":foldrWholePathNm
+                    
+                ]
+            }
+            
         }
     }
     

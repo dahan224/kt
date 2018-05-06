@@ -24,8 +24,11 @@ class FileUtil {
                 let fileExtension = file.pathExtension
                 let folderCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
                 let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
+                let size = attribute[FileAttributeKey.size] as? NSNumber
+                let fileIsDirectory = file.isDirectory
                 
-                if(fileExtension.isEmpty && !fileName.contains("Trash")){
+                if(fileIsDirectory && !fileName.contains("Trash")){
+                    print("size_folder : \(size), \(file.isDirectory)")
                     var foldrWholePathNm = "/Mobile"
                     if let folderNmArray = URLComponents(url: file, resolvingAgainstBaseURL: true)?.path.components(separatedBy: "/") {
                         let documentIndex = folderNmArray.index(of: "Documents")
@@ -59,10 +62,12 @@ class FileUtil {
                 let fileExtension = file.pathExtension
                 let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
                 let decodedFileName:String = fileName.removingPercentEncoding!
+                let size = attribute[FileAttributeKey.size] as? NSNumber
                 
                 let fileCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
-                
-                if(!fileExtension.isEmpty && !fileName.contains("Trash")){
+                let fileIsDirectory = file.isDirectory
+                if(!fileIsDirectory && !fileName.contains("Trash")){
+                    print("size_file : \(size), \(file.isDirectory)")
                     var foldrWholePathNm = "/Mobile"
                     if let folderNmArray = URLComponents(url: file, resolvingAgainstBaseURL: true)?.path.components(separatedBy: "/") {
                         let documentIndex = folderNmArray.index(of: "Documents")
@@ -73,7 +78,7 @@ class FileUtil {
                             }
                         }
                         if let size = attribute[FileAttributeKey.size] as? NSNumber {
-                            if(!fileExtension.isEmpty && !foldrWholePathNm.contains("Trash")){
+                            if(!fileIsDirectory && !foldrWholePathNm.contains("Trash")){
                                 let files = App.LocalFiles(cmd:"C",userId:App.defaults.userId,devUuid:Util.getUuid(),fileNm:decodedFileName,etsionNm:fileExtension,fileSize:size.stringValue,cretDate:Util.date(text: fileCreateDate),amdDate:Util.date(text: modifiedDate), foldrWholePathNm: foldrWholePathNm, savedPath: fileSavedPath)
                                 localFileArray.append(files)
                             }

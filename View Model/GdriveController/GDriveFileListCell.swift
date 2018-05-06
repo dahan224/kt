@@ -120,6 +120,10 @@ class GDriveFileListCell: UICollectionViewCell {
     
     override init(frame: CGRect) {
         super.init(frame: frame)
+        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
+        view1.layer.masksToBounds = false
+        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
+        addSubview(view1)
         
         optionSHowCheck = 0
         btnMultiChecked = false
@@ -131,22 +135,18 @@ class GDriveFileListCell: UICollectionViewCell {
         addSubview(btnMultiCheck)
         addSubview(btnOption)
         addSubview(optionView)
-        let view1:UIView = UIView(frame: CGRect(x:0,y:0, width: frame.width, height: frame.height))
-        view1.layer.masksToBounds = false
-        view1.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
-        
-        addSubview(view1)
+
         
         btnMultiCheck.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        btnMultiCheck.widthAnchor.constraint(equalToConstant: 36).isActive = true
-        btnMultiCheck.heightAnchor.constraint(equalToConstant:  36).isActive = true
+        btnMultiCheck.widthAnchor.constraint(equalToConstant: 25).isActive = true
+        btnMultiCheck.heightAnchor.constraint(equalToConstant:  25).isActive = true
         btnMultiCheckLeadingAnchor = btnMultiCheck.leadingAnchor.constraint(equalTo: leadingAnchor, constant: 36)
         btnMultiCheckLeadingAnchor?.isActive = true
         
         btnMultiCheck.isHidden = true
         
         ivSub.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
-        ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 25).isActive = true
+        ivSub.leadingAnchor.constraint(equalTo: btnMultiCheck.trailingAnchor, constant: 36).isActive = true
         ivSub.widthAnchor.constraint(equalToConstant: 30).isActive = true
         ivSub.heightAnchor.constraint(equalToConstant: 30).isActive = true
         

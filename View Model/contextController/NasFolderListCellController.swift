@@ -74,7 +74,7 @@ class NasFolderListCellController {
         case cell.btnNas:
             self.dv?.hideSelectedOptions(tag: sender.tag)
             
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId)]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId),"etsionNm":""]
             
             
             print("fileDict : \(fileDict)")
@@ -86,7 +86,7 @@ class NasFolderListCellController {
             self.dv?.hideSelectedOptions(tag: sender.tag)
        
             print("folderId:\(foldrId)")
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId), "fromDevNm":deviceName]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"googleDrive","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId), "fromDevNm":deviceName,"etsionNm":""]
             
             print("fileDict : \(fileDict)")
             

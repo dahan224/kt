@@ -40,6 +40,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         GIDSignIn.sharedInstance().clientID = "855259523788-p97fg9b2h94g9ghlv7btv90h60evnlnc.apps.googleusercontent.com"
         GIDSignIn.sharedInstance().delegate = self
         
+        appVerCheck()
+        
 
         // iOS 10 support
         if #available(iOS 10, *) {
@@ -210,7 +212,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
-                    SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                    
+                    if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                        print("aleady Syncing")
+                        
+                    } else {
+                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                    }
                     DispatchQueue.main.async {
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
 //                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
@@ -289,14 +297,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         let userId = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         
-        let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
         var headers = [
             "Authorization": "Basic \(base64Credentials)",
             "x-isi-ifs-target-type":"container"
         ]
         print("headers : \(headers)")
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(fromDevUuid)\(fromFoldr)?recursive=true"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(fromDevUuid)\(fromFoldr)?recursive=true"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
         let parameters: [String: AnyObject] // fill in your params
@@ -328,7 +336,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         let userId = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
         
-        let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
         var headers = [
             "Authorization": "Basic \(base64Credentials)",
@@ -337,7 +345,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         ]
      
         print("headers : \(headers)")
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(fromDevUuid)\(fromFoldr)/\(name)?overwrite=true"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(fromDevUuid)\(fromFoldr)/\(name)?overwrite=true"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
         
@@ -417,7 +425,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         }
         
         print("loginUserId : \(String(describing: loginUserId!))")
-        let credentialData = "gs-\(String(describing: loginUserId!)):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(String(describing: loginUserId!)):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
         
         let decodedData = Data(base64Encoded: base64Credentials)!
@@ -438,7 +446,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             ]
         }
         print("headers : \(headers)")
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
         stringUrl =  stringUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
         
@@ -570,14 +578,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         let versioncheckURL:String = "https://araise.iptime.org/GIGA_StorageAdmin/apps/checkLatestApp.do"
         
-        let bundleIdentifierS : String = String(describing:Bundle.main.bundleIdentifier)
-        let versionNumberS : String = String(describing:Bundle.main.infoDictionary?["CFBundleVersion"])
-        //let bundleIdentifierS : String = "com.posco.poscosoftman3"
-        //let versionNumberS : String = "3.0.7"
+        let bundleIdentifierS : String = (Bundle.main.bundleIdentifier)!
+        let versionNumberS : String = (Bundle.main.infoDictionary?["CFBundleShortVersionString"]) as! String
         
         Alamofire.request(versioncheckURL
             , method: .post
-            , parameters: ["os":"I", "identifier":"net.araise.oneview", "version":"1.0"]
+            , parameters: ["os":"I", "identifier":bundleIdentifierS, "version":versionNumberS]
             , encoding: URLEncoding.default
             , headers: ["Content-Type":"application/x-www-form-urlencoded"]
             ).validate(statusCode: 200..<300).responseJSON { response in
@@ -587,9 +593,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     let json = JSON(value)
                     print("JSON: \(json)")
                     print(json["downloadUrl"])
-                    //print(json["fileName"])
+                    print(json["fileName"])
                     print(json["latest"])
-                    let downloadUrl = "https://araise.iptime.org/GIGA_StorageAdmin/apps/makePlist.do?appId=6"
+                    let downloadUrl = json["downloadUrl"].string!
                     if json["latest"] == "N" {
                         // self.appUgradeconfirm(param1: String(describing:json["fileName"]),param2: String(describing:json["downloadUrl"]))
                         self.appUgradeconfirm(param1: String(describing:json["fileName"]),param2: downloadUrl)
@@ -651,13 +657,52 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             }
         }
     }
+    
+    func deviceOff(){
+        NSLog("+=+=+=1")
+        let cookie:String = UserDefaults.standard.string(forKey: "cookie")!
+        let token:String = UserDefaults.standard.string(forKey: "token")!
+        let urlString = App.URL.server+"devStatusUpdate.do"
+        let headers = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": token,
+            "Cookie": cookie
+        ]
+        let params:[String:Any] = ["userId": App.defaults.userId, "devUuid":Util.getUuid(), "onoff":"N"]
+        print("cookie: \(cookie), token : \(token)")
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters : params,
+                          encoding : JSONEncoding.default,
+                          headers: headers).responseJSON { response in
+                            switch response.result {
+                            case .success(let JSON):
+                                NSLog("+=+=+=")
+                                NSLog(response.result.value as Any as! String)
+                                let responseData = JSON as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("message : \(String(describing: message))")
+                                
+                                NotificationCenter.default.post(name: NSNotification.Name("dismissContainerView"), object: nil)
+                                UserDefaults.standard.set(false, forKey: "autoLoginCheck")
+                                break
+                            case .failure(let error):
+                                
+                                print(error)
+                            }
+        }
+        
+        
+    }
 
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
+        print("applicationWillTerminate")
+        deviceOff()
         let defaults = UserDefaults.standard
         defaults.set("no", forKey: "googleDriveLoginState")
         GIDSignIn.sharedInstance().signOut()
-        print("applicationWillTerminate")
+        
         
     }
   

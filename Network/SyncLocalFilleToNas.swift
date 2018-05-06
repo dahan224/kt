@@ -38,10 +38,12 @@ class SyncLocalFilleToNas {
     var requestView = ""
     var currentFolderId = ""
     var nasSendFolderSelectVC:NasSendFolderSelectVC?
+    var containerViewController:ContainerViewController?
+    var nasSendController:NasSendController?
     var getRootFolder = ""
-    func callSyncFomGdriveToNasSendFolder(view:String, parent:NasSendFolderSelectVC, rootFolder:String){
+    func callSyncFomGdriveToNasSendFolder(view:String, parent:NasSendController, rootFolder:String){
         requestView = view
-        nasSendFolderSelectVC = parent
+        nasSendController = parent
         getRootFolder = rootFolder
         getFileList()
     }
@@ -53,11 +55,18 @@ class SyncLocalFilleToNas {
         getFileList()
     }
     
+    func callSyncToDownloadFronGDriveToSendToNas(view:String, parent:NasSendController){
+        requestView = view
+        nasSendController = parent
+        getFileList()
+    }
+    
+    
     func sync(view:String, getFoldrId:String){
         currentFolderId = getFoldrId
         requestView = view
         if(requestView == "home"){
-            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+//            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         }
         getFileList()
     }
@@ -165,7 +174,7 @@ class SyncLocalFilleToNas {
                 print("nasfileList :\(serverList)")
                 var serverFilePathArray:[String] = []
                 for serverFile in serverList{
-                    print("server : \(serverFile)")
+//                    print("server : \(serverFile)")
                     let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
                     let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
                     var foldrWholePathNm = "\(serverFilePath)/\(serverFileNm)"
@@ -211,12 +220,18 @@ class SyncLocalFilleToNas {
                         print("create filelist : \(self.fileArrayToCreate)")
                         self.createFileListToServer(parameters: self.fileArrayToCreate)
                     } else {
+                        let defaults = UserDefaults.standard
+                        defaults.set(false, forKey: "syncOngoing")
+                        defaults.synchronize()
+                        
                         if(self.requestView == "home"){
-                            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+//                            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                             let fileDict = ["foldrId":self.currentFolderId]
                             NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
                         } else if(self.requestView == "NasSendFolderSelectVC"){
                             self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
+                        } else if(self.requestView == "NasSendController"){
+                            self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                         }
                     }
                 }
@@ -226,12 +241,18 @@ class SyncLocalFilleToNas {
                     print("create filelist : \(self.fileArrayToCreate)")
                     self.createFileListToServer(parameters: self.fileArrayToCreate)
                 } else {
+                    let defaults = UserDefaults.standard
+                    defaults.set(false, forKey: "syncOngoing")
+                    defaults.synchronize()
+                    
                     if(self.requestView == "home"){
-                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+//                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                         let fileDict = ["foldrId":self.currentFolderId]
                         NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
                     } else if (self.requestView == "NasSendFolderSelectVC"){
                         self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
+                    } else if(self.requestView == "NasSendController"){
+                        self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                     }
                 }
                
@@ -241,6 +262,10 @@ class SyncLocalFilleToNas {
     }
 
     func getFileList(){
+       
+        let defaults = UserDefaults.standard
+        defaults.set(true, forKey: "syncOngoing")
+        defaults.synchronize()
         localFileArray.removeAll()
         localFolderArray.removeAll()
         folderPathArray.removeAll()
@@ -248,6 +273,7 @@ class SyncLocalFilleToNas {
          let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "Mobile", foldrWholePathNm: "/Mobile", cretDate : Util.date(text: today), amdDate : Util.date(text: today))
         localFolderArray.append(folder)
         localFileArray = FileUtil().getFileLIst()
+        print("localFileArray : \(localFileArray)")
         let folders:[App.Folders] = FileUtil().getFolderList()
         for folder in folders {
             localFolderArray.append(folder)
@@ -333,6 +359,11 @@ class SyncLocalFilleToNas {
                 if(self.fileArrayToCreate.count>0){
 //                    print("create filelist : \(self.fileArrayToCreate)")
                     self.createFileListToServer(parameters: self.fileArrayToCreate)
+                } else {
+                    let defaults = UserDefaults.standard
+                    defaults.set(false, forKey: "syncOngoing")
+                    defaults.synchronize()
+                    
                 }
                 
                 break
@@ -358,15 +389,21 @@ class SyncLocalFilleToNas {
             case .success(let value):
                 //                                let json = JSON(value)
 //                print("createFileServer : \(response.result)")
+                let defaults = UserDefaults.standard
+                defaults.set(false, forKey: "syncOngoing")
+                defaults.synchronize()
+                
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
                 print(" createFileListToServer message : \(String(describing: message))")
                 if(self.requestView == "home"){
-                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+//                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                     let fileDict = ["foldrId":self.currentFolderId]
                     NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
                 }  else if (self.requestView == "NasSendFolderSelectVC"){
                     self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
+                } else if(self.requestView == "NasSendController"){
+                    self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                 }
                 break
             case .failure(let error):

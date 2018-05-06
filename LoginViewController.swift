@@ -10,6 +10,7 @@ import UIKit
 import Alamofire
 import BEMCheckBox
 import SwiftyJSON
+import WebKit
 
 
 class LoginViewController: UIViewController, UITextFieldDelegate {
@@ -163,15 +164,39 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         "Cookie": ""
     ]
     
+    @IBOutlet weak var webView: UIWebView!
     override func viewDidLoad() {
         super.viewDidLoad()
-        // Do any additional setup after loading the view, typically from a nib.
+        print("viewDidLoad")
+        if currentReachabilityStatus != .reachableViaWiFi {
+            print(UserDefaults.standard.bool(forKey: "isAgree"))
+            if !UserDefaults.standard.bool(forKey: "isAgree") {
+                // 사용자정의 팝업
+                let popup: WanInfoPopupView = UINib(nibName: "WanInfoPopupView", bundle: nil).instantiate(withOwner: self, options: nil)[0] as! WanInfoPopupView
+                
+                // 팝업뷰 배경
+                let viewColor = UIColor.black
+                popup.backgroundColor = viewColor.withAlphaComponent(0.3)
+                popup.frame = self.view.frame // 팝업뷰를 화면크기에 맞추기
+                
+                // 팝업창 배경
+                let baseViewColor = UIColor.white
+                popup.popupView.backgroundColor = baseViewColor.withAlphaComponent(1.0)
+                self.view.addSubview(popup)
+            }
+        } else {
+            loadLoginPage()
+        }
         
+    }
+    
+    func loadLoginPage() {
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(clearInputLogin),
                                                name: NSNotification.Name("clearInputLogin"),
                                                object: nil)
-        
+        NotificationCenter.default.addObserver(self, selector: #selector(updateWebView), name: NSNotification.Name("updateWebView"),
+                                               object: nil)
         textFieldId.text = ""
         textFieldPw.text = ""
         UserDefaults.standard.removeObject(forKey: "cookie")
@@ -180,7 +205,6 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         let string = "/Mobile"
         let str =  string.cString(using: String.Encoding.utf8)
         print("encodedString : \(String(describing: str))")
-        
         
         autoLoginCheckBox.boxType = BEMBoxType.square
         idSaveCheckBox.boxType = BEMBoxType.square
@@ -198,7 +222,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         print("model :\(deviceModel)")
         
         autoLogin()
-      
+    }
+    
+    @objc func updateWebView() {
+        print("updateWebView()")
+        let appDelegate = UIApplication.shared.delegate as! AppDelegate
+        let serverURL: String = appDelegate.serverURL!
+        print(serverURL)
+        webView.stringByEvaluatingJavaScript(from: serverURL)
     }
     
     @IBAction func idSaveCheked(_ sender: BEMCheckBox) {
@@ -246,7 +277,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     
     @objc func keyboardWillShow(_ sender: Notification) {
-        self.view.frame.origin.y = -150
+        self.view.frame.origin.y = -30
     }
     
     @objc func keyboardWillHide(_ sender: Notification) {
@@ -382,11 +413,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     func registerDevice(jsonHeader:[String:String]){
-        
+        uuId = Util.getUuid()
         let notificationToken:String = UserDefaults.standard.string(forKey: "notification_token") ?? "nil_for_simulator"
         print("notificationToken : \(notificationToken)")
         let deviceParameter = App.DeviceInfo(userId: userId, devUuid: uuId, devNm: UIDevice.current.name, osCd: "I", osDesc: "IOS", mkngVndrNm: "apple", devAuthYn: "N", rootFoldrNm: "Mobile", lastUpdtId: userId, token: notificationToken)
         let urlString = App.URL.server+"devAthn.do"
+        print("register deviceParameter : \(deviceParameter)")
         Alamofire.request(urlString,
                           method: .post,
                           parameters: deviceParameter.getParameter,
@@ -477,7 +509,12 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     func sysncFileInfo() {
         print("syncFileInfo called")
-        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+            print("aleady Syncing")
+            
+        } else {
+            SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+        }
         getDeviceList(sortBy: DbHelper.sortByEnum.none)
         
         

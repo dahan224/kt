@@ -159,11 +159,19 @@ class ContextMenuWork {
         }
     }
     func copyShareNasFolder(parameters:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+        let headers = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+            "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil",
+            "x-isi-ifs-target-type":"object",
+            "x-isi-ifs-access-control":"770"
+                
+        ]
         Alamofire.request(App.URL.server+"shareNasFoldrCopy.do"
             , method: .post
             , parameters:parameters
             , encoding : JSONEncoding.default
-            , headers:jsonHeader
+            , headers:headers
             ).responseJSON { response in
                 switch response.result {
                 case .success(let value):
@@ -179,11 +187,11 @@ class ContextMenuWork {
     }
     
     func downloadFromNas(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
             "Authorization": "Basic \(base64Credentials)"
@@ -201,7 +209,7 @@ class ContextMenuWork {
             return (documentsURL, [.removePreviousFile])
         }
         
-        request = Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
+        Alamofire.download(downloadUrl, method: .get, headers:headers, to: destination)
             .downloadProgress(closure: { (progress) in
                 print("download progress : \(progress.fractionCompleted)")
 //                 completionHandler(progress.fractionCompleted, nil)
@@ -211,11 +219,9 @@ class ContextMenuWork {
                 if response.destinationURL != nil {
                     print(response.destinationURL!)
                     if let path = response.destinationURL?.path{
-                        let path2 = "/private\(path)"
-                        
+                        let path2 = "/private\(path)"                        
 //                        DbHelper().localFileToSqlite(id: fileId, path: path2)
                         print("path2 : \(path2)" )
-                        print("saved fileId : \(UserDefaults.standard.string(forKey: path2)), fileId : \(fileId)")
                         completionHandler("success", nil)
                     }
                     
@@ -230,11 +236,11 @@ class ContextMenuWork {
     }
     
     func downloadFromNasToExcute(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
             "Authorization": "Basic \(base64Credentials)"
@@ -276,11 +282,11 @@ class ContextMenuWork {
     
     
     func downloadFromNasFolder(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
             "Authorization": "Basic \(base64Credentials)"
@@ -334,12 +340,12 @@ class ContextMenuWork {
     //remote 관련
     
     func downloadFromRemote(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         
         let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let decodedData = Data(base64Encoded: base64Credentials)!
         let decodedString = String(data: decodedData, encoding: .utf8)!
@@ -386,12 +392,12 @@ class ContextMenuWork {
     }
     
     func downloadFromRemoteToExcute(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         
         let user = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
             "Authorization": "Basic \(base64Credentials)"
@@ -432,12 +438,12 @@ class ContextMenuWork {
     }
     
     func downloadFromRemoteToSend(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(path)/\(fileNm)"
+        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         
         let user = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
             "Authorization": "Basic \(base64Credentials)"
@@ -723,12 +729,17 @@ class ContextMenuWork {
     }
     
     func finishDownload(){
-        SyncLocalFilleToNas().sync(view: "ContextMenuWork", getFoldrId: "")         
         print("download finish")
         NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         
         let messageDict = ["message":"폴더 다운로드를 성공하였습니다"]
         NotificationCenter.default.post(name: Notification.Name("showAlert"), object: self, userInfo: messageDict)
+        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+            print("aleady Syncing")
+            return
+        }
+        SyncLocalFilleToNas().sync(view: "ContextMenuWork", getFoldrId: "")
+        
     }
     
     //nas 폴더 다운로드 끝

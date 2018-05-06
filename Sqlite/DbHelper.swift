@@ -321,6 +321,7 @@ class DbHelper{
         } catch {
             
         }
+        self.database = nil
         
     }
     
@@ -366,13 +367,16 @@ class DbHelper{
                 
                 DriveFileArray.append(deviceStruct)
             }
-            
+            self.database = nil
             return DriveFileArray
+            
         }catch{
             print(error)
+            self.database = nil
             return DriveFileArray
             
         }
+        
     }
     
     func googleDrivelistByName(sortBy:sortByEnum, fileNm:String) -> [App.DriveFileStruct] {
@@ -418,10 +422,11 @@ class DbHelper{
                 }
                 
             }
-            
+            self.database = nil
             return DriveFileArray
         }catch{
             print(error)
+            self.database = nil
             return DriveFileArray
             
         }
@@ -438,18 +443,20 @@ class DbHelper{
         }
         
         if(tableExists(tableName: "googleEmailListTable")){
-            
+            do {
+                try self.database.run(self.googleEmailListTable.insert(googleEmail <- getEmail, accessToken <- getAccessToken, getTokenTime <- getTime))
+            } catch {
+                print(error)
+            }
         } else {
             createGoogleEmailListTable()
         }
         
-        do {
-            try self.database.run(self.googleEmailListTable.insert(googleEmail <- getEmail, accessToken <- getAccessToken, getTokenTime <- getTime))
-        } catch {
-            print(error)
-        }
+        
+        self.database = nil
     }
     func googleAccessTokenUpdate(getEmail: String, getAccessToken:String, getTime:String){
+        
         do {
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
             let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
@@ -459,21 +466,35 @@ class DbHelper{
             print(error)
         }
         if(tableExists(tableName: "googleEmailListTable")){
-            
+            let alice = googleEmailListTable.filter(googleEmail == getEmail)
+            do {
+                try self.database.run(alice.update(accessToken <- getAccessToken, getTokenTime <- getTime))
+                print("access token updated")
+            } catch {
+                print(error)
+            }
         } else {
             createGoogleEmailListTable()
         }
-        let alice = googleEmailListTable.filter(googleEmail == getEmail)
-
+        
+        self.database = nil
+    }
+    
+    func googleEmailListTableExistCheck(){
         do {
-            try self.database.run(alice.update(accessToken <- getAccessToken, getTokenTime <- getTime))
-            print("access token updated")
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
         } catch {
             print(error)
         }
+        if(tableExists(tableName: "googleEmailListTable")){
+            self.database = nil
+        } else {
+            createGoogleEmailListTable()
+        }
     }
-    
-    
     func createGoogleEmailListTable(){
         let createTable = self.googleEmailListTable.create { (table) in
             table.column(id, primaryKey: true)
@@ -484,12 +505,16 @@ class DbHelper{
         }
         do {
             try self.database.run(createTable)
+
             print("Created createGoogleEmailListTable")
-            
+           
+
         }catch{
             print("Created createGoogleEmailListTable error : \(error)")
             print(error)
         }
+        
+        self.database = nil
     }
     
     func googleEmailExistenceCheck(email:String) -> Bool {
@@ -518,6 +543,7 @@ class DbHelper{
             print(error)
             return false
         }
+        self.database = nil
     }
     
     
@@ -527,7 +553,7 @@ class DbHelper{
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
             let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
             database = try Connection(fileUrl.path)
-//            self.database = database
+            self.database = database
         } catch {
             print(error)
         }
@@ -535,7 +561,7 @@ class DbHelper{
         var token = ""
         let tableOrder = self.googleEmailListTable.order()
         do {
-            let devices = try database.prepare(tableOrder)
+            let devices = try self.database.prepare(tableOrder)
             for device in devices {
                 let sliteEmail = "\(device[self.googleEmail])"
                 print("sliteEmail : \(sliteEmail)")
@@ -547,8 +573,10 @@ class DbHelper{
             return token
         }catch{
             print(error)
+            self.database = nil
             return token
         }
+        
     }
     
     func getTokenTime(email:String) -> String {
@@ -557,7 +585,7 @@ class DbHelper{
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
             let fileUrl = documentDirectory.appendingPathComponent("googleEmailListTable").appendingPathExtension("sqlite3")
             database = try Connection(fileUrl.path)
-//            self.database = database
+            self.database = database
         } catch {
             print(error)
         }
@@ -565,7 +593,7 @@ class DbHelper{
         var token = ""
         let tableOrder = self.googleEmailListTable.order()
         do {
-            let devices = try database.prepare(tableOrder)
+            let devices = try self.database.prepare(tableOrder)
             for device in devices {
                 let sliteEmail = "\(device[self.googleEmail])"
                 print("sliteEmail : \(sliteEmail)")
@@ -577,8 +605,10 @@ class DbHelper{
             return token
         }catch{
             print(error)
+            self.database = nil
             return token
         }
+        
     }
     
     func googleEmailListArray() -> [String] {
@@ -595,7 +625,7 @@ class DbHelper{
         
         var tableOrder = self.googleEmailListTable.order()
         do {
-            let devices = try database.prepare(tableOrder)
+            let devices = try self.database.prepare(tableOrder)
             for device in devices {
                 print("table data: googleEmail : \(device[googleEmail])")
                 let email = "\(device[self.googleEmail])"
@@ -606,10 +636,11 @@ class DbHelper{
                 }
                 
             }
-            
+            database = nil
             return emailArray
         }catch{
             print(error)
+            database = nil
             return emailArray
         }
     }

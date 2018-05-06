@@ -432,7 +432,20 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                                                selector: #selector(btnMulticlicked),
                                                name: NSNotification.Name("btnMulticlicked"),
                                                object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(backToOneView),
+                                               name: NSNotification.Name("backToOneView"),
+                                               object: nil)
         
+        var listStyle = UserDefaults.standard.string(forKey: "listViewStyleState") ?? "nil"
+        if listStyle == "nil" {
+            listViewStyleState = .grid
+        } else if listStyle == "list" {
+            listViewStyleState = .list
+        } else {
+            listViewStyleState = .grid
+            
+        }
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -663,7 +676,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             sBarTitle = "all Storage"
         }
         
-        SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self, sBarTitle:title)
+        SetupHomeView.setupMainSearchView(View:searchView, sortButton:sortButton, sBar:sBar, searchDownArrowButton:searchDownArrowButton, parentViewContoller:self, sBarTitle:sBarTitle)
         
         
         showSearchCategory()
@@ -735,7 +748,8 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         activityIndicator.startAnimating()
         driveFileArray.removeAll()
         if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-            let accessToken = DbHelper().getAccessToken(email: googleEmail)
+//            let accessToken = DbHelper().getAccessToken(email: googleEmail)
+            let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
             
             GoogleWork().getFilesByName(accessToken: accessToken, fileNm: fileNm) { responseObject, error in
                 let json = JSON(responseObject!)
@@ -816,7 +830,10 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         return false
     }
    
-    
+    @objc func backToOneView() {
+        cellStyle = 1
+        backToHome()
+    }
     
     @objc func backToHome(){
         print("cellstyle when backToHome : \(cellStyle)")
@@ -830,9 +847,12 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             view.removeFromSuperview()
         }
         var title = "GiGA Stroage"
-        if(!deviceName.isEmpty){
+        if cellStyle == 2 {
             title = deviceName
+        } else {
+            deviceName = title
         }
+
         SetupHomeView.setupMainNavbar(View: customNavBar, navBarTitle: navBarTitle, hamburgerButton: hamburgerButton, listButton: listButton, downArrowButton: downArrowButton, title:title)
         
         for view in self.searchView.subviews {
@@ -911,7 +931,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     DbHelper().jsonToSqlite(getArray: self.DeviceArray)
                     DispatchQueue.main.async {
                         self.setHomeView()
-                        
+                        NotificationCenter.default.post(name: NSNotification.Name("reloadSlideDev"), object: self)
                         self.containerViewController?.activityIndicator.stopAnimating()
                     }
                     
@@ -1113,9 +1133,9 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             }
             
         }
-        if(style == "local"){
+        //if(style == "local"){
             self.setupFileCollectionView(getFolerName: folderName, getDeviceName: deviceName, getDevUuid: selectedDevUuid)
-        }
+        //}
       
         setMultiCountLabel(multiButtonChecked:multiButtonChecked, count:0)
         stringBool = String(multiButtonChecked)
@@ -1327,34 +1347,51 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             listViewStyleState = .list
             containerViewController?.listViewStyleState = .list
             listButton.setImage(#imageLiteral(resourceName: "card_view").withRenderingMode(.alwaysOriginal), for: .normal)
-//            if(mainContentState == .oneViewList){
-                if(maintainFolder){
-                    let fileDict = ["style":"list"]
-                    NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
-                    self.setupFileCollectionView(getFolerName: folderName, getDeviceName: deviceName, getDevUuid: selectedDevUuid)
-                } else {
-                    setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
-                }
-//            }
+            let defaults = UserDefaults.standard
+            defaults.set("list", forKey: "listViewStyleState")
+            
+            //            if(mainContentState == .oneViewList){
+            if(maintainFolder){
+                let fileDict = ["style":"list"]
+                NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
+                self.setupFileCollectionView(getFolerName: folderName, getDeviceName: deviceName, getDevUuid: selectedDevUuid)
+                
+            } else {
+                setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
+            }
+            inActiveMultiCheck()
+            if(selectedAll){
+                selectAllFile()
+            }
+            //            }
             break
         case (.list):
             listViewStyleState = .grid
             containerViewController?.listViewStyleState = .grid
             listButton.setImage(#imageLiteral(resourceName: "list_view").withRenderingMode(.alwaysOriginal), for: .normal)
-//            if(mainContentState == .oneViewList){
-                if(maintainFolder){
-                    let fileDict = ["style":"grid"]
-                    NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
-                    setupFileCollectionView(getFolerName: folderName, getDeviceName: deviceName, getDevUuid: selectedDevUuid)
-                } else {
-                    setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
-                }
-//            }
+            let defaults = UserDefaults.standard
+            defaults.set("grid", forKey: "listViewStyleState")
+            
+            //            if(mainContentState == .oneViewList){
+            if(maintainFolder){
+                let fileDict = ["style":"grid"]
+                NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
+                setupFileCollectionView(getFolerName: folderName, getDeviceName: deviceName, getDevUuid: selectedDevUuid)
+                
+            } else {
+                setupDeviceListView(sortBy: oneViewSortState, multiCheckd: multiButtonChecked)
+            }
+            inActiveMultiCheck()
+            if(selectedAll){
+                selectAllFile()
+            }
+            
+            //            }
             
             break
-     
+            
         }
-        
+        backToHome()
     }
     
     @IBAction func btnFlick1Clicked(_ sender: UIButton) {
@@ -1436,6 +1473,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
             }
         } else {
             print("tableview bottomstate : \(bottomListState)")
+            cell.lblTitle.textColor = HexStringToUIColor().getUIColor(hex: "4F4F4F")
             if viewState == .home {
                 switch bottomListState {
                 case .nasFileInfo:
@@ -1576,25 +1614,25 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                         let fileDict = ["action":"download","fromOsCd":fromOsCd]
                         child?.handleMultiCheckFolderArray(fileDict: fileDict)
                         //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                        inActiveMultiCheck()
+//                        inActiveMultiCheck()
                         break
                     case 1 :
                         let fileDict = ["action":"nas","fromOsCd":fromOsCd]
                         child?.handleMultiCheckFolderArray(fileDict: fileDict)
                         //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                        inActiveMultiCheck()
+//                        inActiveMultiCheck()
                         break
                     case 2 :
                         let fileDict = ["action":"gDrive","fromOsCd":fromOsCd]
                         child?.handleMultiCheckFolderArray(fileDict: fileDict)
                         //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                        inActiveMultiCheck()
+//                        inActiveMultiCheck()
                         break
                     case 3 :
                         let fileDict = ["action":"delete","fromOsCd":fromOsCd]
                         child?.handleMultiCheckFolderArray(fileDict: fileDict)
                         //                        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-                        inActiveMultiCheck()
+//                        inActiveMultiCheck()
                         break
                         
                     default :
@@ -1681,6 +1719,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         if let getInfo = folderName.userInfo?["folderName"] as? String, let getDeviceName = folderName.userInfo?["deviceName"] as? String, let getDevUuid = folderName.userInfo?["devUuid"] as? String  {
             self.deviceName = getDeviceName
             self.folderName = getInfo
+            self.selectedDevUuid = getDevUuid
             maintainFolder = true
             print("folderName : \(self.folderName)")
             setupFileCollectionView(getFolerName: getInfo, getDeviceName:getDeviceName, getDevUuid:getDevUuid)
@@ -1726,8 +1765,14 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     }
    
     @objc func refreshButtonClicked(){
-        SyncLocalFilleToNas().sync(view: "home", getFoldrId:currentFolderId)
         
+        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+            print("aleady Syncing")
+        } else {
+            containerViewController?.activityIndicator.startAnimating()
+            SyncLocalFilleToNas().sync(view: "home", getFoldrId:currentFolderId)
+            
+        }
     }
    
     @objc func setGoogleDriveFileListView(cellStyle: NSNotification){
@@ -1761,12 +1806,17 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                         let fileIdDict = ["fileId":"0"]
                         
                         self.containerViewController?.activityIndicator.stopAnimating()
-                        self.containerViewController?.finishAlamofire()
+                        self.containerViewController?.finishLoading()
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){
                         UIAlertAction in
                             print("download from nas finish")
-                            SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                            if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                                print("aleady Syncing")
+                                
+                            } else {
+                                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                            }
                         }
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
@@ -1852,7 +1902,6 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     @objc func openDocument(urlDict:NSNotification){
         
         if let getUrl = urlDict.userInfo!["url"] as? URL {
-            containerViewController?.activityIndicator.startAnimating()
             documentController = UIDocumentInteractionController(url: getUrl)
             documentController.delegate = self
 //            documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
@@ -1913,6 +1962,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
     func documentInteractionControllerWillPresentOptionsMenu(_ controller: UIDocumentInteractionController) {
         print("documentInteractionControllerWillPresentOptionsMenu")
         DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+            
             self.containerViewController?.activityIndicator.stopAnimating()
         })
     }

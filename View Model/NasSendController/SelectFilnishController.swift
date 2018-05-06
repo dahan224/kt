@@ -21,14 +21,16 @@ class SelectFilnishController {
     var originalFileName = ""
     var originalFileId = ""
     var amdDate = ""
+    
     var oldFoldrWholePathNm = ""
-    func sendToNas(parent:NasSendFolderSelectVC, getToOsCd:String, getToUserId:String, getOriginalFileName:String, getAmdDate:String, getOriginalFileId:String, oldFoldrWholePathNm:String, newFoldrWholePathNm:String, multiCheckedfolderArray:[App.FolderStruct], etsionNm:String, storageState:NasSendFolderSelectVC.toStorageKind, listState:NasSendFolderSelectVC.listEnum, driveFileArray:[App.DriveFileStruct], checkedButtonRow:Int, driveFolderNameArray:[String], driveFolderIdArray:[String], fromOsCd:String, fromDevUuid:String, accessToken:String, googleDriveFileIdPath:String, deviceName:String, fromUserId:String){
+    func send(parent:NasSendFolderSelectVC, getToOsCd:String, getToUserId:String, getOriginalFileName:String, getAmdDate:String, getOriginalFileId:String, oldFoldrWholePathNm:String, newFoldrWholePathNm:String, multiCheckedfolderArray:[App.FolderStruct], etsionNm:String, storageState:NasSendFolderSelectVC.toStorageKind, listState:NasSendFolderSelectVC.listEnum, driveFileArray:[App.DriveFileStruct], checkedButtonRow:Int, driveFolderNameArray:[String], driveFolderIdArray:[String], fromOsCd:String, fromDevUuid:String, accessToken:String, googleDriveFileIdPath:String, deviceName:String, fromUserId:String){
         toOsCd = getToOsCd
         toUserId = getToUserId
         originalFileName = getOriginalFileName
         originalFileId = getOriginalFileId
         amdDate = getAmdDate
         self.oldFoldrWholePathNm = oldFoldrWholePathNm
+        self.etsionNm = etsionNm
         switch storageState {
         case .nas:
             if(!etsionNm.isEmpty){
@@ -37,16 +39,16 @@ class SelectFilnishController {
                     toOsCd = "S"
                 }
                 parent.NasSendFolderSelectVCToggleIndicator()
-//                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
+                //                let fileUrl:URL = FileUtil().getFileUrl(fileNm: originalFileName, amdDate: amdDate)!
                 let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: originalFileName, foldrWholePathNm: "/Mobile", amdDate: self.amdDate)!
                 parent.sendToNasFromLocal(url: fileUrl, name: originalFileName, toOsCd:toOsCd, fileId: originalFileId)
             } else {
                 // local 폴더 업로드 to nas
-                print("upload path : \(newFoldrWholePathNm), oldFoldrWholePathNm: \(oldFoldrWholePathNm)")
-                ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm, getMultiArray:multiCheckedfolderArray, parent:parent)
-                
+//                print("upload path : \(newFoldrWholePathNm), oldFoldrWholePathNm: \(oldFoldrWholePathNm)")
+//                ToNasFromLocalFolder().readyCreatFolders(getToUserId:toUserId, getNewFoldrWholePathNm:newFoldrWholePathNm, getOldFoldrWholePathNm:oldFoldrWholePathNm, getMultiArray:multiCheckedfolderArray, parent:ContainerViewController!)
+//                
             }
-     
+            
             break
         case .googleDrive:
             var checkedFolderId = "root"
@@ -58,12 +60,13 @@ class SelectFilnishController {
                 print("listState : \(listState), index : \(checkedButtonRow)")
                 checkedFolderId = driveFileArray[checkedButtonRow].fileId
                 checkedFolderName = driveFileArray[checkedButtonRow].name
+                finalNewFoldrWholePathNm = ""
                 for (index, file) in driveFolderNameArray.enumerated() {
                     if(index < driveFolderNameArray.count){
-                        finalNewFoldrWholePathNm += "/\(driveFolderNameArray[index])"
+                        finalNewFoldrWholePathNm += "\(driveFolderNameArray[index])/"
                     }
                 }
-                finalNewFoldrWholePathNm += "/\(checkedFolderName)"
+                finalNewFoldrWholePathNm += "\(checkedFolderName)"
             }
             print("driveFolderIdArray: \(driveFolderIdArray), checkedFolderId : \(checkedFolderId)")
             print("driveFolderNameArray: \(driveFolderNameArray), checkedFolderName : \(checkedFolderName)")
@@ -76,10 +79,10 @@ class SelectFilnishController {
                     
                     
                 } else {
-                    print("upload folder from local to gDrive")
+                    print("upload folder from local to gDrive, newFoldrWholePathNm: \(finalNewFoldrWholePathNm)")
                     
-                    print("\(driveFolderNameArray)")
-                    GoogleWork().readyCreatFolders(getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: checkedFolderId, parent: parent)
+                    //                    print("\(driveFolderNameArray)")
+//                    GoogleWork().readyCreatFolders(getAccessToken: accessToken, getNewFoldrWholePathNm: finalNewFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: checkedFolderId, parent: )
                 }
                 
                 
@@ -109,7 +112,8 @@ class SelectFilnishController {
                 }
                 
             } else {
-                if(fromFoldrId.isEmpty){
+                print("etsionNm : \(etsionNm)")
+                if(!etsionNm.isEmpty){
                     // from nas to gdrive
                     print("downloadFromNasToDriveFile")
                     
@@ -117,12 +121,12 @@ class SelectFilnishController {
                     parent.downloadFromNasToDrive(name: originalFileName, path: oldFoldrWholePathNm, fileId: checkedFolderId)
                 } else {
                     // from nas to gdrive folder
-                    let inFoldrId = Int(fromFoldrId)
+                    let inFoldrId:Int = Int(fromFoldrId) ?? 0
                     print("deviceName : \(deviceName), newFoldrWholePathNm: \(newFoldrWholePathNm)")
                     print("driveFolderIdArray: \(driveFolderIdArray), checkedFolderId : \(checkedFolderId)")
                     print("driveFolderNameArray: \(driveFolderNameArray), checkedFolderName : \(checkedFolderName)")
-                    
-                    SendFolderToGdriveFromNAS().downloadFolderFromNas(foldrId: inFoldrId!, foldrWholePathNm: oldFoldrWholePathNm, userId:fromUserId, devUuid:fromDevUuid, deviceName:deviceName, getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getGdriveFolderIdToSave: checkedFolderId, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent:parent)
+                    print("foldrId: \(inFoldrId), foldrWholePathNm: \(oldFoldrWholePathNm), userId:\(fromUserId), devUuid:\(fromDevUuid), deviceName:\(deviceName), getAccessToken: \(accessToken), getNewFoldrWholePathNm: \(newFoldrWholePathNm), getGdriveFolderIdToSave: \(checkedFolderId), getOldFoldrWholePathNm: \(oldFoldrWholePathNm),  getMultiArray: \(multiCheckedfolderArray), fileId: \(googleDriveFileIdPath), parent:\(parent), storageState: .googleDrive")
+//                    SendFolderToGdriveFromNAS().downloadFolderFromNas(foldrId: inFoldrId, foldrWholePathNm: oldFoldrWholePathNm, userId:fromUserId, devUuid:fromDevUuid, deviceName:deviceName, getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getGdriveFolderIdToSave: checkedFolderId, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: googleDriveFileIdPath, parent:parent, storageState: .googleDrive)
                     
                 }
                 
@@ -134,3 +138,4 @@ class SelectFilnishController {
         
     }
 }
+

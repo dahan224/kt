@@ -20,7 +20,8 @@ class SendFolderToGdriveFromNAS{
     var newPath = ""
     var style = ""
     var toSavePathParent = ""
-    var nasSendFolderSelectVC:NasSendFolderSelectVC?
+    
+    var containerViewController:ContainerViewController?
     var multiCheckedfolderArray:[App.FolderStruct] = []
     var gdriveFolderIdDict:[String:String] = [:]
     var forSaveFolderId = ""
@@ -41,14 +42,14 @@ class SendFolderToGdriveFromNAS{
     var selectedUserId = ""
     var selectedDeviceName = ""
     var driveFileArray:[App.DriveFileStruct] = []
-    
+    var storageState = NasSendFolderSelectVC.toStorageKind.nas_gdrive_multi
     
    
     //다운로드 from nas to google drive 시작
     
-    func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, getAccessToken: String, getNewFoldrWholePathNm: String,  getGdriveFolderIdToSave: String, getOldFoldrWholePathNm: String,  getMultiArray: [App.FolderStruct], fileId:String, parent:NasSendFolderSelectVC){
+    func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, getAccessToken: String, getNewFoldrWholePathNm: String,  getGdriveFolderIdToSave: String, getOldFoldrWholePathNm: String,  getMultiArray: [App.FolderStruct], fileId:String, parent:ContainerViewController, storageState:NasSendFolderSelectVC.toStorageKind){
         
-        
+        self.storageState = storageState
         selectedUserId = userId
         selectedDevUuid = devUuid
         selectedDeviceName = deviceName
@@ -59,14 +60,11 @@ class SendFolderToGdriveFromNAS{
         print("oldFoldrWholePathNm : \(oldFoldrWholePathNm), newFoldrWholePathNm : \(newFoldrWholePathNm), selectedDeviceName:\(selectedDeviceName)")
         
         multiCheckedfolderArray = getMultiArray
-        nasSendFolderSelectVC = parent
+        containerViewController = parent
         folderIdsToDownLoad.removeAll()
         folderPathToDownLoad.removeAll()
         fileArrayToDownload.removeAll()
-        if(nasSendFolderSelectVC?.indicatorAnimating)!{
-        } else {
-            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
-        }
+        
         
         print("call from downloadFolderFromNas")
         getFolderIdsToDownload(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:selectedDevUuid,deviceName:selectedDeviceName)
@@ -145,7 +143,7 @@ class SendFolderToGdriveFromNAS{
             let index = folderIdsToDownLoad.count - 1
             if(index > -1){
                 let stringFolderId = String(folderIdsToDownLoad[index])
-                getFileListToDownload(userId: userId, devUuid: selectedDevUuid, foldrId: stringFolderId, index:index)
+                getFileListToDownload(userId: selectedUserId, devUuid: selectedDevUuid, foldrId: stringFolderId, index:index)
                 return
             }
         }
@@ -256,7 +254,7 @@ class SendFolderToGdriveFromNAS{
         
         print("download finish, toSavePathParent: \(toSavePathParent)")
         
-        readyCreatFolders(getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: toSavePathParent, parent: nasSendFolderSelectVC!)
+        readyCreatFolders(getAccessToken: accessToken, getNewFoldrWholePathNm: newFoldrWholePathNm, getOldFoldrWholePathNm: oldFoldrWholePathNm,  getMultiArray: multiCheckedfolderArray, fileId: toSavePathParent, parent: containerViewController!)
     }
     
     
@@ -355,7 +353,7 @@ class SendFolderToGdriveFromNAS{
     
     ////폴더 gdrive upload 시작
     
-    func readyCreatFolders(getAccessToken:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.FolderStruct], fileId: String, parent:NasSendFolderSelectVC){
+    func readyCreatFolders(getAccessToken:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.FolderStruct], fileId: String, parent:ContainerViewController){
         if(parent.indicatorAnimating) {
             
         } else {
@@ -374,7 +372,7 @@ class SendFolderToGdriveFromNAS{
         oldFoldrWholePathNm = oldFoldrWholePathNm.replacingOccurrences(of: upFoldersToDelete, with: "/tmp")
         print("oldFoldrWholePathNm : \(oldFoldrWholePathNm), newFoldrWholePathNm: \(newFoldrWholePathNm)")
         multiCheckedfolderArray = getMultiArray
-        nasSendFolderSelectVC = parent
+        containerViewController = parent
         gdriveFolderIdDict.removeAll()
         for folder in folders{
             print("folder.foldrWholePathNm : \(folder.foldrWholePathNm) , oldFoldrWholePathNm : \(oldFoldrWholePathNm)")
@@ -382,17 +380,19 @@ class SendFolderToGdriveFromNAS{
                 print(folder.foldrWholePathNm)
                 var path = folder.foldrWholePathNm
                 print("local path : \(path)")
-                path = path.replacingOccurrences(of: "/Mobile/tmp", with: newFoldrWholePathNm)
+                path = "\(path.replacingOccurrences(of: "/Mobile/tmp", with: newFoldrWholePathNm))/"
                 
                 foldersToCreate.append(path)
             }
         }
         
         foldersToCreate.reverse()
+        toSavePathParent = getNewFoldrWholePathNm
         print("path to update : \(foldersToCreate)")
         gdriveFolderIdDict.updateValue(toSavePathParent, forKey: "\(newFoldrWholePathNm)/")
         print("toSavePathParent : \(toSavePathParent)")
         print("gdriveFolderIdDict : \(gdriveFolderIdDict)")
+        print("foldersToCreate : \(foldersToCreate)")
         createFolders(foldersToCreate: foldersToCreate)
     }
     
@@ -518,25 +518,41 @@ class SendFolderToGdriveFromNAS{
             }
         }
         print("upload Files finish")
-        if(multiCheckedfolderArray.count > 0){
-            
+        if (storageState == .nas_gdrive_multi) {
             let lastIndex = multiCheckedfolderArray.count - 1
             multiCheckedfolderArray.remove(at: lastIndex)
-            nasSendFolderSelectVC?.multiCheckedfolderArray = multiCheckedfolderArray
-            nasSendFolderSelectVC?.startMultiLocalToGdrive()
-            
+//            nasSendFolderSelectVC?.multiCheckedfolderArray = multiCheckedfolderArray
+//            nasSendFolderSelectVC?.startMultiNasToGdrive()
         } else {
-            let pathForRemove:String = FileUtil().getFilePath(fileNm: "tmp", amdDate: "amdDate")
-            print("pathForRemove : \(pathForRemove)")
-            if(pathForRemove.isEmpty){
+            if(multiCheckedfolderArray.count > 0){
+                
+                let lastIndex = multiCheckedfolderArray.count - 1
+                multiCheckedfolderArray.remove(at: lastIndex)
+//                nasSendFolderSelectVC?.multiCheckedfolderArray = multiCheckedfolderArray
+//                nasSendFolderSelectVC?.startMultiLocalToGdrive()
                 
             } else {
-                FileUtil().removeFile(path: pathForRemove)
+                let pathForRemove:String = FileUtil().getFilePath(fileNm: "tmp", amdDate: "amdDate")
+                print("pathForRemove : \(pathForRemove)")
+                if(pathForRemove.isEmpty){
+                    
+                } else {
+                    FileUtil().removeFile(path: pathForRemove)
+                }
+                DispatchQueue.main.async {
+                    let alertController = UIAlertController(title: nil, message: "업로드에 성공하였습니다.", preferredStyle: .alert)
+                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                        UIAlertAction in
+                        //Do you Success button Stuff here
+                        self.containerViewController?.finishLoading()
+                    }
+                    alertController.addAction(yesAction)
+                    self.containerViewController?.present(alertController, animated: true)
+                    
+                }
             }
-            nasSendFolderSelectVC?.NasSendFolderSelectVCAlert(title: "업로드에 성공하였습니다.")
-            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
-            
         }
+        
     }
     
     

@@ -77,7 +77,7 @@ class GDriveFileListCellController:UIViewController {
                 }
             case cell.btnNas:
                 deviceView.hideSelectedOptions(tag: sender.tag)
-                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":"gDrive","fromDevUuid":currentDevUuid, "mimeType":mimeType,]
+                let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":"gDrive","fromDevUuid":currentDevUuid, "mimeType":mimeType]
                 print("fileDict : \(fileDict)")
                 
                 NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
@@ -101,7 +101,8 @@ class GDriveFileListCellController:UIViewController {
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                             if(currentFolderId == "root" || currentFolderId.isEmpty){
                                 if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-                                    var accessToken = DbHelper().getAccessToken(email: googleEmail)
+//                                    var accessToken = DbHelper().getAccessToken(email: googleEmail)
+                                    var accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
                                     containerView.getFiles(accessToken: accessToken, root: "root")
                                 }                                
                             } else {
@@ -196,7 +197,8 @@ class GDriveFileListCellController:UIViewController {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     if(currentFolderId == "root" || currentFolderId.isEmpty){
                         if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-                            var accessToken = DbHelper().getAccessToken(email: googleEmail)
+//                            var accessToken = DbHelper().getAccessToken(email: googleEmail)
+                            var accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
                             containerView.getFiles(accessToken: accessToken, root: "root")
                         }
                     } else {

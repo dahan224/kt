@@ -82,16 +82,15 @@ class SetupFolderInsideCollectionView {
         selectAllButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         selectAllButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: -5.0).isActive = true
         
-        if(getDevUuid == Util.getUuid()){
-            if(multiButtonChecked){
-                localRefreshButton.isHidden = true
-                selectAllButton.isHidden = false
-            } else {
-                localRefreshButton.isHidden = false
-                selectAllButton.isHidden = true
-            }
-        } else {
+        if(multiButtonChecked){
             localRefreshButton.isHidden = true
+            selectAllButton.isHidden = false
+        } else {
+            if(getDevUuid == Util.getUuid()){
+                localRefreshButton.isHidden = false
+            } else {
+                localRefreshButton.isHidden = true
+            }
             selectAllButton.isHidden = true
         }
         

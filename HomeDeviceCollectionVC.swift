@@ -40,6 +40,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var selectedDevUuid = ""
     var selectedDevUserId = ""
     var selectedDevFoldrId = ""
+    var selectedDevOsCd = ""
     var currentFolderId = ""
     var sortBy = ""
     var upFolderId = ""
@@ -326,10 +327,9 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         var cells = [cell1, cell2, cell3]
         var cell = cells[0]
         print("cellStyle : \(cellStyle)")
-        print("listViewStyleState : \(listViewStyleState)")
+        print("deviceName: \(deviceName)")
         switch mainContentState {
         case .oneViewList:
-            
             if(cellStyle == 1){
                 let imageString = Util.getDeviceImageString(osNm: DeviceArray[indexPath.row].osNm, onoff: DeviceArray[indexPath.row].onoff)
                 cell1.deviceImage.image = UIImage(named: imageString)
@@ -354,290 +354,48 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     cell3.lblLogical.isHidden = true
                     cell1.lblSub.isHidden = true
                 }
-                    if(DeviceArray[indexPath.row].devUuid == Util.getUuid()){
-                        cell3.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "ff0000")
-                        cell1.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "ff0000")
-                    } else {
-                        cell3.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "4F4F4F")
-                        cell1.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "4F4F4F")
-                    }
-                    switch listViewStyleState{
-                    case .grid:
-                        cell = cells[0]
-                        break
-                    case .list:
-                        cell = cells[2]
-                        break
-                    }
-                    cell.layer.shadowColor = UIColor.lightGray.cgColor
-                    cell.layer.shadowOffset = CGSize(width:0,height: 2.0)
-                    cell.layer.shadowRadius = 1.0
-                    cell.layer.shadowOpacity = 1.0
-                    cell.layer.masksToBounds = false;
-                    cell.layer.shadowPath = UIBezierPath(roundedRect:cell.bounds, cornerRadius:cell.contentView.layer.cornerRadius).cgPath
-//                    print("devUuid : \(currentDevUuid), my : \(Util.getUuid())")
+                
+                if(DeviceArray[indexPath.row].devUuid == Util.getUuid()){
+                    cell3.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "ff0000")
+                    cell1.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "ff0000")
                 } else {
-                    if(folderArray[indexPath.row].osCd != "nil"){
-                        fromOsCd = folderArray[indexPath.row].osCd
-                    }
-                    if(folderArray[indexPath.row].devUuid != "nil"){
-                        selectedDevUuid = folderArray[indexPath.row].devUuid
-                    }
-                    if(selectedDevUuid != Util.getUuid()){
-                        if(folderArray[indexPath.row].fileNm != "nil"){
-                            
-                            if(fromOsCd != "S" && fromOsCd != "G"){
-                                
-                                //리모트 파일 셀 컨트롤
-                                let cell4 = RemoteFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, viewState:viewState)
-
-                                if (multiCheckListState == .active){
-                                    
-                                    cell4.btnMultiCheck.isHidden = false
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                                    cell4.btnMultiCheck.tag = indexPath.row
-                                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-                                    cell4.btnOption.isHidden = true
-                                    
-                                } else {
-                                    cell4.resetMultiCheck()
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                                    cell4.btnOption.isHidden = false
-                                    cell4.btnMultiCheck.isHidden = true
-                                    cell4.btnMultiChecked = false
-                                    
-                                }
-                                
-                                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
-                                swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-                                cell4.btnOption.addGestureRecognizer(swipeLeft)
-                                cell4.btnOption.tag = indexPath.row
-                                cell4.btnOption.addTarget(self, action: #selector(btnRemoteFileOptionClicked(sender:)), for: .touchUpInside)
-                                
-                                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
-                                rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-                                cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
-                                cell4.btnOptionRed.tag = indexPath.row
-                                cell4.btnOptionRed.addTarget(self, action: #selector(btnRemoteFileOptionClicked(sender:)), for: .touchUpInside)
-                                
-                                cells.append(cell4)
-                            } else {
-                                print("NasFileCellController get cell")
-                                //nas 파일 셀 컨트롤
-                                let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName, viewState:viewState)
-
-                                if (multiCheckListState == .active){
-                                    cell4.btnMultiCheck.isHidden = false
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                                    cell4.btnMultiCheck.tag = indexPath.row
-                                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-                                    cell4.btnOption.isHidden = true
-                                    
-                                    print("cell : \(indexPath.row), multi checked : \(cell4.btnMultiChecked)")
-                                    if(cell4.btnMultiChecked && cell4.btnMultiCheck.tag == indexPath.row){
-                                        cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-                                    } else {
-                                        cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-                                    }
-                                    
-                                } else {
-                                    cell4.resetMultiCheck()
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                                    cell4.btnOption.isHidden = false
-                                    cell4.btnMultiCheck.isHidden = true
-                                    cell4.btnMultiChecked = false
-                                }
-                                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
-                                swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-                                cell4.btnOption.addGestureRecognizer(swipeLeft)
-                                cell4.btnOption.tag = indexPath.row
-                                cell4.btnOption.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
-                                
-                                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
-                                rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-                                cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
-                                cell4.btnOptionRed.tag = indexPath.row
-                                cell4.btnOptionRed.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
-                                
-                                cells.append(cell4)
-                            }
-                            
-                            var imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
-                            let fileThumbYn = folderArray[indexPath.row].fileThumbYn
-                            if fileThumbYn == "Y" {
-                                
-                            } else {
-                                
-                            }
-                            let CollectionViewGridCell = GridCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName, viewState:viewState)
-                            if (multiCheckListState == .active){
-                                CollectionViewGridCell.btnMultiCheck.isHidden = false
-                                CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
-                                CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-                                if(folderArray[indexPath.row].checked){
-                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-                                } else {
-                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-                                }
-                            } else {
-                                CollectionViewGridCell.resetMultiCheck()
-                                CollectionViewGridCell.btnMultiCheck.isHidden = true
-                            }
-                            
-                            cells.append(CollectionViewGridCell)
-                            switch listViewStyleState{
-                            case .grid:
-                                cell = cells[4]
-                                break
-                            case .list:
-                                cell = cells[3]
-                                break
-                            }
-                        } else {
-                            
-                            if(fromOsCd != "S" && fromOsCd != "G"){
-                                //리모트 폴더 셀 컨트롤
-                                
-                                let cell4 = RemoteFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
-                                
-                                if (multiCheckListState == .active){
-                                    
-                                    cell4.btnMultiCheck.isHidden = true
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                                    cell4.btnMultiCheck.tag = indexPath.row
-                                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-                                    cell4.btnOption.isHidden = true
-                                    
-                                } else {
-                                    cell4.resetMultiCheck()
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                                    cell4.btnOption.isHidden = true
-                                    cell4.btnMultiCheck.isHidden = true
-                                    cell4.btnMultiChecked = false
-                                }
-                                cells.append(cell4)
-                                cell2.lblSub.isHidden = false
-                                cell4.btnOption.isHidden = false
-                                cell2.lblSub.isHidden = false
-                                if(folderArray[indexPath.row].foldrNm == ".."){
-                                    cell4.lblSub.isHidden = true
-                                    cell4.btnOption.isHidden = true
-                                    cell2.lblSub.isHidden = true
-                                }
-                            } else {
-                                //nas 폴더 셀 컨트로
-                                let cell4 = NasFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
-                                //
-                                if (multiCheckListState == .active){
-                                    cell4.btnMultiCheck.isHidden = false
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                                    cell4.btnMultiCheck.tag = indexPath.row
-                                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-                                    if(folderArray[indexPath.row].foldrNm == ".."){
-                                        cell4.btnMultiCheck.isHidden = true
-                                    } else {
-                                        cell4.btnMultiCheck.isHidden = false
-                                    
-                                    }
-                                    
-                                    cell4.btnOption.isHidden = true
-                                    
-                                } else {
-                                    cell4.resetMultiCheck()
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
-                                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                                    cell4.btnOption.isHidden = false
-                                    cell4.btnMultiCheck.isHidden = true
-                                    cell4.btnMultiChecked = false
-                                }
-                                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
-                                swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-                                cell4.btnOption.addGestureRecognizer(swipeLeft)
-                                cell4.btnOption.tag = indexPath.row
-                                cell4.btnOption.addTarget(self, action: #selector(btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
-                                
-                                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
-                                rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-                                cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
-                                cell4.btnOptionRed.tag = indexPath.row
-                                cell4.btnOptionRed.addTarget(self, action: #selector(btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
-                                
-                                cells.append(cell4)
-                                cell2.lblSub.isHidden = false
-                                cell4.btnOption.isHidden = false
-                                cell2.lblSub.isHidden = false
-                                if(folderArray[indexPath.row].foldrNm == ".."){
-                                    cell4.lblSub.isHidden = true
-                                    cell4.btnOption.isHidden = true
-                                    cell2.lblSub.isHidden = true
-
-                                 
-                                }
-                                
-                            }
-                            let CollectionViewGridCell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewGridCell", for: indexPath) as! CollectionViewGridCell
-                            CollectionViewGridCell.lblMain.text = folderArray[indexPath.row].foldrNm
-                            let editedDate = folderArray[indexPath.row].amdDate.components(separatedBy: " ")[0]                            
-                            let cellDevNm = folderArray[indexPath.row].devNm
-                            CollectionViewGridCell.lblSub.text = "\(editedDate) | \(cellDevNm)"
-                            
-                            CollectionViewGridCell.ivMain.image = UIImage(named: "ico_folder")
-                            CollectionViewGridCell.ivSub.image = UIImage(named: "ico_folder")
-                            if (multiCheckListState == .active){
-                                if(fromOsCd != "S" && fromOsCd != "G" && selectedDevUuid != Util.getUuid()){
-                                    CollectionViewGridCell.btnMultiCheck.isHidden = true
-                                } else {
-                                    CollectionViewGridCell.btnMultiCheck.isHidden = false
-                                    CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
-                                    CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-                                    if(folderArray[indexPath.row].checked){
-                                        CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-                                    } else {
-                                        CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-                                    }
-                                }
-                                
-                            } else {
-                                CollectionViewGridCell.resetMultiCheck()
-                                CollectionViewGridCell.btnMultiCheck.isHidden = true
-                            }
-                           
-                            cells.append(CollectionViewGridCell)
-                            
-                            if(folderArray[indexPath.row].foldrNm == ".."){
-                                CollectionViewGridCell.lblSub.isHidden = true
-                            }
-                            switch listViewStyleState{
-                            case .grid:
-                                cell = cells[4]
-                                break
-                            case .list:
-                                cell = cells[3]
-                                break
-                            }
-                        }
+                    cell3.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "4F4F4F")
+                    cell1.lblMain.textColor = HexStringToUIColor().getUIColor(hex: "4F4F4F")
+                }
+                
+                switch listViewStyleState{
+                case .grid:
+                    cell = cells[0]
+                    break
+                case .list:
+                    cell = cells[2]
+                    break
+                }
+                cell.layer.shadowColor = UIColor.lightGray.cgColor
+                cell.layer.shadowOffset = CGSize(width:0,height: 2.0)
+                cell.layer.shadowRadius = 1.0
+                cell.layer.shadowOpacity = 1.0
+                cell.layer.masksToBounds = false;
+                cell.layer.shadowPath = UIBezierPath(roundedRect:cell.bounds, cornerRadius:cell.contentView.layer.cornerRadius).cgPath
+                //                    print("devUuid : \(currentDevUuid), my : \(Util.getUuid())")
+            } else {
+                cell3.lblSub.isHidden = false
+                cell2.lblMain.text = folderArray[indexPath.row].foldrNm
+                cell2.lblSub.text = folderArray[indexPath.row].amdDate
+                cell3.lblSub.text = folderArray[indexPath.row].amdDate
+                if(folderArray[indexPath.row].osCd != "nil"){
+                    fromOsCd = folderArray[indexPath.row].osCd
+                }
+                if(folderArray[indexPath.row].devUuid != "nil"){
+                    selectedDevUuid = folderArray[indexPath.row].devUuid
+                }
+                if(selectedDevUuid != Util.getUuid()){
+                    if(folderArray[indexPath.row].fileNm != "nil"){
                         
-                    } else {
-                        //로컬 파일
-                        if(folderArray[indexPath.row].fileNm != "nil"){
-                            let cell4 = LocalFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, viewState:viewState)
-                            cells.append(cell4)
-//
+                        if(fromOsCd != "S" && fromOsCd != "G"){
+                            
+                            //리모트 파일 셀 컨트롤
+                            let cell4 = RemoteFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, viewState:viewState)
                             
                             if (multiCheckListState == .active){
                                 
@@ -655,6 +413,58 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                     cell4.btnMultiChecked = false
                                     cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
                                 }
+                                
+                            } else {
+                                cell4.resetMultiCheck()
+                                cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                                cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                cell4.btnOption.isHidden = false
+                                cell4.btnMultiCheck.isHidden = true
+                                cell4.btnMultiChecked = false
+                                
+                            }
+                            
+                            let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
+                            swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                            cell4.btnOption.addGestureRecognizer(swipeLeft)
+                            cell4.btnOption.tag = indexPath.row
+                            cell4.btnOption.addTarget(self, action: #selector(btnRemoteFileOptionClicked(sender:)), for: .touchUpInside)
+                            
+                            let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
+                            rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                            cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                            cell4.btnOptionRed.tag = indexPath.row
+                            cell4.btnOptionRed.addTarget(self, action: #selector(btnRemoteFileOptionClicked(sender:)), for: .touchUpInside)
+                            
+                            cells.append(cell4)
+                        } else {
+                            print("NasFileCellController get cell")
+                            //nas 파일 셀 컨트롤
+                            let cell4 = NasFileCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName, viewState:viewState)
+                            
+                            if (multiCheckListState == .active){
+                                cell4.btnMultiCheck.isHidden = false
+                                cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                                cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                cell4.btnMultiCheck.tag = indexPath.row
+                                cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                                cell4.btnOption.isHidden = true
+                                
+                                print("cell : \(indexPath.row), multi checked : \(cell4.btnMultiChecked)")
+                                if(cell4.btnMultiChecked && cell4.btnMultiCheck.tag == indexPath.row){
+                                    cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                                } else {
+                                    cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                }
+                                if(selectAllCheck){
+                                    cell4.btnMultiChecked = true
+                                    cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                                } else {
+                                    cell4.btnMultiChecked = false
+                                    cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                }
                             } else {
                                 cell4.resetMultiCheck()
                                 cell4.btnMultiCheckLeadingAnchor?.isActive = false
@@ -664,51 +474,68 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                 cell4.btnMultiCheck.isHidden = true
                                 cell4.btnMultiChecked = false
                             }
-                            
-                            
-                            let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
+                            let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
                             swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                             cell4.btnOption.addGestureRecognizer(swipeLeft)
                             cell4.btnOption.tag = indexPath.row
-                            cell4.btnOption.addTarget(self, action: #selector(btnLocalFileOptionClicked(sender:)), for: .touchUpInside)
+                            cell4.btnOption.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
                             
-                            let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
+                            let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
                             rightSwipe.direction = UISwipeGestureRecognizerDirection.right
                             cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
                             cell4.btnOptionRed.tag = indexPath.row
-                            cell4.btnOptionRed.addTarget(self, action: #selector(btnLocalFileOptionClicked(sender:)), for: .touchUpInside)
-
-                            let CollectionViewGridCell = GridCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName, viewState:viewState)
-                            if (multiCheckListState == .active){
-                                CollectionViewGridCell.btnMultiCheck.isHidden = false
-                                CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
-                                CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-                                if(folderArray[indexPath.row].checked){
-                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-                                } else {
-                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-                                }
-                            } else {
-                                CollectionViewGridCell.resetMultiCheck()
-                                CollectionViewGridCell.btnMultiCheck.isHidden = true
-                            }
-                         
-                            cells.append(CollectionViewGridCell)
-                            switch listViewStyleState{
-                            case .grid:
-                                cell = cells[4]
-                                break
-                            case .list:
-                                cell = cells[3]
-                                break
-                            }
-                        } else {
-                            //로컬 폴더
-                            let cell4 = LocalFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                            cell4.btnOptionRed.addTarget(self, action: #selector(btnNasOptionClicked(sender:)), for: .touchUpInside)
+                            
                             cells.append(cell4)
-                           
+                        }
+                        
+                        cell2.lblMain.text = folderArray[indexPath.row].fileNm
+                        let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
+                        cell2.ivMain.image = UIImage(named: imageString)
+                        
+                        cell2.ivSub.image = UIImage(named: imageString)
+                        
+                        let CollectionViewGridCell = GridCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName, viewState:viewState)
+                        if (multiCheckListState == .active){
+                            CollectionViewGridCell.btnMultiCheck.isHidden = false
+                            CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
+                            CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                            if(folderArray[indexPath.row].checked){
+                                CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                            } else {
+                                CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                            }
+                            if(selectAllCheck){
+                                CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                            } else {
+                                CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                            }
+                            
+                            
+                        } else {
+                            CollectionViewGridCell.resetMultiCheck()
+                            CollectionViewGridCell.btnMultiCheck.isHidden = true
+                        }
+                        
+                        cells.append(CollectionViewGridCell)
+                        switch listViewStyleState{
+                        case .grid:
+                            cell = cells[4]
+                            break
+                        case .list:
+                            cell = cells[3]
+                            break
+                        }
+                    } else {
+                        
+                        if(fromOsCd != "S" && fromOsCd != "G"){
+                            //리모트 폴더 셀 컨트롤
+                            
+                            let cell4 = RemoteFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                            
                             if (multiCheckListState == .active){
-                                cell4.btnMultiCheck.isHidden = false
+                                
+                                cell4.btnMultiCheck.isHidden = true
                                 cell4.btnMultiCheckLeadingAnchor?.isActive = false
                                 cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
                                 cell4.btnMultiCheckLeadingAnchor?.isActive = true
@@ -726,11 +553,74 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                     }
                                     
                                 } else {
-                                    cell4.btnMultiChecked = false
-                                    cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                    
+                                    if(folderArray[indexPath.row].foldrNm == ".."){
+                                        cell4.btnMultiCheck.isHidden = true
+                                    } else {
+                                        cell4.btnMultiChecked = false
+                                        cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                    }
+                                    
                                 }
                             } else {
-                                 cell4.resetMultiCheck()
+                                cell4.resetMultiCheck()
+                                cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                                cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                cell4.btnOption.isHidden = true
+                                cell4.btnMultiCheck.isHidden = true
+                                cell4.btnMultiChecked = false
+                            }
+                            cells.append(cell4)
+                            if(folderArray[indexPath.row].foldrNm == ".."){
+                                cell4.lblSub.isHidden = true
+                                cell4.btnOption.isHidden = true
+                                cell2.lblSub.isHidden = true
+                            } else {
+                                cell2.lblSub.isHidden = false
+                                cell4.lblSub.isHidden = false
+                            }
+                        } else {
+                            //nas 폴더 셀 컨트로
+                            let cell4 = NasFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                            //
+                            if (multiCheckListState == .active){
+                                cell4.btnMultiCheck.isHidden = false
+                                cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                                cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                                cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                                cell4.btnMultiCheck.tag = indexPath.row
+                                cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                                if(folderArray[indexPath.row].foldrNm == ".."){
+                                    cell4.btnMultiCheck.isHidden = true
+                                } else {
+                                    cell4.btnMultiCheck.isHidden = false
+                                    
+                                }
+                                if(selectAllCheck){
+                                    if(folderArray[indexPath.row].foldrNm == ".."){
+                                        cell4.btnMultiCheck.isHidden = true
+                                        cell4.btnMultiChecked = false
+                                        cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                    } else {
+                                        cell4.btnMultiChecked = true
+                                        cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                                    }
+                                    
+                                } else {
+                                    
+                                    if(folderArray[indexPath.row].foldrNm == ".."){
+                                        cell4.btnMultiCheck.isHidden = true
+                                    } else {
+                                        cell4.btnMultiChecked = false
+                                        cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                    }
+                                    
+                                }
+                                cell4.btnOption.isHidden = true
+                                
+                            } else {
+                                cell4.resetMultiCheck()
                                 cell4.btnMultiCheckLeadingAnchor?.isActive = false
                                 cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
                                 cell4.btnMultiCheckLeadingAnchor?.isActive = true
@@ -738,41 +628,42 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                 cell4.btnMultiCheck.isHidden = true
                                 cell4.btnMultiChecked = false
                             }
-                            
-                            let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFolderSwipeToLeft(sender:)))
+                            let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
                             swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                             cell4.btnOption.addGestureRecognizer(swipeLeft)
                             cell4.btnOption.tag = indexPath.row
-                            cell4.btnOption.addTarget(self, action: #selector(btnLocalFolderOptionClicked(sender:)), for: .touchUpInside)
+                            cell4.btnOption.addTarget(self, action: #selector(btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
                             
-                            let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFolderSwipeToLeft(sender:)))
+                            let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
                             rightSwipe.direction = UISwipeGestureRecognizerDirection.right
                             cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
                             cell4.btnOptionRed.tag = indexPath.row
-                            cell4.btnOptionRed.addTarget(self, action: #selector(btnLocalFolderOptionClicked(sender:)), for: .touchUpInside)
+                            cell4.btnOptionRed.addTarget(self, action: #selector(btnNasFolderOptionClicked(sender:)), for: .touchUpInside)
                             
-                            cell2.lblMain.text = folderArray[indexPath.row].foldrNm
-                            cell2.ivMain.image = UIImage(named: "ico_folder")
-                            cell2.ivSub.image = UIImage(named: "ico_folder")
-                            cell2.lblSub.isHidden = false
-                            cell4.btnOption.isHidden = false
-                            cell2.lblSub.isHidden = false
+                            cells.append(cell4)
                             if(folderArray[indexPath.row].foldrNm == ".."){
                                 cell4.lblSub.isHidden = true
                                 cell4.btnOption.isHidden = true
                                 cell2.lblSub.isHidden = true
-
+                            } else {
+                                cell2.lblSub.isHidden = false
+                                cell4.lblSub.isHidden = false
                             }
                             
-                            let CollectionViewGridCell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewGridCell", for: indexPath) as! CollectionViewGridCell
-                            CollectionViewGridCell.lblMain.text = folderArray[indexPath.row].foldrNm
-                            let editedDate = folderArray[indexPath.row].amdDate.components(separatedBy: " ")[0]
-                            let cellDevNm = folderArray[indexPath.row].devNm
-                            CollectionViewGridCell.lblSub.text = "\(editedDate) | \(cellDevNm)"
-                            
-                            CollectionViewGridCell.ivMain.image = UIImage(named: "ico_folder")
-                            CollectionViewGridCell.ivSub.image = UIImage(named: "ico_folder")
-                            if (multiCheckListState == .active){
+                        }
+                        let CollectionViewGridCell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewGridCell", for: indexPath) as! CollectionViewGridCell
+                        CollectionViewGridCell.lblMain.text = folderArray[indexPath.row].foldrNm
+                        let editedDate = folderArray[indexPath.row].amdDate.components(separatedBy: " ")[0]
+                        CollectionViewGridCell.lblSub.text = "\(editedDate) | \(deviceName)"
+                        
+                        CollectionViewGridCell.ivMain.image = UIImage(named: "ico_folder")
+                        CollectionViewGridCell.ivSub.image = UIImage(named: "ico_folder")
+                        if (multiCheckListState == .active){
+                            if(fromOsCd != "S" && fromOsCd != "G"){
+                                CollectionViewGridCell.btnMultiCheck.isHidden = true
+                            } else if folderArray[indexPath.row].foldrNm == ".." {
+                                CollectionViewGridCell.btnMultiCheck.isHidden = true
+                            } else {
                                 CollectionViewGridCell.btnMultiCheck.isHidden = false
                                 CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
                                 CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
@@ -781,98 +672,322 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                 } else {
                                     CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
                                 }
-                            } else {
-                                CollectionViewGridCell.resetMultiCheck()
-                                CollectionViewGridCell.btnMultiCheck.isHidden = true
+                                if(selectAllCheck){
+                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                                } else {
+                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                }
+                                
                             }
-                          
                             
-                            cells.append(CollectionViewGridCell)
-                            switch listViewStyleState{
-                            case .grid:
-                                cell = cells[4]
-                                break
-                            case .list:
-                                cell = cells[3]
-                                break
-                            }
+                        } else {
+                            CollectionViewGridCell.resetMultiCheck()
+                            CollectionViewGridCell.btnMultiCheck.isHidden = true
                         }
                         
-                    }
-                    
-                    
-                }
-                break
-            case .googleDriveList :
-                // 파일
-                if(!driveFileArray[indexPath.row].mimeType.contains("folder")){
-                    let cell4 = GDriveFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: driveFileArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
-                    cells.append(cell4)
-                    let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFileSwipeToLeft(sender:)))
-                    swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-                    cell4.btnOption.addGestureRecognizer(swipeLeft)
-                    cell4.btnOption.tag = indexPath.row
-                    cell4.btnOption.addTarget(self, action: #selector(btnGDriveFileOptionClicked(sender:)), for: .touchUpInside)
-                    
-                    let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFileSwipeToLeft(sender:)))
-                    rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-                    cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
-                    cell4.btnOptionRed.tag = indexPath.row
-                    cell4.btnOptionRed.addTarget(self, action: #selector(btnGDriveFileOptionClicked(sender:)), for: .touchUpInside)
-                    if (multiCheckListState == .active){
-                        cell4.btnMultiCheck.isHidden = false
-                        cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                        cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
-                        cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                        cell4.btnMultiCheck.tag = indexPath.row
-                        cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnGoogleDriveMultiCheckClicked(sender:)), for: .touchUpInside)
-                        cell4.btnOption.isHidden = true
-                    } else {
-                        cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                        cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
-                        cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                        cell4.btnOption.isHidden = false
-                        cell4.btnMultiCheck.isHidden = true
-                        cell4.btnMultiChecked = false
-                    }
-                    
-                    cell2.lblMain.text = driveFileArray[indexPath.row].name
-                    let etsionFromMimeType = Util.getEtsionFromMimetype(mimeType: driveFileArray[indexPath.row].mimeType)
-                    let imageString = Util.getFileImageString(fileExtension: etsionFromMimeType)
-                    let thumbnailLink = driveFileArray[indexPath.row].thumbnailLink
-                    if(thumbnailLink != "nil") {
-                        Alamofire.request(thumbnailLink).responseImage { response in
-                            print(response.request)
-                            print(response.response)
-                            if let getImage = response.result.value {
-                                print("image downloaded: \(getImage)")
-                                cell2.ivMain.image = getImage
-                            } else {
-                                cell2.ivMain.image = UIImage(named: imageString)
-                            }
+                        cells.append(CollectionViewGridCell)
+                        
+                        if(folderArray[indexPath.row].foldrNm == ".."){
+                            CollectionViewGridCell.lblSub.isHidden = true
+                        } else {
+                            CollectionViewGridCell.lblSub.isHidden = false
                         }
-                    } else {
-                        cell2.ivMain.image = UIImage(named: imageString)
+                        switch listViewStyleState{
+                        case .grid:
+                            cell = cells[4]
+                            break
+                        case .list:
+                            cell = cells[3]
+                            break
+                        }
                     }
-                    cell2.ivSub.image = UIImage(named: imageString)
                     
                 } else {
-                    // 폴더
-                    let cell4 = GDriveFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: driveFileArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
-                    cells.append(cell4)
-                    let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFolderSwipeToLeft(sender:)))
-                    swipeLeft.direction = UISwipeGestureRecognizerDirection.left
-                    cell4.btnOption.addGestureRecognizer(swipeLeft)
-                    cell4.btnOption.tag = indexPath.row
-                    cell4.btnOption.addTarget(self, action: #selector(btnGDriveFolderOptionClicked(sender:)), for: .touchUpInside)
+                    //로컬 파일
+                    if(folderArray[indexPath.row].fileNm != "nil"){
+                        let cell4 = LocalFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, viewState:viewState)
+                        cells.append(cell4)
+                        //
+                        
+                        if (multiCheckListState == .active){
+                            
+                            cell4.btnMultiCheck.isHidden = false
+                            cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                            cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                            cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                            cell4.btnMultiCheck.tag = indexPath.row
+                            cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                            cell4.btnOption.isHidden = true
+                            if(selectAllCheck){
+                                cell4.btnMultiChecked = true
+                                cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                            } else {
+                                cell4.btnMultiChecked = false
+                                cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                            }
+                        } else {
+                            cell4.resetMultiCheck()
+                            cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                            cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                            cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                            cell4.btnOption.isHidden = false
+                            cell4.btnMultiCheck.isHidden = true
+                            cell4.btnMultiChecked = false
+                        }
+                        
+                        
+                        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
+                        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                        cell4.btnOption.addGestureRecognizer(swipeLeft)
+                        cell4.btnOption.tag = indexPath.row
+                        cell4.btnOption.addTarget(self, action: #selector(btnLocalFileOptionClicked(sender:)), for: .touchUpInside)
+                        
+                        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
+                        rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                        cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                        cell4.btnOptionRed.tag = indexPath.row
+                        cell4.btnOptionRed.addTarget(self, action: #selector(btnLocalFileOptionClicked(sender:)), for: .touchUpInside)
+                        
+                        cell2.lblMain.text = folderArray[indexPath.row].fileNm
+                        let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].etsionNm)
+                        cell2.ivMain.image = UIImage(named: imageString)
+                        cell2.ivSub.image = UIImage(named: imageString)
+                        
+                        let CollectionViewGridCell = GridCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self, deviceName:deviceName, viewState:viewState)
+                        if (multiCheckListState == .active){
+                            CollectionViewGridCell.btnMultiCheck.isHidden = false
+                            CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
+                            CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                            if(folderArray[indexPath.row].checked){
+                                CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                            } else {
+                                CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                            }
+                            if(selectAllCheck){
+                                CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                            } else {
+                                CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                            }
+                        } else {
+                            CollectionViewGridCell.resetMultiCheck()
+                            CollectionViewGridCell.btnMultiCheck.isHidden = true
+                        }
+                        
+                        cells.append(CollectionViewGridCell)
+                        switch listViewStyleState{
+                        case .grid:
+                            cell = cells[4]
+                            break
+                        case .list:
+                            cell = cells[3]
+                            break
+                        }
+                    } else {
+                        //로컬 폴더
+                        let cell4 = LocalFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: folderArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                        cells.append(cell4)
+                        
+                        if (multiCheckListState == .active){
+                            cell4.btnMultiCheck.isHidden = false
+                            cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                            cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                            cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                            cell4.btnMultiCheck.tag = indexPath.row
+                            cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                            cell4.btnOption.isHidden = true
+                            
+                            if(selectAllCheck){
+                                if(folderArray[indexPath.row].foldrNm == ".."){
+                                    cell4.btnMultiCheck.isHidden = true
+                                    cell4.btnMultiChecked = false
+                                    cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                } else {
+                                    cell4.btnMultiChecked = true
+                                    cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                                }
+                                
+                            } else {
+                                
+                                if(folderArray[indexPath.row].foldrNm == ".."){
+                                    cell4.btnMultiCheck.isHidden = true
+                                } else {
+                                    cell4.btnMultiChecked = false
+                                    cell4.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                }
+                                
+                            }
+                        } else {
+                            cell4.resetMultiCheck()
+                            cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                            cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                            cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                            cell4.btnOption.isHidden = false
+                            cell4.btnMultiCheck.isHidden = true
+                            cell4.btnMultiChecked = false
+                        }
+                        
+                        let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFolderSwipeToLeft(sender:)))
+                        swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                        cell4.btnOption.addGestureRecognizer(swipeLeft)
+                        cell4.btnOption.tag = indexPath.row
+                        cell4.btnOption.addTarget(self, action: #selector(btnLocalFolderOptionClicked(sender:)), for: .touchUpInside)
+                        
+                        let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFolderSwipeToLeft(sender:)))
+                        rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                        cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                        cell4.btnOptionRed.tag = indexPath.row
+                        cell4.btnOptionRed.addTarget(self, action: #selector(btnLocalFolderOptionClicked(sender:)), for: .touchUpInside)
+                        
+                        cell2.lblMain.text = folderArray[indexPath.row].foldrNm
+                        cell2.ivMain.image = UIImage(named: "ico_folder")
+                        cell2.ivSub.image = UIImage(named: "ico_folder")
+                        
+                        if(folderArray[indexPath.row].foldrNm == ".."){
+                            cell4.lblSub.isHidden = true
+                            cell4.btnOption.isHidden = true
+                            cell2.lblSub.isHidden = true
+                        } else {
+                            cell2.lblSub.isHidden = false
+                            cell4.lblSub.isHidden = false
+                        }
+                        
+                        let CollectionViewGridCell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewGridCell", for: indexPath) as! CollectionViewGridCell
+                        CollectionViewGridCell.lblMain.text = folderArray[indexPath.row].foldrNm
+                        let editedDate = folderArray[indexPath.row].amdDate.components(separatedBy: " ")[0]
+                        CollectionViewGridCell.lblSub.text = "\(editedDate) | \(deviceName)"
+                        
+                        CollectionViewGridCell.ivMain.image = UIImage(named: "ico_folder")
+                        CollectionViewGridCell.ivSub.image = UIImage(named: "ico_folder")
+                        if (multiCheckListState == .active){
+                            if folderArray[indexPath.row].foldrNm == ".." {
+                                CollectionViewGridCell.btnMultiCheck.isHidden = true
+                            } else {
+                                CollectionViewGridCell.btnMultiCheck.isHidden = false
+                                CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
+                                CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                                if(folderArray[indexPath.row].checked){
+                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                                } else {
+                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                }
+                                if(selectAllCheck){
+                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                                } else {
+                                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                                }
+                                
+                            }
+                        } else {
+                            CollectionViewGridCell.resetMultiCheck()
+                            CollectionViewGridCell.btnMultiCheck.isHidden = true
+                        }
+                        
+                        if(folderArray[indexPath.row].foldrNm == ".."){
+                            CollectionViewGridCell.lblSub.isHidden = true
+                        } else {
+                            CollectionViewGridCell.lblSub.isHidden = false
+                        }
+                        
+                        cells.append(CollectionViewGridCell)
+                        switch listViewStyleState{
+                        case .grid:
+                            cell = cells[4]
+                            break
+                        case .list:
+                            cell = cells[3]
+                            break
+                        }
+                    }
                     
-                    let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFolderSwipeToLeft(sender:)))
-                    rightSwipe.direction = UISwipeGestureRecognizerDirection.right
-                    cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
-                    cell4.btnOptionRed.tag = indexPath.row
-                    cell4.btnOptionRed.addTarget(self, action: #selector(btnGDriveFolderOptionClicked(sender:)), for: .touchUpInside)
-                    
-                    if (multiCheckListState == .active){
+                }
+                
+                
+            }
+            break
+        case .googleDriveList :
+            deviceName = "Google Drive"
+            // 파일
+            if(!driveFileArray[indexPath.row].mimeType.contains("folder")){
+                let cell4 = GDriveFileListCellController().getCell(indexPathRow: indexPath.row, folderArray: driveFileArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                cells.append(cell4)
+                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFileSwipeToLeft(sender:)))
+                swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                cell4.btnOption.addGestureRecognizer(swipeLeft)
+                cell4.btnOption.tag = indexPath.row
+                cell4.btnOption.addTarget(self, action: #selector(btnGDriveFileOptionClicked(sender:)), for: .touchUpInside)
+                
+                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFileSwipeToLeft(sender:)))
+                rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                cell4.btnOptionRed.tag = indexPath.row
+                cell4.btnOptionRed.addTarget(self, action: #selector(btnGDriveFileOptionClicked(sender:)), for: .touchUpInside)
+                if (multiCheckListState == .active){
+                    cell4.btnMultiCheck.isHidden = false
+                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
+                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                    cell4.btnMultiCheck.tag = indexPath.row
+                    cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnGoogleDriveMultiCheckClicked(sender:)), for: .touchUpInside)
+                    cell4.btnOption.isHidden = true
+                } else {
+                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                    cell4.btnOption.isHidden = false
+                    cell4.btnMultiCheck.isHidden = true
+                    cell4.btnMultiChecked = false
+                }
+                
+                cell2.lblMain.text = driveFileArray[indexPath.row].name
+                let etsionFromMimeType = Util.getEtsionFromMimetype(mimeType: driveFileArray[indexPath.row].mimeType)
+                let imageString = Util.getFileImageString(fileExtension: etsionFromMimeType)
+                cell2.ivMain.image = UIImage(named: imageString)
+                cell2.ivSub.image = UIImage(named: imageString)
+                
+                let url = URL(string:driveFileArray[indexPath.row].thumbnailLink)
+                
+                let CollectionViewGridCell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewGridCell", for: indexPath) as! CollectionViewGridCell
+                CollectionViewGridCell.lblMain.text = driveFileArray[indexPath.row].name
+                let editedDate = driveFileArray[indexPath.row].modifiedTime.components(separatedBy: "T")[0]
+                CollectionViewGridCell.lblSub.text = "\(editedDate) | \(deviceName)"
+                CollectionViewGridCell.ivMain.af_setImage(withURL: url!, placeholderImage: UIImage(named:imageString), filter: nil, imageTransition: .crossDissolve(0.5), runImageTransitionIfCached: true, completion: nil)
+                CollectionViewGridCell.ivSub.image = UIImage(named: imageString)
+                if (multiCheckListState == .active){
+                    CollectionViewGridCell.btnMultiCheck.isHidden = false
+                    CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
+                    CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                    /*if(driveFileArray[indexPath.row].checked){
+                     CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                     } else {*/
+                    CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                    //}
+                } else {
+                    CollectionViewGridCell.resetMultiCheck()
+                    CollectionViewGridCell.btnMultiCheck.isHidden = true
+                }
+                
+                cells.append(CollectionViewGridCell)
+                
+            } else {
+                // 폴더
+                let cell4 = GDriveFolderListCellController().getCell(indexPathRow: indexPath.row, folderArray: driveFileArray, multiCheckListState: multiCheckListState, collectionView: deviceCollectionView, parentView: self)
+                cells.append(cell4)
+                let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFolderSwipeToLeft(sender:)))
+                swipeLeft.direction = UISwipeGestureRecognizerDirection.left
+                cell4.btnOption.addGestureRecognizer(swipeLeft)
+                cell4.btnOption.tag = indexPath.row
+                cell4.btnOption.addTarget(self, action: #selector(btnGDriveFolderOptionClicked(sender:)), for: .touchUpInside)
+                
+                let rightSwipe = UISwipeGestureRecognizer(target: self, action: #selector(cellGDriveFolderSwipeToLeft(sender:)))
+                rightSwipe.direction = UISwipeGestureRecognizerDirection.right
+                cell4.btnOptionRed.addGestureRecognizer(rightSwipe)
+                cell4.btnOptionRed.tag = indexPath.row
+                cell4.btnOptionRed.addTarget(self, action: #selector(btnGDriveFolderOptionClicked(sender:)), for: .touchUpInside)
+                
+                if (multiCheckListState == .active){
+                    if driveFileArray[indexPath.row].name == ".." {
+                        cell4.btnMultiCheck.isHidden = true
+                    } else {
                         cell4.btnMultiCheck.isHidden = false
                         cell4.btnMultiCheckLeadingAnchor?.isActive = false
                         cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: 25)
@@ -880,45 +995,81 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         cell4.btnMultiCheck.tag = indexPath.row
                         cell4.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnGoogleDriveMultiCheckClicked(sender:)), for: .touchUpInside)
                         cell4.btnOption.isHidden = true
-                    } else {
-                        cell4.btnMultiCheckLeadingAnchor?.isActive = false
-                        cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
-                        cell4.btnMultiCheckLeadingAnchor?.isActive = true
-                        cell4.btnOption.isHidden = false
+                    }
+                } else {
+                    cell4.btnMultiCheckLeadingAnchor?.isActive = false
+                    cell4.btnMultiCheckLeadingAnchor = cell4.btnMultiCheck.leadingAnchor.constraint(equalTo: cell4.leadingAnchor, constant: -36)
+                    cell4.btnMultiCheckLeadingAnchor?.isActive = true
+                    cell4.btnOption.isHidden = false
+                    cell4.btnMultiCheck.isHidden = true
+                    cell4.btnMultiChecked = false
+                }
+                
+                
+                cell2.lblMain.text = driveFileArray[indexPath.row].name
+                cell2.ivMain.image = UIImage(named: "ico_folder")
+                cell2.ivSub.image = UIImage(named: "ico_folder")
+                
+                if(driveFileArray[indexPath.row].name == ".."){
+                    cell4.lblSub.isHidden = true
+                    cell4.btnOption.isHidden = true
+                    cell2.lblSub.isHidden = true
+                } else {
+                    cell2.lblSub.isHidden = false
+                    cell4.lblSub.isHidden = false
+                }
+                
+                let CollectionViewGridCell = deviceCollectionView.dequeueReusableCell(withReuseIdentifier: "CollectionViewGridCell", for: indexPath) as! CollectionViewGridCell
+                CollectionViewGridCell.lblMain.text = driveFileArray[indexPath.row].name
+                let editedDate = driveFileArray[indexPath.row].modifiedTime.components(separatedBy: "T")[0]
+                CollectionViewGridCell.lblSub.text = "\(editedDate) | \(deviceName)"
+                
+                CollectionViewGridCell.ivMain.image = UIImage(named: "ico_folder")
+                CollectionViewGridCell.ivSub.image = UIImage(named: "ico_folder")
+                if (multiCheckListState == .active){
+                    if driveFileArray[indexPath.row].name == ".." {
                         cell4.btnMultiCheck.isHidden = true
-                        cell4.btnMultiChecked = false
+                    } else {
+                        CollectionViewGridCell.btnMultiCheck.isHidden = false
+                        CollectionViewGridCell.btnMultiCheck.tag = indexPath.row
+                        CollectionViewGridCell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
+                        /*if(driveFileArray[indexPath.row].checked){
+                         CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                         } else {*/
+                        CollectionViewGridCell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                        /*}*/
                     }
-                    
-                    
-                    cell2.lblMain.text = driveFileArray[indexPath.row].name
-                    cell2.ivMain.image = UIImage(named: "ico_folder")
-                    cell2.ivSub.image = UIImage(named: "ico_folder")
-                    
-                    if(driveFileArray[indexPath.row].name == ".."){
-                        cell4.lblSub.isHidden = true
-                        cell4.btnOption.isHidden = true
-                        cell2.lblSub.isHidden = true
-
-                    }
+                } else {
+                    CollectionViewGridCell.resetMultiCheck()
+                    CollectionViewGridCell.btnMultiCheck.isHidden = true
                 }
                 
-                switch listViewStyleState{
-                case .grid:
-                    cell = cells[1]
-                    break
-                case .list:
-                    cell = cells[3]
-                    break
+                if(driveFileArray[indexPath.row].name == ".."){
+                    CollectionViewGridCell.lblSub.isHidden = true
+                } else {
+                    CollectionViewGridCell.lblSub.isHidden = false
                 }
                 
-
+                cells.append(CollectionViewGridCell)
+            }
+            
+            switch listViewStyleState{
+            case .grid:
+                cell = cells[4]
+                break
+            case .list:
+                cell = cells[3]
                 break
             }
+            
+            
+            break
+        }
         
-       
-         return cell
+        
+        return cell
     }
-    
+
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         print("item : \(indexPath.row)")
         
@@ -930,6 +1081,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             homeViewController?.fromOsCd = fromOsCd
             selectedDevUuid = DeviceArray[indexPath.row].devUuid
             selectedDevUserId = DeviceArray[indexPath.row].userId
+            selectedDevOsCd = DeviceArray[indexPath.row].osCd
             
             var state = HomeViewController.bottomListEnum.nasFileInfo
             if(fromOsCd == "G" || fromOsCd == "S"){
@@ -1402,7 +1554,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         let buttonRow = sender.tag
         let indexPath = IndexPath(row: buttonRow, section: 0)
         let cell = deviceCollectionView.cellForItem(at: indexPath) as! GDriveFolderListCell
-        GDriveFolderListCellController().GdriveFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: driveFileArray, deviceName: "Google Drive", parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUuid, currentFolderId:  currentFolderId)
+        GDriveFolderListCellController().GdriveFolderContextMenuCalled(cell: cell, indexPath: indexPath, sender: sender, folderArray: driveFileArray, deviceName: "Google Drive", parentView: "device", deviceView:self, userId: userId, fromOsCd: fromOsCd, currentDevUuid: selectedDevUuid, selectedDevUserId: selectedDevUuid, currentFolderId:  currentFolderId, containerViewController:containerViewController!)
     }
     //구글드라이브 폴더 컨텍스트 종료
     
@@ -1411,7 +1563,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         self.driveFileArray.removeAll()
         var param = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"sortBy":sortBy]
         var googleEmail = UserDefaults.standard.string(forKey: "googleEmail")
-        accessToken = DbHelper().getAccessToken(email: googleEmail!)
+//        accessToken = DbHelper().getAccessToken(email: googleEmail!)
+        accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
         if !accessToken.isEmpty {
             print("accessToken : \(accessToken)")
             print("showInsideParam : \(param)")
@@ -1463,10 +1616,10 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
 
     func uploadNasGDriveFile(fileId:String, mimeType:String, name:String) {
-        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail") {
             
-        accessToken = DbHelper().getAccessToken(email: googleEmail)
-//        accessToken = UserDefaults.standard.string(forKey: "accessToken")!
+//        accessToken = DbHelper().getAccessToken(email: googleEmail)
+        accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
         let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
         print("stringUrl : \(stringUrl)")
         
@@ -1482,7 +1635,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 homeViewController?.homeViewToggleIndicator()
             }
             
-            accessToken = DbHelper().getAccessToken(email: googleEmail)
+//            accessToken = DbHelper().getAccessToken(email: googleEmail)
+            accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
             print("fileId : \(fileId), mimeType : \(mimeType)")
             let stringUrl = "https://www.googleapis.com/drive/v3/files/\(fileId)/?alt=media&access_token=\(accessToken)"
             print("stringUrl : \(stringUrl)")
@@ -1504,7 +1658,12 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     print("response : \(response)")
                     if response.destinationURL != nil {
                         print(response.destinationURL!)
-                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                            print("aleady Syncing")
+                            
+                        } else {
+                            SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                        }
                         DispatchQueue.main.async {
                             let alertController = UIAlertController(title: nil, message: "다운로드를 성공하였습니다.", preferredStyle: .alert)
                             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
@@ -1677,7 +1836,10 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
     @objc func btnMultiCheckClicked(sender:UIButton){
        
-        MultiCheckFileListController().btnMultiCheckClicked(sender: sender, getHomeViewController: homeViewController!, parent: self)
+        
+            MultiCheckFileListController().btnMultiCheckClicked(sender: sender, parent: self)
+        
+        
     }
     
     @objc func btnGoogleDriveMultiCheckClicked(sender:UIButton){
@@ -1786,7 +1948,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     homeViewController?.inActiveMultiCheck()
                     break
                 case "gDrive":
-                    print(" multi gDrive")
+                    print("multi to  gDrive")
                     containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"local_gdrive_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid,foldrWholePathNm:foldrWholePathNm)
                     break
                     
@@ -1804,9 +1966,41 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 // NAS 멀티 메뉴 핸들
                 switch getAction {
                 case "download":
-                    print("다운로드 multi")
+                    print("다운로드 multi, selectedDevUuid : \(selectedDevUserId)")
+                    
                     NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                    MultiCheckFileListController().callDwonLoad(getFolderArray: multiCheckedfolderArray, parent: self, devUuid: selectedDevUuid, deviceName: deviceName)
+                    MultiCheckFileListController().callDwonLoad(getFolderArray: multiCheckedfolderArray, parent: self, devUuid: selectedDevUuid, deviceName: deviceName, devUserId:selectedDevUserId)
+                    
+                    var fileIdArryStr = ""
+                    var fileSizeArryStr = ""
+                    var fileNmArryStr = ""
+                    var fileEtsionmArryStr = ""
+                    for arryIndex in 0...multiCheckedfolderArray.count-1 {
+                        
+                        var id = multiCheckedfolderArray[arryIndex].fileId
+                        var name = multiCheckedfolderArray[arryIndex].fileNm
+                        if id == 0 {
+                            id = multiCheckedfolderArray[arryIndex].foldrId
+                            name = multiCheckedfolderArray[arryIndex].foldrNm
+                        }
+                        
+                        if arryIndex == multiCheckedfolderArray.count-1 {
+                            fileIdArryStr += "\(id)"
+                            fileSizeArryStr += multiCheckedfolderArray[arryIndex].fileSize
+                            fileNmArryStr += name
+                            fileEtsionmArryStr += multiCheckedfolderArray[arryIndex].etsionNm
+                        } else {
+                            fileIdArryStr += "\(id):"
+                            fileSizeArryStr += "\(multiCheckedfolderArray[arryIndex].fileSize):"
+                            fileNmArryStr += "\(name):"
+                            fileEtsionmArryStr += "\(multiCheckedfolderArray[arryIndex].etsionNm):"
+                        }
+                    }
+                    let fileDict = ["fileIdArryStr":fileIdArryStr, "fileSizeArryStr":fileSizeArryStr,"fileNmArryStr":fileNmArryStr,"fileEtsionmArryStr":fileEtsionmArryStr]
+                    print("multiProgressSegue fileDict : \(fileDict)")
+                    NotificationCenter.default.post(name: Notification.Name("multiProgressSegue"), object: self, userInfo: fileDict)
+                    
+                    
                     homeViewController?.inActiveMultiCheck()
                     break
                 case "nas":
@@ -1817,7 +2011,11 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     
                     break
                 case "gDrive":
-                    print(" multi gDrive")
+                    print("multi gDrive, folder : \(foldrWholePathNm)")
+                    let fileDict = ["fileId":"fileId", "fileNm":"fileNm","amdDate":"amdDate", "oldFoldrWholePathNm":foldrWholePathNm,"fromDevUuid":selectedDevUuid, "toStorage":"googleDriveMulti","fromUserId":selectedDevUserId, "fromOsCd":selectedDevOsCd]
+                    containerViewController?.googleSignInCheckForMulti(fileDict: fileDict, getMultiArray:multiCheckedfolderArray)
+//                    containerViewController?.getMultiFolderArray(getArray:multiCheckedfolderArray, toStorage:"nas_gdrive_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid,foldrWholePathNm:foldrWholePathNm)
+                    
                     break
                     
                 case "delete":
@@ -1839,6 +2037,32 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         print("다운로드 multi gDrive")
                         NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                         GdriveMultiCheckController().callDwonLoad(getFolderArray: gDriveMultiCheckedfolderArray, parent: self)
+                        
+                        var fileIdArryStr = ""
+                        var fileSizeArryStr = ""
+                        var fileNmArryStr = ""
+                        var fileEtsionmArryStr = ""
+                        for arryIndex in 0...gDriveMultiCheckedfolderArray.count-1 {
+                            
+                            var id = gDriveMultiCheckedfolderArray[arryIndex].fileId
+                            var name = gDriveMultiCheckedfolderArray[arryIndex].name
+                            var fileExtension = gDriveMultiCheckedfolderArray[arryIndex].fileExtension
+                            
+                            if arryIndex == gDriveMultiCheckedfolderArray.count-1 {
+                                fileIdArryStr += "\(id)"
+                                fileSizeArryStr += gDriveMultiCheckedfolderArray[arryIndex].size
+                                fileNmArryStr += name
+                                fileEtsionmArryStr += gDriveMultiCheckedfolderArray[arryIndex].fileExtension
+                            } else {
+                                fileIdArryStr += "\(id):"
+                                fileSizeArryStr += "\(gDriveMultiCheckedfolderArray[arryIndex].size):"
+                                fileNmArryStr += "\(name):"
+                                fileEtsionmArryStr += "\(gDriveMultiCheckedfolderArray[arryIndex].fileExtension):"
+                            }
+                        }
+                        let fileDict = ["fileIdArryStr":fileIdArryStr, "fileSizeArryStr":fileSizeArryStr,"fileNmArryStr":fileNmArryStr,"fileEtsionmArryStr":fileEtsionmArryStr]
+                        print("multiProgressSegue fileDict : \(fileDict)")
+                        NotificationCenter.default.post(name: Notification.Name("multiProgressSegue"), object: self, userInfo: fileDict)
                         
                         break
                     case "nas":
@@ -1911,7 +2135,12 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             let alertController = UIAlertController(title: nil, message: "멀티 파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel) {
                 UIAlertAction in
-                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                    print("aleady Syncing")
+                    
+                } else {
+                    SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                }
                 self.delegate.notificationOnGoing = false
                 
             }
@@ -2023,7 +2252,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 } else if fromOsCd == "S" || fromOsCd == "G" {
                     //nas 롱 터치
                     print("selectedFileId : \(folderArray[indexPath.row].fileId)")
-                    homeViewController?.homeViewToggleIndicator()
+                    containerViewController?.activityIndicator.startAnimating()
                     let fileNm = folderArray[indexPath.row].fileNm
                     let fileId = "\(folderArray[indexPath.row].fileId)"
                     let foldrWholePathNm = "\(folderArray[indexPath.row].foldrWholePathNm)"
@@ -2063,8 +2292,10 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     func googleSignInCheck(name:String, path:String, fileDict:[String:String]){
         if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
             
-            var accessToken = DbHelper().getAccessToken(email: googleEmail)
-            let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
+//            var accessToken = DbHelper().getAccessToken(email: googleEmail)
+            let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
+            let getTokenTime = UserDefaults.standard.string(forKey: "googleLoginTime")!
+//            let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
             print("accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
             let now = Date()
             let dateGetTokenTime = Util.stringToDate(text: getTokenTime)
@@ -2075,6 +2306,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             let timeDifference = userCalendar.dateComponents(requestedComponent, from: dateGetTokenTime, to: now)
             //                        print(timeDifference.hour)
             let hour = timeDifference.hour
+            print("hour : \(hour)")
             if(hour! < 1){
                 //                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
                 let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
@@ -2126,7 +2358,12 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                         self.containerViewController?.alamofireCompleted()
-                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                            print("aleady Syncing")
+                            
+                        } else {
+                            SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                        }
                         alertController.addAction(yesAction)
                         self.present(alertController, animated: true)
                     }
@@ -2172,7 +2409,12 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
-                    SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                    if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                        print("aleady Syncing")
+                        
+                    } else {
+                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                    }
                     DispatchQueue.main.async {
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
@@ -2238,117 +2480,111 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         print("clickDeviceItem clicked  index : \(stringIndexPathRow), device array count : \(DeviceArray.count)")
         if let stringIndexPathRow = stringIndexPathRow.userInfo?["indexPathRow"] as? String {
             if let indexPathRow = Int(stringIndexPathRow) {
-                if(DeviceArray[indexPathRow].osCd == "D"){
-//                    mainContentState = .googleDriveList
-//                    cellStyle = 3
-//                    homeViewController?.cellStyle = 3
-//                    currentFolderId = "root"
-//                    homeViewController?.currentFolderId = currentFolderId
-//                    fromOsCd = "D"
-//                    homeViewController?.fromOsCd = "D"
-//
-//                    if let homeIndicatorAnimatingCheck = homeViewController?.indicatorAnimating {
-//                        if(!homeIndicatorAnimatingCheck) {
-//                            homeViewController?.homeViewToggleIndicator()
-//                        }
-//                    }
-
-                    containerViewController?.activityIndicator.startAnimating()
-                    
-                    
-                    
-                    print("google drive clicked")
-                    
-//                    let fileDict = ["state":"loginForList"]
-//                    NotificationCenter.default.post(name: Notification.Name("googleSignInSegue"), object: self, userInfo: fileDict)
-                    if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+                print("devid : \(DeviceArray[indexPathRow].devUuid), myid : \(Util.getUuid())")
+                if indexPathRow < DeviceArray.count {
+                    if(DeviceArray[indexPathRow].osCd == "D"){
+                        containerViewController?.activityIndicator.startAnimating()
+                        print("google drive clicked")
                         
-                        var accessToken = DbHelper().getAccessToken(email: googleEmail)
-                        let getTokenTime = DbHelper().getTokenTime(email: googleEmail)
-                        print("deviceclick item accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
-                        let now = Date()
-                        let dateGetTokenTime = Util.stringToDate(text: getTokenTime)
-                        var userCalendar = Calendar.current
-                        userCalendar.timeZone = TimeZone.current
-                        let requestedComponent: Set<Calendar.Component> = [.hour,.minute,.second]
-                        //        let requestedComponent: Set<Calendar.Component> = [.hour]
-                        let timeDifference = userCalendar.dateComponents(requestedComponent, from: dateGetTokenTime, to: now)
-//                        print(timeDifference.hour)
-                        let hour = timeDifference.hour
-                        if(hour! < 1){
-//                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
-                            let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
-                            if(loginState == "login"){
-                                print("get file")
-                                
-                                containerViewController?.googleSignInSegueState = .loginForList
-                                GIDSignIn.sharedInstance().signInSilently()
-                             
-                            } else {
-                                
-                                print("login called")
-                                containerViewController?.googleSignInSegueState = .loginForList
-                                containerViewController?.googleSignInAlertShow()
+                        //                    let fileDict = ["state":"loginForList"]
+                        //                    NotificationCenter.default.post(name: Notification.Name("googleSignInSegue"), object: self, userInfo: fileDict)
+                        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+                            
+                            let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")
+                            let getTokenTime:String = UserDefaults.standard.string(forKey: "googleLoginTime")!
+                            
+                            print("deviceclick item accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
+                            let now = Date()
+                            if !getTokenTime.isEmpty {
+                                let dateGetTokenTime = Util.stringToDate(text: getTokenTime)
+                                var userCalendar = Calendar.current
+                                userCalendar.timeZone = TimeZone.current
+                                let requestedComponent: Set<Calendar.Component> = [.hour,.minute,.second]
+                                //        let requestedComponent: Set<Calendar.Component> = [.hour]
+                                let timeDifference = userCalendar.dateComponents(requestedComponent, from: dateGetTokenTime, to: now)
+                                //                        print(timeDifference.hour)
+                                let hour = timeDifference.hour
+                                print("hour : \(hour)")
+                                if(hour! < 1){
+                                    //                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
+                                    let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
+                                    if(loginState == "login"){
+                                        print("get file")
+                                        
+                                        containerViewController?.googleSignInSegueState = .loginForList
+                                        GIDSignIn.sharedInstance().signInSilently()
+                                        
+                                    } else {
+                                        
+                                        print("login called")
+                                        containerViewController?.googleSignInSegueState = .loginForList
+                                        containerViewController?.googleSignInAlertShow()
+                                    }
+                                    
+                                } else {
+                                    print("google email")
+                                    containerViewController?.googleSignInSegueState = .loginForList
+                                    containerViewController?.googleSignInAlertShow()
+                                }
                             }
-
+                            
                         } else {
                             print("google email")
                             containerViewController?.googleSignInSegueState = .loginForList
                             containerViewController?.googleSignInAlertShow()
                         }
+                        
+                        
                     } else {
-                        print("google email")
-                        containerViewController?.googleSignInSegueState = .loginForList
-                        containerViewController?.googleSignInAlertShow()
-                    }
-
-                    
-                } else {
-                    cellStyle = 2
-                    homeViewController?.cellStyle = 2
-                    mainContentState = .oneViewList
-                    selectedDevUuid = DeviceArray[indexPathRow].devUuid
-                    if(selectedDevUuid == Util.getUuid()){
-                        contextMenuState = .local
-                        print("contextMenuState local")
-                    } else {
-                        contextMenuState = .nas
-                        print("contextMenuState nas")
-                    }
-                    userId = DeviceArray[indexPathRow].userId
-                    selectedDevUserId = DeviceArray[indexPathRow].userId
-                    deviceName = DeviceArray[indexPathRow].devNm
-                    print("userId:\(userId)")
-                    if(viewState == .home){
-                        getRootFolder(userId:userId, devUuid: selectedDevUuid, deviceName:deviceName)
-                    }
-                    
-                    let folderName = ["folderName":"\(DeviceArray[indexPathRow].devNm)","deviceName":deviceName, "devUuid":selectedDevUuid]
-                    if(viewState == .home){
+                        cellStyle = 2
+                        homeViewController?.cellStyle = 2
+                        mainContentState = .oneViewList
+                        selectedDevUuid = DeviceArray[indexPathRow].devUuid
+                        if(selectedDevUuid == Util.getUuid()){
+                            contextMenuState = .local
+                            print("contextMenuState local")
+                        } else {
+                            contextMenuState = .nas
+                            print("contextMenuState nas")
+                        }
+                        userId = DeviceArray[indexPathRow].userId
+                        selectedDevUserId = DeviceArray[indexPathRow].userId
+                        selectedDevOsCd = DeviceArray[indexPathRow].osCd
+                        deviceName = DeviceArray[indexPathRow].devNm
+                        
+                        print("userId:\(userId)")
+                        if(viewState == .home){
+                            getRootFolder(userId:userId, devUuid: selectedDevUuid, deviceName:deviceName)
+                        }
+                        
                         let folderName = ["folderName":"\(DeviceArray[indexPathRow].devNm)","deviceName":deviceName, "devUuid":selectedDevUuid]
-                        homeViewController?.completeFolderNameForSearchView = "\(DeviceArray[indexPathRow].devNm)"
-                        NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
-                    } else {
+                        if(viewState == .home){
+                            let folderName = ["folderName":"\(DeviceArray[indexPathRow].devNm)","deviceName":deviceName, "devUuid":selectedDevUuid]
+                            homeViewController?.completeFolderNameForSearchView = "\(DeviceArray[indexPathRow].devNm)"
+                            NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
+                        } else {
+                            
+                        }
+                        searchStepState = .device
+                        foldrWholePathNm = ""
+                        fromOsCd = DeviceArray[indexPathRow].osCd
+                        homeViewController?.fromOsCd = fromOsCd
+                        homeViewController?.currentFolderId = currentFolderId
+                        var state = HomeViewController.bottomListEnum.nasFileInfo
+                        if(fromOsCd == "G" || fromOsCd == "S"){
+                            state = HomeViewController.bottomListEnum.nasFileInfo
+                        } else {
+                            state = HomeViewController.bottomListEnum.remoteFileInfo
+                            if(selectedDevUuid == Util.getUuid()){
+                                state = HomeViewController.bottomListEnum.localFileInfo
+                            }
+                        }
+                        print("foldrWholePathNm : \(foldrWholePathNm)")
+                        Vc.dataFromContainer(containerData: indexPathRow, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: selectedDevUuid, getCurrentFolderId: currentFolderId)
                         
                     }
-                    searchStepState = .device
-                    foldrWholePathNm = ""
-                    fromOsCd = DeviceArray[indexPathRow].osCd
-                    homeViewController?.fromOsCd = fromOsCd
-                    homeViewController?.currentFolderId = currentFolderId
-                    var state = HomeViewController.bottomListEnum.nasFileInfo
-                    if(fromOsCd == "G" || fromOsCd == "S"){
-                        state = HomeViewController.bottomListEnum.nasFileInfo
-                    } else {
-                        state = HomeViewController.bottomListEnum.remoteFileInfo
-                        if(selectedDevUuid == Util.getUuid()){
-                            state = HomeViewController.bottomListEnum.localFileInfo
-                        }
-                    }
-                    print("foldrWholePathNm : \(foldrWholePathNm)")
-                    Vc.dataFromContainer(containerData: indexPathRow, getStepState: searchStepState, getBottomListState: state, getStringId:id, getStringFolderPath: foldrWholePathNm, getCurrentDevUuid: selectedDevUuid, getCurrentFolderId: currentFolderId)
-                    
                 }
+               
                 
             }
         }
@@ -2386,6 +2622,9 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                             } else if (self.fromOsCd == "W"){
                                 var folder = App.FolderStruct(data: rootFolder as AnyObject)
                                 folder.devNm = deviceName
+                                folder.osCd = self.selectedDevOsCd
+                                folder.userId = self.selectedDevUserId
+                                folder.userId = self.selectedDevUserId
                                 print("deviceName : \(deviceName)")
                                 print("folder : \(folder)")
                                 self.folderIdArray.append(0)
@@ -2395,6 +2634,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                 self.homeViewController?.cellStyle = 2
                                 self.collectionviewCellSpcing()
                                 self.currentFolderId = String(foldrId)
+                                
                                 self.deviceCollectionView.reloadData()
                                 self.deviceCollectionView.collectionViewLayout.invalidateLayout()
                                 
@@ -2473,6 +2713,10 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     var folder = App.FolderStruct(data: list as AnyObject)
                     folder.devUuid = devUuid
                     folder.devNm = deviceName
+                    folder.userId = self.selectedDevUserId
+                    folder.osCd = self.selectedDevOsCd
+                    folder.userId = self.selectedDevUserId
+                    print("folderUserId: \(folder.userId)")
                     self.folderArray.append(folder)
                 }
             }
@@ -2497,7 +2741,10 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     
                     var folder = App.FolderStruct(data: list as AnyObject)
                     folder.devUuid = devUuid
+                    folder.userId = self.selectedDevUserId
                     folder.devNm = self.deviceName
+                    folder.osCd = self.selectedDevOsCd
+                    folder.userId = self.selectedDevUserId
                     print("list : \(list), folder:\(folder)")
                     self.folderArray.append(folder)
                 }

@@ -83,7 +83,8 @@ class GdriveMultiCheckController {
             let mimeType = getFolderArray[index].mimeType
             if(mimeType == Util.getGoogleMimeType(etsionNm: "folder")){
                 if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-                    let accessToken = DbHelper().getAccessToken(email: googleEmail)
+//                    let accessToken = DbHelper().getAccessToken(email: googleEmail)
+                    let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
                     let downloadRootFolderName = name
                     downloadFolderFromGDrive(foldrId: fileId, getAccessToken: accessToken, fileId: fileId, downloadRootFolderName:downloadRootFolderName)
                 }
@@ -93,13 +94,23 @@ class GdriveMultiCheckController {
                     if let fileUrl = responseObject {
                         var newArray = getFolderArray
                         self.multiCheckedfolderArray.remove(at: self.multiCheckedfolderArray.count - 1)
+                        
+                        let fileDict = ["fileId":fileId]
+                        NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
+                        
                         self.callDwonLoad(getFolderArray: self.multiCheckedfolderArray, parent: self.homeDeviceCollectionVC!)
                     }
                 }
             }
             return
         }
-        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+            print("aleady Syncing")
+            
+        } else {
+            SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+        }
+        /*
         DispatchQueue.main.async {
             let alertController = UIAlertController(title: nil, message: "다운로드를 성공하였습니다.", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
@@ -109,7 +120,7 @@ class GdriveMultiCheckController {
             }
             alertController.addAction(yesAction)
             parent.present(alertController, animated: true)
-        }
+        }*/
         
     }
 
@@ -302,6 +313,9 @@ class GdriveMultiCheckController {
     }
     
     func finishGDriveFolderDownload(){
+        let foldrId:String = multiCheckedfolderArray[self.multiCheckedfolderArray.count - 1].fileId
+        let fileDict = ["fileId":foldrId]
+        NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
         self.multiCheckedfolderArray.remove(at: self.multiCheckedfolderArray.count - 1)
         self.callDwonLoad(getFolderArray: self.multiCheckedfolderArray, parent: self.homeDeviceCollectionVC!)
     }

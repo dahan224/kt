@@ -70,6 +70,10 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
                                                selector: #selector(tableScrollTop),
                                                name: NSNotification.Name("tableScrollTop"),
                                                object: nil)
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(reloadSlideDev),
+                                               name: NSNotification.Name("reloadSlideDev") ,
+                                               object: nil)
         
         print("slide view called")
         screenSize = self.view.bounds
@@ -372,6 +376,11 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         }
     }
 
+    @objc func reloadSlideDev() {
+        self.DeviceArray = DbHelper().listSqlite(sortBy: DbHelper.sortByEnum.none)
+        self.sortData()
+        self.tableView.reloadData()
+    }
   
 }
 

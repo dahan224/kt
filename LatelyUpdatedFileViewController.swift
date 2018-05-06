@@ -318,7 +318,15 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         super.viewDidLoad()
 
           // Do any additional setup after loading the view.
-        
+        var listStyle = UserDefaults.standard.string(forKey: "listViewStyleState") ?? "nil"
+        if listStyle == "nil" {
+            listViewStyleState = .grid
+        } else if listStyle == "list" {
+            listViewStyleState = .list
+        } else {
+            listViewStyleState = .grid
+            
+        }
         getLatelyUpdateFileList()
         tableView.delegate = self
         tableView.dataSource = self
@@ -595,8 +603,9 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
     }
     
     @objc func latelyCloseBottomMenu() {
+        print("latelyCloseBottomMenu called")
         latelyViewToggleBottomMenu()
-        backgroundView.removeGestureRecognizer(tapGesture)
+//        backgroundView.removeGestureRecognizer(tapGesture)
     }
     
     func bottomStateFromContainer(fileDict:[String:Any]){
@@ -653,6 +662,9 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
             listViewStyleState = .list
             containerViewController?.listViewStyleState = .list
             listButton.setImage(#imageLiteral(resourceName: "card_view").withRenderingMode(.alwaysOriginal), for: .normal)
+            let defaults = UserDefaults.standard
+            defaults.set("list", forKey: "listViewStyleState")
+            
             if(mainContentState == .oneViewList){
                 let fileDict = ["style":"list"]
                 NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
@@ -662,6 +674,9 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
             listViewStyleState = .grid
             containerViewController?.listViewStyleState = .grid
             listButton.setImage(#imageLiteral(resourceName: "list_view").withRenderingMode(.alwaysOriginal), for: .normal)
+            let defaults = UserDefaults.standard
+            defaults.set("grid", forKey: "listViewStyleState")
+            
             if(mainContentState == .oneViewList){
                 let fileDict = ["style":"grid"]
                 NotificationCenter.default.post(name: Notification.Name("changeListStyle"), object: self, userInfo: fileDict)
