@@ -127,7 +127,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
     func deviceOff(){
         let cookie:String = UserDefaults.standard.string(forKey: "cookie")!
         let token:String = UserDefaults.standard.string(forKey: "token")!
-        let urlString = App.URL.server+"devStatusUpdate.do"
+        let urlString = App.URL.hostIpServer+"devStatusUpdate.do"
         let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": token,
@@ -146,14 +146,19 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
                                 print(response.result.value as Any)
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
-                                print("message : \(String(describing: message))")
-                                
-                                NotificationCenter.default.post(name: NSNotification.Name("dismissContainerView"), object: nil)
-                                UserDefaults.standard.set(false, forKey: "autoLoginCheck")
+                                print("deviceOff message : \(String(describing: message))")
+                                DispatchQueue.main.async {
+                                    print("call dismiss")
+                                    if UserDefaults.standard.bool(forKey: "autoLoginCheck") {
+                                        UserDefaults.standard.set(true, forKey: "idSaveCheck")
+                                        UserDefaults.standard.set(false, forKey: "autoLoginCheck")
+                                    }
+                                    NotificationCenter.default.post(name: NSNotification.Name("dismissContainerView"), object: nil)
+                                }
                                 break
                             case .failure(let error):
-                                
-                                print(error)
+//                                print("error : \(error)")
+                                self.showErrorAlert()
                             }
         }
         
@@ -163,7 +168,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
     func logout(){
         let cookie:String = UserDefaults.standard.string(forKey: "cookie")!
         let token:String = UserDefaults.standard.string(forKey: "token")!
-        let urlString = App.URL.server+"logout.do"
+        let urlString = App.URL.hostIpServer+"logout.do"
         let headers = [
             "Content-Type": "application/x-www-form-urlencoded",
             "X-Auth-Token": token,
@@ -184,7 +189,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
                                 self.deviceOff()
                                 break
                             case .failure(let error):
-                                
+                                self.showErrorAlert()
                                 print(error)
                             }
         }
@@ -382,5 +387,12 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         self.tableView.reloadData()
     }
   
+    public func showErrorAlert(){
+        let alertController = UIAlertController(title: "네트워크 에러로 잠시 후 재시도 부탁 드립니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+        }
+        alertController.addAction(okAction)
+        self.present(alertController,animated: true,completion: nil)
+    }
 }
 

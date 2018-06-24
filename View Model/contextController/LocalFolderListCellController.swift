@@ -27,15 +27,17 @@ class LocalFolderListCellController {
         cell.lblMain.text = folderArray[indexPath.row].foldrNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
         
+        if multiCheckListState == .active {
+            if folderArray[indexPathRow].checked {
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            
+            
+        }
         
         
-        cell.btnOption.isHidden = false
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionLocalFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionLocalFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionLocalFolderShowClicked(sender:)), for: .touchUpInside)
         return cell
     }
     

@@ -33,7 +33,7 @@ class SyncLocalFilleToNas {
     var fileSyncFinished = false
     var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
     var loginToken = UserDefaults.standard.string(forKey: "token")!
-    var userId = App.defaults.userId
+    var userId = UserDefaults.standard.string(forKey: "userId")!
     var uuId = Util.getUuid()
     var requestView = ""
     var currentFolderId = ""
@@ -51,7 +51,7 @@ class SyncLocalFilleToNas {
     func callSyncFomNasSend(view:String, parent:NasSendFolderSelectVC){
         requestView = view
         nasSendFolderSelectVC = parent
-     
+        
         getFileList()
     }
     
@@ -66,8 +66,10 @@ class SyncLocalFilleToNas {
         currentFolderId = getFoldrId
         requestView = view
         if(requestView == "home"){
-//            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+            //            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         }
+        self.userId = UserDefaults.standard.string(forKey: "userId")!
+        print("userId : \(userId)")
         getFileList()
     }
     
@@ -81,7 +83,7 @@ class SyncLocalFilleToNas {
         print("syncFolerInfo Called")
         folderArrayToCreate.removeAll()
         //모바일 폴더 동기화 리스트
-        Alamofire.request(App.URL.server+"mobileFoldrList.json"
+        Alamofire.request(App.URL.hostIpServer+"mobileFoldrList.json"
             , method: .post
             , parameters:["userId":userId, "devUuid":uuId as Any]
             , encoding : JSONEncoding.default
@@ -95,14 +97,14 @@ class SyncLocalFilleToNas {
                         let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                         if(json["listData"].exists()){
                             if(serverList.count < 1){
-//                                print(serverList.count)
+                                //                                print(serverList.count)
                                 for (_, folder) in self.localFolderArray.enumerated() {
                                     let parameter = folder.getParameter
-//                                    print("parameter : \(parameter)")
+                                    //                                    print("parameter : \(parameter)")
                                     self.folderArrayToCreate.append(parameter)
                                 }
                             } else {
-//                                print("jsonlistData: \(json["listData"])")
+                                //                                print("jsonlistData: \(json["listData"])")
                                 var serverFolderPathArray:[String] = []
                                 var localFolderPathArray:[String] = []
                                 for serverFolder in serverList{
@@ -117,7 +119,7 @@ class SyncLocalFilleToNas {
                                     }
                                 }
                                 for localFolder in self.localFolderArray {
-                                   let localFolderPath = "\(localFolder.foldrWholePathNm)"
+                                    let localFolderPath = "\(localFolder.foldrWholePathNm)"
                                     localFolderPathArray.append(localFolderPath)
                                 }
                                 print("localFolderPathArray : \(localFolderPathArray)")
@@ -143,11 +145,11 @@ class SyncLocalFilleToNas {
                                 } else {
                                     self.sysncFileInfo()
                                 }
-
+                                
                             }
                             
                             self.folderSyncFinished = true
-                           
+                            
                         }
                     }
                     break
@@ -166,15 +168,16 @@ class SyncLocalFilleToNas {
         fileArrayToUpdate.removeAll()
         fileArrayToDelete.removeAll()
         fileArrayToCreate.removeAll()
-        
-        GetListFromServer().getMobileFileLIst(devUuid: uuId, userId:App.defaults.userId, deviceName:"sdf"){ responseObject, error in
+        let userId = UserDefaults.standard.string(forKey: "userId")!
+        print("userId: \(userId)")
+        GetListFromServer().getMobileFileLIst(devUuid: uuId, userId:userId, deviceName:"sdf"){ responseObject, error in
             let json = JSON(responseObject!)
             if(json["listData"].exists()){
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                 print("nasfileList :\(serverList)")
                 var serverFilePathArray:[String] = []
                 for serverFile in serverList{
-//                    print("server : \(serverFile)")
+                    //                    print("server : \(serverFile)")
                     let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
                     let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
                     var foldrWholePathNm = "\(serverFilePath)/\(serverFileNm)"
@@ -225,12 +228,10 @@ class SyncLocalFilleToNas {
                         defaults.synchronize()
                         
                         if(self.requestView == "home"){
-//                            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                            //                            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                             let fileDict = ["foldrId":self.currentFolderId]
                             NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
-                        } else if(self.requestView == "NasSendFolderSelectVC"){
-                            self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
-                        } else if(self.requestView == "NasSendController"){
+                        }  else if(self.requestView == "NasSendController"){
                             self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                         }
                     }
@@ -246,23 +247,21 @@ class SyncLocalFilleToNas {
                     defaults.synchronize()
                     
                     if(self.requestView == "home"){
-//                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                        //                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                         let fileDict = ["foldrId":self.currentFolderId]
                         NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
-                    } else if (self.requestView == "NasSendFolderSelectVC"){
-                        self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                     } else if(self.requestView == "NasSendController"){
                         self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                     }
                 }
-               
+                
             }
-    
+            
         }
     }
-
+    
     func getFileList(){
-       
+        
         let defaults = UserDefaults.standard
         defaults.set(true, forKey: "syncOngoing")
         defaults.synchronize()
@@ -270,7 +269,7 @@ class SyncLocalFilleToNas {
         localFolderArray.removeAll()
         folderPathArray.removeAll()
         let today = Date()
-         let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "Mobile", foldrWholePathNm: "/Mobile", cretDate : Util.date(text: today), amdDate : Util.date(text: today))
+        let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "Mobile", foldrWholePathNm: "/Mobile", cretDate : Util.date(text: today), amdDate : Util.date(text: today))
         localFolderArray.append(folder)
         localFileArray = FileUtil().getFileLIst()
         print("localFileArray : \(localFileArray)")
@@ -278,17 +277,28 @@ class SyncLocalFilleToNas {
         for folder in folders {
             localFolderArray.append(folder)
         }
-         self.sysncFoldrInfo()
+        self.sysncFoldrInfo()
     }
     
     
     func createFolderListToServer(parameters:[[String: Any]]){
-        var request = URLRequest(url: try! (App.URL.server+"mobileFoldrMetaInfoList.do").asURL())
+        var request = URLRequest(url: try! (App.URL.hostIpServer+"mobileFoldrMetaInfoList.do").asURL())
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
         request.setValue(self.loginCookie, forHTTPHeaderField: "Cookie")
-        let values = parameters
+        //let values = parameters
+        var encodingParams:[[String:Any]] = parameters
+        for index in 0 ... parameters.count-1 {
+            let foldrNm:String = parameters[index]["foldrNm"] as? String ?? ""
+            let foldrWholePathNm:String = parameters[index]["foldrWholePathNm"] as? String ?? ""
+            
+            encodingParams[index].updateValue(foldrNm.precomposedStringWithCompatibilityMapping, forKey: "foldrNm")
+            encodingParams[index].updateValue(foldrWholePathNm.precomposedStringWithCompatibilityMapping, forKey: "foldrWholePathNm")
+            
+        }
+        let values = encodingParams
+        
         request.httpBody = try! JSONSerialization.data(withJSONObject: values)
         Alamofire.request(request).responseJSON { response in
             //                print("httpBody : \(response.request?.httpBody)")
@@ -297,7 +307,7 @@ class SyncLocalFilleToNas {
                 _ = JSON(value)
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
-//                print("createFolderListToServer : \(message)")
+                print("createFolderListToServer : \(message)")
                 self.sysncFileInfo()
                 
                 break
@@ -310,7 +320,7 @@ class SyncLocalFilleToNas {
     
     
     func deleteFolderListToServer(parameters:[[String: Any]]){
-        var request = URLRequest(url: try! (App.URL.server+"mobileFoldrMetaInfoList.do").asURL())
+        var request = URLRequest(url: try! (App.URL.hostIpServer+"mobileFoldrMetaInfoList.do").asURL())
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
@@ -324,12 +334,12 @@ class SyncLocalFilleToNas {
                 _ = JSON(value)
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
-//                   print("deleteFolderListToServer : \(message)")
+                //                   print("deleteFolderListToServer : \(message)")
                 if(self.folderArrayToCreate.count > 0){
-//                    print("createfolder : \(self.folderArrayToCreate)")
+                    //                    print("createfolder : \(self.folderArrayToCreate)")
                     self.createFolderListToServer(parameters: self.folderArrayToCreate)
                 } else {
-                        self.sysncFileInfo()
+                    self.sysncFileInfo()
                 }
                 
                 break
@@ -341,7 +351,7 @@ class SyncLocalFilleToNas {
     }
     
     func deleteFileListToServer(parameters:[[String:Any]]){
-        var request = URLRequest(url: try! (App.URL.server+"mobileFileMetaInfoList.do").asURL())
+        var request = URLRequest(url: try! (App.URL.hostIpServer+"mobileFileMetaInfoList.do").asURL())
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
@@ -352,12 +362,12 @@ class SyncLocalFilleToNas {
             switch response.result {
             case .success(let value):
                 //                                let json = JSON(value)
-//                print("deleteFileListToServer : \(response.result)")
+                //                print("deleteFileListToServer : \(response.result)")
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
                 print(" deleteFileListToServer message : \(message)")
                 if(self.fileArrayToCreate.count>0){
-//                    print("create filelist : \(self.fileArrayToCreate)")
+                    //                    print("create filelist : \(self.fileArrayToCreate)")
                     self.createFileListToServer(parameters: self.fileArrayToCreate)
                 } else {
                     let defaults = UserDefaults.standard
@@ -377,18 +387,30 @@ class SyncLocalFilleToNas {
     
     
     func createFileListToServer(parameters:[[String:Any]]){
-        var request = URLRequest(url: try! (App.URL.server+"mobileFileMetaInfoList.do").asURL())
+        var request = URLRequest(url: try! (App.URL.hostIpServer+"mobileFileMetaInfoList.do").asURL())
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
         request.setValue(self.loginCookie, forHTTPHeaderField: "Cookie")
-        let values = parameters
+        //let values = parameters
+        
+        var encodingParams:[[String:Any]] = parameters
+        for index in 0 ... parameters.count-1 {
+            let fileNm:String = parameters[index]["fileNm"] as? String ?? ""
+            let foldrWholePathNm:String = parameters[index]["foldrWholePathNm"] as? String ?? ""
+            
+            encodingParams[index].updateValue(fileNm.precomposedStringWithCompatibilityMapping, forKey: "fileNm")
+            encodingParams[index].updateValue(foldrWholePathNm.precomposedStringWithCompatibilityMapping, forKey: "foldrWholePathNm")
+            
+        }
+        let values = encodingParams
+        
         request.httpBody = try! JSONSerialization.data(withJSONObject: values)
         Alamofire.request(request).responseJSON { (response) in
             switch response.result {
             case .success(let value):
                 //                                let json = JSON(value)
-//                print("createFileServer : \(response.result)")
+                //                print("createFileServer : \(response.result)")
                 let defaults = UserDefaults.standard
                 defaults.set(false, forKey: "syncOngoing")
                 defaults.synchronize()
@@ -397,11 +419,9 @@ class SyncLocalFilleToNas {
                 let message = responseData.object(forKey: "message")
                 print(" createFileListToServer message : \(String(describing: message))")
                 if(self.requestView == "home"){
-//                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                    //                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
                     let fileDict = ["foldrId":self.currentFolderId]
                     NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
-                }  else if (self.requestView == "NasSendFolderSelectVC"){
-                    self.nasSendFolderSelectVC?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                 } else if(self.requestView == "NasSendController"){
                     self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
                 }
@@ -414,4 +434,3 @@ class SyncLocalFilleToNas {
         }
     }
 }
-

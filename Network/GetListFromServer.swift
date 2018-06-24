@@ -26,7 +26,7 @@ class GetListFromServer {
         params = ["userId":userId]
        
         //모바일 폴더 동기화 리스트
-        Alamofire.request(App.URL.server+"listOneview.json"
+        Alamofire.request(App.URL.hostIpServer+"listOneview.json"
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
@@ -49,7 +49,7 @@ class GetListFromServer {
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId,"devUuid":devUuid]
         let filnalUrl = "listFoldr.json"
-        Alamofire.request(App.URL.server+filnalUrl
+        Alamofire.request(App.URL.hostIpServer+filnalUrl
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
@@ -73,7 +73,7 @@ class GetListFromServer {
         let filnalUrl = "mobileFileList.json"
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId,"devUuid":devUuid]        
-        Alamofire.request(App.URL.server+filnalUrl
+        Alamofire.request(App.URL.hostIpServer+filnalUrl
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
@@ -97,7 +97,7 @@ class GetListFromServer {
         let filnalUrl = "mobileFoldrList.json"
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId,"devUuid":devUuid]
-        Alamofire.request(App.URL.server+filnalUrl
+        Alamofire.request(App.URL.hostIpServer+filnalUrl
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
@@ -121,7 +121,7 @@ class GetListFromServer {
         let filnalUrl = "listNasFoldr.json"
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId,"devUuid":devUuid]
-        Alamofire.request(App.URL.server+filnalUrl
+        Alamofire.request(App.URL.hostIpServer+filnalUrl
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
@@ -143,7 +143,7 @@ class GetListFromServer {
     }
     func showInsideFoldrList(params:[String:Any], deviceName:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         let filnalUrl = "listFoldr.json"
-        Alamofire.request(App.URL.server+filnalUrl
+        Alamofire.request(App.URL.hostIpServer+filnalUrl
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
@@ -167,7 +167,7 @@ class GetListFromServer {
     
     func getFileList(params:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         let filnalUrl = "listFile.json"
-        Alamofire.request(App.URL.server+filnalUrl
+        Alamofire.request(App.URL.hostIpServer+filnalUrl
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default

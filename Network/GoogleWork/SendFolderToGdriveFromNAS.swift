@@ -43,11 +43,11 @@ class SendFolderToGdriveFromNAS{
     var selectedDeviceName = ""
     var driveFileArray:[App.DriveFileStruct] = []
     var storageState = NasSendFolderSelectVC.toStorageKind.nas_gdrive_multi
-    
+    var nasSendController:NasSendController?
    
     //다운로드 from nas to google drive 시작
     
-    func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, getAccessToken: String, getNewFoldrWholePathNm: String,  getGdriveFolderIdToSave: String, getOldFoldrWholePathNm: String,  getMultiArray: [App.FolderStruct], fileId:String, parent:ContainerViewController, storageState:NasSendFolderSelectVC.toStorageKind){
+    func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, getAccessToken: String, getNewFoldrWholePathNm: String,  getGdriveFolderIdToSave: String, getOldFoldrWholePathNm: String,  getMultiArray: [App.FolderStruct], fileId:String, containerViewController:ContainerViewController, storageState:NasSendFolderSelectVC.toStorageKind, nasSendController:NasSendController){
         
         self.storageState = storageState
         selectedUserId = userId
@@ -60,7 +60,8 @@ class SendFolderToGdriveFromNAS{
         print("oldFoldrWholePathNm : \(oldFoldrWholePathNm), newFoldrWholePathNm : \(newFoldrWholePathNm), selectedDeviceName:\(selectedDeviceName)")
         
         multiCheckedfolderArray = getMultiArray
-        containerViewController = parent
+        self.containerViewController = containerViewController
+        self.nasSendController = nasSendController
         folderIdsToDownLoad.removeAll()
         folderPathToDownLoad.removeAll()
         fileArrayToDownload.removeAll()
@@ -75,30 +76,33 @@ class SendFolderToGdriveFromNAS{
         let param = ["userId": userId, "devUuid":devUuid, "foldrId":String(foldrId),"sortBy":""]
         print("param : \(param)")
         GetListFromServer().getMobileFoldrLIst(devUuid:devUuid, userId:userId, deviceName: deviceName) { responseObject, error in
-            let json = JSON(responseObject!)
-            if(json["listData"].exists()){
-                let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-                if (serverList.count > 0){
-                    for list in serverList {
-                        
-                        let folderPath = list["foldrWholePathNm"] as? String ?? "nil"
-                        let foldrId = list["foldrId"] as? Int ?? 0
-                        if(folderPath.contains(self.oldFoldrWholePathNm)){
-                            print("list : \(list)")
-                            self.folderIdsToDownLoad.append(foldrId)
-                            self.folderPathToDownLoad.append(folderPath)
+            if let responseObj = responseObject {
+                let json = JSON(responseObj)
+                if(json["listData"].exists()){
+                    let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
+                    if (serverList.count > 0){
+                        for list in serverList {
+                            
+                            let folderPath = list["foldrWholePathNm"] as? String ?? "nil"
+                            let foldrId = list["foldrId"] as? Int ?? 0
+                            if(folderPath.contains(self.oldFoldrWholePathNm)){
+                                print("list : \(list)")
+                                self.folderIdsToDownLoad.append(foldrId)
+                                self.folderPathToDownLoad.append(folderPath)
+                            }
                         }
                     }
-                }                
-                self.printFolderPath()
+                    self.printFolderPath()
+                }
             }
+            
         }
     }
   
     
     func printFolderPath(){
-        print("folderPathToDownLoad: \(folderPathToDownLoad)")
-        print("folderIdsToDownLoad: \(folderIdsToDownLoad)")
+//        print("folderPathToDownLoad: \(folderPathToDownLoad)")
+//        print("folderIdsToDownLoad: \(folderIdsToDownLoad)")
         upFoldersToDelete = ""
         let saveRootFoldrArray = folderPathToDownLoad[0].components(separatedBy: "/")
         for (index, name) in saveRootFoldrArray.enumerated() {
@@ -106,11 +110,11 @@ class SendFolderToGdriveFromNAS{
                 upFoldersToDelete += "/\(saveRootFoldrArray[index])"
             }
         }
-        print("upFoldersToDelete : \(upFoldersToDelete)")
+//        print("upFoldersToDelete : \(upFoldersToDelete)")
         for name in folderPathToDownLoad {
             var fullName = "tmp\(name)"
             fullName = fullName.replacingOccurrences(of: upFoldersToDelete, with: "")
-            print("fullName : \(fullName)")
+//            print("fullName : \(fullName)")
             let createdPath:URL = self.createLocalFolder(folderName: fullName)!
         }
         
@@ -175,7 +179,7 @@ class SendFolderToGdriveFromNAS{
     }
     
     func downloadFile(){
-        print("fileArrayToDownload : \(fileArrayToDownload)")
+//        print("fileArrayToDownload : \(fileArrayToDownload)")
         for file in fileArrayToDownload{
             print("download file : \(file)")
         }
@@ -198,39 +202,41 @@ class SendFolderToGdriveFromNAS{
     
     
     func callDownloadFromNasFolder(name:String, path:String, fileId:String, index:Int){
-        downloadFromNasFolder(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+        downloadFromNasFolder(userId:selectedUserId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
                 if(success == "success"){
+                    self.fileArrayToDownload.remove(at: index)
+                    self.downloadFile()
                 }
             }
-            self.fileArrayToDownload.remove(at: index)
-            self.downloadFile()
+            
         }
     }
     
     func downloadFromNasFolder(userId:String, fileNm:String, path:String, fileId:String, completionHandler: @escaping (String?, NSError?) -> ()){
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
+//        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
+        var stringUrl = "\(App.URL.nasServer)\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let user = userId
+        let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
             "Authorization": "Basic \(base64Credentials)"
         ]
         print("stringUrl : \(stringUrl)")
-        var saveFileNm = ""
-        saveFileNm = fileNm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+        
+        print("stringUrl : \(stringUrl)")
         let fullPath = path
         
         let editPath = fullPath.replacingOccurrences(of: upFoldersToDelete, with: "")
        
-        print("save path : tmp\(editPath)/\(saveFileNm)")
+        print("save path : tmp\(editPath)/\(fileNm)")
         let downloadUrl:URL = URL(string: stringUrl)!
         let destination: DownloadRequest.DownloadFileDestination = { _, _ in
             var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            documentsURL.appendPathComponent("tmp\(editPath)/\(saveFileNm)")
+            documentsURL.appendPathComponent("tmp\(editPath)/\(fileNm)")
             return (documentsURL, [.removePreviousFile])
         }
         
@@ -287,11 +293,24 @@ class SendFolderToGdriveFromNAS{
             addParents = ",'parents' : [ '\(parentFileId)' ]"
         }
         do {
+            let attribute = try FileManager.default.attributesOfItem(atPath: fileURL.path)
+            if let size = attribute[FileAttributeKey.size] as? NSNumber {
+                fileSize =  size.doubleValue / 1000000.0
+            }
+        } catch {
+            print("Error: \(error)")
+        }
+        print("FILE Yes AVAILABLE")
+        print("stream upload, fileSize : \(fileSize)")
+        let edited = name.replacingOccurrences(of: "'", with: "\\'")
+        let newName = edited.precomposedStringWithCanonicalMapping
+        let stream:InputStream = InputStream(url: fileURL)!
+         do {
             let data = try Data(contentsOf: fileURL as URL)
             Alamofire.upload(multipartFormData: { multipartFormData in
-                multipartFormData.append("{'name':'\(name)'\(addParents) }".data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName :"foo_bar_baz", mimeType: "application/json; charset=UTF-8")
+                multipartFormData.append("{'name':'\(newName)'\(addParents) }".data(using: String.Encoding.utf8, allowLossyConversion: false)!, withName :"foo_bar_baz", mimeType: "application/json; charset=UTF-8")
                 
-                multipartFormData.append(data, withName: "foo_bar_baz", fileName: name, mimeType: googleMimeType)
+                multipartFormData.append(stream, withLength: UInt64(fileSize), name: "foo_bar_baz", fileName: newName, mimeType: googleMimeType)
                 
             }, usingThreshold: UInt64.init(), to: stringUrl, method: .post, headers: headers,
                encodingCompletion: { encodingResult in
@@ -405,7 +424,7 @@ class SendFolderToGdriveFromNAS{
                 let foldername = folderPathArray[folderPathArray.count - 2]
                 print("foldername : \(foldername)")
                 var parentFolder = ""
-                for (index, path) in folderPathArray.enumerated() {
+                for (index, _) in folderPathArray.enumerated() {
                     if( index < folderPathArray.count - 2){
                         parentFolder += "\(folderPathArray[index])/"
                     }
@@ -428,7 +447,7 @@ class SendFolderToGdriveFromNAS{
     func callCreateGoogleDriveFolder(name:String, index:Int, foldersToCreate:[String], parentFolderId:String){
         createFolderInGdrive(name: name, fileId: parentFolderId) { responseObject, error in
             //            print("responseObject : \(responseObject)")
-            let json = JSON(responseObject as Any)
+//            let json = JSON(responseObject as Any)
             if let id = responseObject?.object(forKey: "id") as? String {
                 self.forSaveFolderId = id
                 print("created file Id : \(id)")
@@ -460,28 +479,6 @@ class SendFolderToGdriveFromNAS{
         print("files to upload count : \(files.count), files : \(files)")
         self.uploadFile(files: files)
 
-//        GetListFromServer().getMobileFileLIst(devUuid: Util.getUuid(), userId:App.defaults.userId, deviceName:"sdf"){ responseObject, error in
-//            let json = JSON(responseObject!)
-//            if(json["listData"].exists()){
-//                let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-//                for serverFile in serverList{
-//                    let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
-//                    let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
-//                    let serverFileAmdDate = serverFile["amdDate"] as? String ?? "nil"
-//                    print("file path to update : \(serverFilePath), oldFoldrWholePathNm : \(self.oldFoldrWholePathNm), fileName : \(serverFileNm), amdDate : \(serverFileAmdDate), ")
-//                    if  serverFilePath.contains(self.oldFoldrWholePathNm) {
-//
-//                        fileToUpload.append(serverFilePath)
-//                        let uploadFile:App.Files = App.Files(data: serverFile)
-//                        files.append(uploadFile)
-//                    }
-//
-//                }
-//                print("files to upload count : \(files.count)")
-//                self.uploadFile(files: files)
-//            }
-//
-//        }
     }
     
     func uploadFile(files:[App.LocalFiles]){
@@ -517,17 +514,24 @@ class SendFolderToGdriveFromNAS{
                 return
             }
         }
-        print("upload Files finish")
+        print("upload Files finish, storageState : \(storageState)")
         if (storageState == .nas_gdrive_multi) {
+            let foldrId:String = "\(self.multiCheckedfolderArray[self.multiCheckedfolderArray.count - 1].foldrId)"
+            let fileDict = ["fileId":foldrId]
+            NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
             let lastIndex = multiCheckedfolderArray.count - 1
             multiCheckedfolderArray.remove(at: lastIndex)
-//            nasSendFolderSelectVC?.multiCheckedfolderArray = multiCheckedfolderArray
-//            nasSendFolderSelectVC?.startMultiNasToGdrive()
+            nasSendController?.multiCheckedfolderArray = multiCheckedfolderArray
+            nasSendController?.startMultiNasToGdrive()
         } else {
             if(multiCheckedfolderArray.count > 0){
+                let foldrId:String = "\(self.multiCheckedfolderArray[self.multiCheckedfolderArray.count - 1].foldrId)"
+                let fileDict = ["fileId":foldrId]
+                NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
                 
                 let lastIndex = multiCheckedfolderArray.count - 1
                 multiCheckedfolderArray.remove(at: lastIndex)
+                
 //                nasSendFolderSelectVC?.multiCheckedfolderArray = multiCheckedfolderArray
 //                nasSendFolderSelectVC?.startMultiLocalToGdrive()
                 
@@ -567,24 +571,31 @@ class SendFolderToGdriveFromNAS{
                     print(error.localizedDescription)
                 }
             }
-        } 
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
+        }
+        var stringUrl = "\(App.URL.nasServer)\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(path)/\(fileNm)"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
-        let user = userId
+        let user:String = App.defaults.userId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+        let credentialData = "\(App.nasFoldrFrontNm)\(user):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString()
         let headers = [
             "Authorization": "Basic \(base64Credentials)"
         ]
-        var saveFileNm = ""
-        saveFileNm = fileNm.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
+//        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(path)/\(fileNm)"
+//        stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+//        let user = userId
+//        let password:String = UserDefaults.standard.string(forKey: "userPassword")!
+//        let credentialData = "gs-\(user):\(password)".data(using: String.Encoding.utf8)!
+//        let base64Credentials = credentialData.base64EncodedString()
+//        let headers = [
+//            "Authorization": "Basic \(base64Credentials)"
+//        ]
         
         print("stringUrl : \(stringUrl)")
         let downloadUrl:URL = URL(string: stringUrl)!
         let destination: DownloadRequest.DownloadFileDestination = { _, _ in
             var documentsURL = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask)[0]
-            documentsURL.appendPathComponent("tmp/\(saveFileNm)")
+            documentsURL.appendPathComponent("tmp/\(fileNm)")
             return (documentsURL, [.removePreviousFile])
         }
         

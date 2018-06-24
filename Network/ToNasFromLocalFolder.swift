@@ -18,7 +18,8 @@ class ToNasFromLocalFolder {
     var newFolderNm = ""
     var newPath = ""
     var style = ""
-    var nasSendFolderSelectVC:NasSendFolderSelectVC?
+    var containerViewController:ContainerViewController?
+    var nasSendController:NasSendController?
     var multiCheckedfolderArray:[App.FolderStruct] = []
     var loginCookie = UserDefaults.standard.string(forKey: "cookie") ?? "nil"
     var loginToken = UserDefaults.standard.string(forKey: "token") ?? "nil"
@@ -27,8 +28,9 @@ class ToNasFromLocalFolder {
         "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
         "Cookie": UserDefaults.standard.string(forKey: "cookie")!
     ]
-    func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.FolderStruct], parent:NasSendFolderSelectVC){
-        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
+    var toOsCd = "G"
+    func readyCreatFolders(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.FolderStruct], parent:ContainerViewController, toOsCd:String){
+        //        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
         let folders:[App.Folders] = FileUtil().getFolderList()
         var foldersToCreate:[String] = []
         toUserId = getToUserId
@@ -37,12 +39,42 @@ class ToNasFromLocalFolder {
         let oldFoldrWholePathNmArray = oldFoldrWholePathNm.components(separatedBy: "/")
         newFolderNm = oldFoldrWholePathNmArray[oldFoldrWholePathNmArray.count - 1]
         multiCheckedfolderArray = getMultiArray
-        nasSendFolderSelectVC = parent
+        containerViewController = parent
+        self.toOsCd = toOsCd
         for folder in folders{
             if folder.foldrWholePathNm == oldFoldrWholePathNm || folder.foldrWholePathNm.contains("\(oldFoldrWholePathNm)/") {
                 print(folder.foldrWholePathNm)
                 var path = folder.foldrWholePathNm
                 print("local path : \(path)")
+                print("newFoldrWholePathNm : \(newFoldrWholePathNm), newFolderNm : \(newFolderNm)")
+                path = path.replacingOccurrences(of: oldFoldrWholePathNm, with: "\(newFoldrWholePathNm)/\(newFolderNm)")
+                let newPath = path.precomposedStringWithCompatibilityMapping
+                print("path to update : \(newPath)")
+                foldersToCreate.append(newPath)
+            }
+        }
+        print("newFolderNm : \(newFolderNm)")
+        createFolders(foldersToCreate: foldersToCreate)
+    }
+    
+    func readyCreatFoldersFromNasSendController(getToUserId:String, getNewFoldrWholePathNm:String, getOldFoldrWholePathNm:String, getMultiArray : [App.FolderStruct], nasSendController:NasSendController, toOsCd:String){
+        //        NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
+        let folders:[App.Folders] = FileUtil().getFolderList()
+        var foldersToCreate:[String] = []
+        toUserId = getToUserId
+        newFoldrWholePathNm = getNewFoldrWholePathNm
+        oldFoldrWholePathNm = getOldFoldrWholePathNm
+        let oldFoldrWholePathNmArray = oldFoldrWholePathNm.components(separatedBy: "/")
+        newFolderNm = oldFoldrWholePathNmArray[oldFoldrWholePathNmArray.count - 1]
+        multiCheckedfolderArray = getMultiArray
+        self.nasSendController = nasSendController
+        self.toOsCd = toOsCd
+        for folder in folders{
+            if folder.foldrWholePathNm == oldFoldrWholePathNm || folder.foldrWholePathNm.contains("\(oldFoldrWholePathNm)/") {
+                print(folder.foldrWholePathNm)
+                var path = folder.foldrWholePathNm
+                print("local path : \(path)")
+                print("newFoldrWholePathNm : \(newFoldrWholePathNm), newFolderNm : \(newFolderNm)")
                 path = path.replacingOccurrences(of: oldFoldrWholePathNm, with: "\(newFoldrWholePathNm)/\(newFolderNm)")
                 print("path to update : \(path)")
                 foldersToCreate.append(path)
@@ -51,6 +83,8 @@ class ToNasFromLocalFolder {
         print("newFolderNm : \(newFolderNm)")
         createFolders(foldersToCreate: foldersToCreate)
     }
+    
+    
     
     func createFolders(foldersToCreate:[String]) {
         if(foldersToCreate.count > 0){
@@ -62,23 +96,30 @@ class ToNasFromLocalFolder {
             }
         }
         print("createFile")
+
         initForUploadFiles()
     }
     
     func callCreateNasFolder(param:[String:Any], index:Int, foldersToCreate:[String]){
         
-        ContextMenuWork().createNasFolder(parameters: param){ responseObject, error in
+        ContextMenuWork().createNasFolder(parameters: param, toOsCd:toOsCd){ responseObject, error in
             let json = JSON(responseObject as Any)
-            let message = responseObject?.object(forKey: "message")
+            let message = json["message"].string
             print("\(String(describing: message)), \(String(describing: json["statusCode"].int))")
             if let statusCode = json["statusCode"].int, statusCode == 100 {
-                
+                var newFolders = foldersToCreate
+                newFolders.remove(at: index)
+                self.createFolders(foldersToCreate: newFolders)
             } else {
-                print(error?.localizedDescription as Any)
+                let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                    UIAlertAction in
+                    //Do you Success button Stuff here
+                    self.containerViewController?.finishLoading()
+                }
+                alertController.addAction(yesAction)
+                self.containerViewController?.present(alertController, animated: true)
             }
-            var newFolders = foldersToCreate
-            newFolders.remove(at: index)
-            self.createFolders(foldersToCreate: newFolders)
         }
     }
     
@@ -132,46 +173,63 @@ class ToNasFromLocalFolder {
                 
                 
                 return
+               
             }
         }
         print("upload Files finish")
         if(multiCheckedfolderArray.count > 0){
+            print("call startMultiLocalToNas")
+            let foldrId:String = "\(self.multiCheckedfolderArray[self.multiCheckedfolderArray.count - 1].foldrId)"
+            let fileDict = ["fileId":foldrId]
+            NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
             let lastIndex = multiCheckedfolderArray.count - 1
             multiCheckedfolderArray.remove(at: lastIndex)
-            nasSendFolderSelectVC?.multiCheckedfolderArray = multiCheckedfolderArray
-            nasSendFolderSelectVC?.startMultiLocalToNas()
+            
+            nasSendController?.multiCheckedfolderArray = multiCheckedfolderArray
+            nasSendController?.startMultiSendToNas()
             
         } else {
-            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCToggleIndicator"), object: self, userInfo: nil)
-//            NotificationCenter.default.post(name: Notification.Name("NasSendFolderSelectVCAlert"), object: self, userInfo: nil)
-            nasSendFolderSelectVC?.NasSendFolderSelectVCAlert(title: "NAS로 내보내기 성공")
+            DispatchQueue.main.async {
+                let alertController = UIAlertController(title: nil, message: "NAS로 내보내기 성공", preferredStyle: .alert)
+                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                    UIAlertAction in
+                    //Do you Success button Stuff here
+                    self.containerViewController?.finishLoading()
+                }
+                alertController.addAction(yesAction)
+                self.containerViewController?.present(alertController, animated: true)
+                
+            }
         }
         
         
     }
     
     func sendToNasFromLocal(url:URL, name:String, toOsCd:String, originalFileId:Int, files:[App.Files], newFoldrWholePathNm:String){
-        
+        print("toOsCd : \(toOsCd)")
         let userId = toUserId
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        
-        let credentialData = "gs-\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
+        let loginUserId = UserDefaults.standard.string(forKey: "userId")
+        print("loginUserId : \(String(describing: loginUserId!))")
+        let credentialData = "\(App.nasFoldrFrontNm)\(String(describing: loginUserId!)):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
+        let decodedData = Data(base64Encoded: base64Credentials)!
+        let decodedString = String(data: decodedData, encoding: .utf8)!
+        print("decodedString : \(decodedString)")
         var headers = [
             "Authorization": "Basic \(base64Credentials)",
             "x-isi-ifs-target-type":"object"
-            
         ]
         if(toOsCd != "G"){
             headers = [
                 "Authorization": "Basic \(base64Credentials)",
                 "x-isi-ifs-target-type":"object",
                 "x-isi-ifs-access-control":"770"
-                
             ]
         }
         print("headers : \(headers)")
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/gs-\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
+        
+        var stringUrl = "\(App.URL.nasServer)\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
         stringUrl =  stringUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
         
@@ -180,32 +238,53 @@ class ToNasFromLocalFolder {
         print("fileExtension : \(fileExtension)")
         print("file path : \(filePath)")
         
-        Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
-            .uploadProgress { progress in // main queue by default
-//                print("Upload Progress: \(progress.fractionCompleted)")
-                
+
+        var fileSize = 0.0
+        do {
+            let attribute = try FileManager.default.attributesOfItem(atPath: filePath)
+            if let size = attribute[FileAttributeKey.size] as? NSNumber {
+                fileSize =  size.doubleValue / 1000000.0
             }
-            .downloadProgress { progress in // main queue by default
-//                print("Download Progress: \(progress.fractionCompleted)")
-            }
-            .responseString { response in
-                print("Success: \(response.result.isSuccess)")
-                print("Response String: \(response)")
-                if let alamoError = response.result.error {
-                    let alamoCode = alamoError._code
-                    let statusCode = (response.response?.statusCode) ?? 0
-                } else { //no errors
-                    let statusCode = (response.response?.statusCode)! //example : 200
-                    self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, originalFileId:originalFileId, files:files, newFoldrWholePathNm:newFoldrWholePathNm)
-                    
-                }
+        } catch {
+            print("Error: \(error)")
         }
+        print("FILE Yes AVAILABLE")
+        print("stream upload, fileSize : \(fileSize)")
+        
+        let stream:InputStream = InputStream(url: url)!
+        let newName = name.precomposedStringWithCompatibilityMapping
+        Alamofire.upload(multipartFormData: { multipartFormData in
+            //                    multipartFormData.append(url, withName: encodedSavedFileName)
+            multipartFormData.append(stream, withLength: UInt64(fileSize), name: "file", fileName: newName, mimeType: fileExtension)
+            
+        }, usingThreshold: UInt64.init(), to: stringUrl, method: .put, headers: headers,
+           encodingCompletion: { encodingResult in
+            switch encodingResult {
+            case .success(let upload, _, _):
+                upload.responseJSON { response in
+                    let statusCode = (response.response?.statusCode)! //example : 200
+                    print("statusCode : \(statusCode), response : \(response)")
+                    if(statusCode == 200) {
+                        self.notifyNasUploadFinish(name: newName, toOsCd:toOsCd, originalFileId:originalFileId, files:files, newFoldrWholePathNm:newFoldrWholePathNm)
+                    }
+                }
+                upload.uploadProgress { progress in
+                    
+                    print(progress.fractionCompleted)
+                }
+                break
+            case .failure(let encodingError):
+                print(encodingError.localizedDescription)
+                
+                break
+            }
+        })
     }
     
     
     
     func notifyNasUploadFinish(name:String, toOsCd:String, originalFileId:Int, files:[App.Files], newFoldrWholePathNm:String){
-        let urlString = App.URL.server+"nasUpldCmplt.do"
+        let urlString = App.URL.hostIpServer+"nasUpldCmplt.do"
         let paramas:[String : Any] = ["userId":toUserId,"fileId":originalFileId,"toFoldr":newFoldrWholePathNm,"toFileNm":name,"toOsCd":toOsCd]
         print("notifyNasUploadFinish param : \(paramas)")
         Alamofire.request(urlString,
@@ -215,17 +294,36 @@ class ToNasFromLocalFolder {
                           headers: jsonHeader).responseJSON { response in
                             switch response.result {
                             case .success(let JSON):
-                                print(response.result.value)
                                 let responseData = JSON as! NSDictionary
-                                let message = responseData.object(forKey: "message")
+                                let message = responseData.object(forKey: "message") as? String ?? ""
                                 print("message : \(message)")
-                                var newFiles = files
-                                newFiles.remove(at: newFiles.count - 1)
-                                self.uploadFile(files: newFiles)
-                                break
-                            case .failure(let error):
+                                let statusCode = responseData.object(forKey: "statusCode") as? Int ?? 0
+                                if statusCode == 100 {
+                                    
+                                    var newFiles = files
+                                    newFiles.remove(at: newFiles.count - 1)
+                                    self.uploadFile(files: newFiles)
+                                    break
+                                } else {
+                                    let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
+                                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                                        UIAlertAction in
+                                        //Do you Success button Stuff here
+                                        self.containerViewController?.finishLoading()
+                                    }
+                                    alertController.addAction(yesAction)
+                                    self.containerViewController?.present(alertController, animated: true)
+                                }
                                 
-                                print(error.localizedDescription)
+                            case .failure(let error):
+                                let alertController = UIAlertController(title: nil, message: "요청처리에 실패하셨습니다.", preferredStyle: .alert)
+                                let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                                    UIAlertAction in
+                                    //Do you Success button Stuff here
+                                    self.containerViewController?.finishLoading()
+                                }
+                                alertController.addAction(yesAction)
+                                self.containerViewController?.present(alertController, animated: true)
                             }
         }
     }

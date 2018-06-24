@@ -16,19 +16,13 @@ class RemoteFolderListCellController {
     func getCell(indexPathRow:Int, folderArray:[App.FolderStruct], multiCheckListState:HomeDeviceCollectionVC.multiCheckListEnum, collectionView:UICollectionView, parentView:HomeDeviceCollectionVC) -> RemoteFolderListCell {
         let indexPath = IndexPath(row: indexPathRow, section: 0)
         let cell = collectionView.dequeueReusableCell(withReuseIdentifier: "RemoteFolderListCell", for: indexPath) as! RemoteFolderListCell
-        
+        cell.btnMultiCheck.isHidden = true
         if (multiCheckListState == .active){
-            cell.btnMultiCheck.isHidden = false
-            cell.btnMultiCheck.tag = indexPath.row
-            cell.btnMultiCheck.addTarget(self, action: #selector(HomeDeviceCollectionVC.btnMultiCheckClicked(sender:)), for: .touchUpInside)
-            cell.btnOption.isHidden = true
+             cell.btnOption.isHidden = true
             
         } else {
             cell.btnOption.isHidden = false
-            cell.btnMultiCheck.isHidden = true
-        }
-        if(folderArray[indexPath.row].foldrNm == ".."){
-            cell.btnOption.isHidden = true
+            
         }
         cell.btnOption.isHidden = true
         cell.ivSub.image = UIImage(named: "ico_folder")

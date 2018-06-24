@@ -171,7 +171,7 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
     
     func updateDev(devNm:String, uuid:String) {
         
-        let url = App.URL.server + "updDevNm.do"
+        let url = App.URL.hostIpServer + "updDevNm.do"
         let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": self.loginToken,
@@ -213,7 +213,7 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
     
     func deleteDev(uuid:String) {
         
-        let url = App.URL.server + "devDataInita.do"
+        let url = App.URL.hostIpServer + "devDataInita.do"
         let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": self.loginToken,
@@ -250,7 +250,10 @@ class DeviceContainerVCB: UIViewController, UITableViewDataSource, UITableViewDe
                             self.present(alertController, animated: true)
                         }
                     } else {
-                        
+                        let alertController = UIAlertController(title: nil, message: json["message"].string, preferredStyle: .alert)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        alertController.addAction(yesAction)
+                        self.present(alertController, animated: true)
                     }
                 case .failure(let error):
                     print(error)

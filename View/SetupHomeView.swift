@@ -58,16 +58,19 @@ class SetupHomeView {
         sortButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         sortButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         sortButton.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
-        sortButton.leadingAnchor.constraint(equalTo: View.leadingAnchor, constant: 10.0).isActive = true
+//        sortButton.leadingAnchor.constraint(equalTo: View.leadingAnchor, constant: 10.0).isActive = true
+        sortButton.leadingAnchor.constraint(equalTo: View.leadingAnchor, constant: 15.0).isActive = true
         
         
         
         sBar.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         sBar.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
         sBar.heightAnchor.constraint(equalTo: View.heightAnchor).isActive = true
-        sBar.leadingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: 20.0).isActive = true
+        sBar.leadingAnchor.constraint(equalTo: sortButton.trailingAnchor, constant: 15.0).isActive = true
         sBar.trailingAnchor.constraint(equalTo: View.trailingAnchor).isActive = true
         sBar.placeholder = "Search in \(sBarTitle)"
+        
+        
         
         
         
@@ -85,6 +88,7 @@ class SetupHomeView {
         View.addSubview(navBarTitle)
         View.addSubview(listButton)
         View.addSubview(downArrowButton)
+        
         
         hamburgerButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         hamburgerButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
@@ -108,11 +112,12 @@ class SetupHomeView {
         downArrowButton.topAnchor.constraint(equalTo: View.topAnchor).isActive = true
         downArrowButton.leadingAnchor.constraint(equalTo: View.trailingAnchor).isActive = true
         
+     
     }
     
     
     
-    class func setupLatelySearchView(searchView:UIView, multiButton:UIButton){
+    class func setupLatelySearchView(searchView:UIView, multiButton:UIButton, selectAllButton:UIButton, multiButtonChecked:Bool){
        
         
         for view in searchView.subviews {
@@ -122,22 +127,36 @@ class SetupHomeView {
         let label = UILabel()
         searchView.addSubview(label)
         searchView.addSubview(multiButton)
+        searchView.addSubview(selectAllButton)
+        
         label.textAlignment = .left
-        label.text = ">최근 업데이트 파일"
+        label.text = "> 최근 업데이트 파일"
         label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
         label.translatesAutoresizingMaskIntoConstraints = false
         label.widthAnchor.constraint(equalToConstant: 200.0).isActive = true
         label.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         label.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         label.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
-        
+        label.padding = UIEdgeInsets(top: 0, left: 16, bottom: 0, right: 0)
         
         multiButton.isHidden = false
         multiButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         multiButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         multiButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         multiButton.trailingAnchor.constraint(equalTo: searchView.trailingAnchor, constant: -10.0).isActive = true
-      
+        
+        selectAllButton.translatesAutoresizingMaskIntoConstraints = false
+        selectAllButton.widthAnchor.constraint(equalToConstant: 80.0).isActive = true
+        selectAllButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        selectAllButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+        selectAllButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: -5.0).isActive = true
+        
+        if(multiButtonChecked){
+            
+            selectAllButton.isHidden = false
+        } else {
+            selectAllButton.isHidden = true
+        }
         
     }
 }

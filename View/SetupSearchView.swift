@@ -9,10 +9,12 @@
 import UIKit
 
 class SetupSearchView {
-    class func setupSearchNavbar(View:UIView,navBarTitle:UIButton, backBUtton:UIButton, title:String){
+    class func setupSearchNavbar(View:UIView,navBarTitle:UIButton, backBUtton:UIButton, title:String, listButton:UIButton){
+        
         
         View.addSubview(backBUtton)
         View.addSubview(navBarTitle)
+        View.addSubview(listButton)
         
         backBUtton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         backBUtton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
@@ -25,12 +27,23 @@ class SetupSearchView {
         navBarTitle.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         navBarTitle.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
         navBarTitle.centerXAnchor.constraint(equalTo: View.centerXAnchor).isActive = true
+        
+        listButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
+        listButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        listButton.centerYAnchor.constraint(equalTo: View.centerYAnchor).isActive = true
+        listButton.trailingAnchor.constraint(equalTo: View.trailingAnchor, constant: -20.0).isActive = true
+        
     }
     
     class func showFileCountLabel(count:Int, view:UIView, searchCountLabel:UILabel,searchCategoryView:UIStackView, multiButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton){
+//        multiButton.removeFromSuperview()
         
+        print("showFileCountLabel called")
+       
         view.addSubview(searchCountLabel)
         view.addSubview(multiButton)
+        view.addSubview(selectAllButton)
+        searchCountLabel.padding = UIEdgeInsets(top: 0, left: 10, bottom: 0, right: 0)
         searchCountLabel.widthAnchor.constraint(equalTo: view.widthAnchor).isActive = true
         searchCountLabel.centerXAnchor.constraint(equalTo: view.centerXAnchor).isActive = true
         searchCountLabel.heightAnchor.constraint(equalToConstant: 60.0).isActive = true
@@ -50,23 +63,31 @@ class SetupSearchView {
         attributedString1.append(attributedString3)
         
         searchCountLabel.attributedText = attributedString1
+        view.bringSubview(toFront: searchCountLabel)
         
         multiButton.widthAnchor.constraint(equalToConstant: 30.0).isActive = true
         multiButton.heightAnchor.constraint(equalToConstant: 30.0).isActive = true
         multiButton.centerYAnchor.constraint(equalTo: searchCountLabel.centerYAnchor).isActive = true
         multiButton.trailingAnchor.constraint(equalTo: view.trailingAnchor, constant: -15).isActive = true
         
-        if(multiButtonChecked){
-            view.addSubview(selectAllButton)
-            selectAllButton.widthAnchor.constraint(equalToConstant: 80.0).isActive = true
-            selectAllButton.heightAnchor.constraint(equalToConstant: 30.0).isActive = true
-            selectAllButton.centerYAnchor.constraint(equalTo: searchCountLabel.centerYAnchor).isActive = true
-            selectAllButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: 20).isActive = true
+        if(count > 0) {
+            multiButton.isHidden = false
         } else {
-            if(view.subviews.contains(selectAllButton)){
-                selectAllButton.removeFromSuperview()
-            }
+            multiButton.isHidden = true
         }
+       
+        selectAllButton.widthAnchor.constraint(equalToConstant: 80.0).isActive = true
+        selectAllButton.heightAnchor.constraint(equalToConstant: 30.0).isActive = true
+        selectAllButton.centerYAnchor.constraint(equalTo: searchCountLabel.centerYAnchor).isActive = true
+        selectAllButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: -20).isActive = true
+        
+        if(multiButtonChecked){
+            selectAllButton.isHidden = false
+            
+        } else {
+            selectAllButton.isHidden = true
+        }
+        
         
     }
     

@@ -23,6 +23,9 @@ class GDriveFileListCell: UICollectionViewCell {
         label.font = UIFont.boldSystemFont(ofSize: 14)
         label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 1
+        label.lineBreakMode = NSLineBreakMode.byTruncatingTail
+        label.sizeToFit()
         return label
     }()
     let lblSub:UILabel = {
@@ -40,6 +43,8 @@ class GDriveFileListCell: UICollectionViewCell {
         label.font = UIFont.systemFont(ofSize: 11)
         label.textColor = HexStringToUIColor().getUIColor(hex: "919191")
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 1
+        label.sizeToFit()
         return label
     }()
     
@@ -151,20 +156,23 @@ class GDriveFileListCell: UICollectionViewCell {
         ivSub.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         
-        
+        let width = App.Size.screenWidth / 3
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
+        lblMain.widthAnchor.constraint(equalToConstant: App.Size.screenWidth/2+30).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -50).isActive = true
+        //lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -55).isActive = true
         
         
-        lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
+        //lblSub.topAnchor.constraint(lessThanOrEqualTo: topAnchor, constant: 50).isActive = true
+        lblSub.topAnchor.constraintEqualToSystemSpacingBelow(ivSub.topAnchor, multiplier: 2).isActive = true
         lblSub.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
         lblSub.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         
-        let width = App.Size.screenWidth / 2
+        
         lblDevice.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
-        lblDevice.leadingAnchor.constraint(equalTo: lblMain.leadingAnchor, constant: width).isActive = true
-        lblDevice.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
+        lblDevice.leadingAnchor.constraint(equalTo: lblSub.leadingAnchor, constant: width).isActive = true
+        lblDevice.widthAnchor.constraint(equalToConstant: width-30).isActive = true
+        //lblDevice.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
         
         btnOption.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         btnOption.widthAnchor.constraint(equalToConstant: 36).isActive = true
@@ -191,13 +199,17 @@ class GDriveFileListCell: UICollectionViewCell {
     func multiCheck(){
         
     }
+    func resetMultiCheck(){
+        btnMultiChecked = false
+        btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+    }
     
     
     @objc func setupLocalView(){
         for view in optionView.subviews {
             view.removeFromSuperview()
         }
-        
+        optionView.layer.addBorder([UIRectEdge.bottom], color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder), width: 1.0)
         optionView.addSubview(btnOptionRed)
         optionView.addSubview(btnShow)
         optionView.addSubview(btnDwnld)

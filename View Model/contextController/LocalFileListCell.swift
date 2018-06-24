@@ -26,6 +26,9 @@ class LocalFileListCell: UICollectionViewCell {
         label.font = UIFont.boldSystemFont(ofSize: 14)
         label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 1
+        label.lineBreakMode = NSLineBreakMode.byTruncatingTail
+        label.sizeToFit()
         return label
     }()
     let lblSub:UILabel = {
@@ -39,10 +42,12 @@ class LocalFileListCell: UICollectionViewCell {
     
     let lblDevice:UILabel = {
         let label = UILabel()
-        label.textAlignment = .left
+        label.textAlignment = .right
         label.font = UIFont.systemFont(ofSize: 11)
         label.textColor = HexStringToUIColor().getUIColor(hex: "919191")
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 1
+        label.sizeToFit()
         return label
     }()
     
@@ -162,20 +167,24 @@ class LocalFileListCell: UICollectionViewCell {
         ivSub.heightAnchor.constraint(equalToConstant: 30).isActive = true
         
         
-        
+        let width = App.Size.screenWidth / 3
+        let mainWidth = App.Size.screenWidth / 10 * 7
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
+        lblMain.widthAnchor.constraint(equalToConstant: mainWidth).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -50).isActive = true
+        //lblMain.trailingAnchor.constraint(equalTo: trailingAnchor, constant: -55).isActive = true
         
         
-        lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
+        //lblSub.topAnchor.constraint(lessThanOrEqualTo: topAnchor, constant: 50).isActive = true
+        lblSub.topAnchor.constraintEqualToSystemSpacingBelow(ivSub.topAnchor, multiplier: 2).isActive = true
         lblSub.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 20).isActive = true
-        lblSub.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 50).isActive = true
+        lblSub.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true
         
-        let width = App.Size.screenWidth / 2
+        
         lblDevice.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
-        lblDevice.leadingAnchor.constraint(equalTo: lblMain.leadingAnchor, constant: width).isActive = true
-        lblDevice.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
+        lblDevice.leadingAnchor.constraint(equalTo: lblSub.leadingAnchor, constant: width).isActive = true
+        lblDevice.widthAnchor.constraint(equalToConstant: width-30).isActive = true
+        //lblDevice.trailingAnchor.constraint(equalTo: trailingAnchor, constant: 20).isActive = true
         
         btnOption.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         btnOption.widthAnchor.constraint(equalToConstant: 36).isActive = true

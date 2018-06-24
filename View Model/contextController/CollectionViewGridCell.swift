@@ -44,6 +44,7 @@ class CollectionViewGridCell: UICollectionViewCell {
         label.font = UIFont.boldSystemFont(ofSize: 13)
         label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
         label.translatesAutoresizingMaskIntoConstraints = false
+        label.numberOfLines = 1
         return label
     }()
     let lblSub:UILabel = {
@@ -79,6 +80,9 @@ class CollectionViewGridCell: UICollectionViewCell {
         fatalError("init(coder:) has not been implemented")
     }
     func setupView(){
+        
+        btnMultiChecked = false
+        
         backgroundColor = UIColor.white
         addSubview(ivBackground)
         addSubview(ivMain)
@@ -99,11 +103,16 @@ class CollectionViewGridCell: UICollectionViewCell {
         ivBackground.widthAnchor.constraint(equalTo: widthAnchor).isActive = true
         ivBackground.heightAnchor.constraint(equalTo: heightAnchor).isActive = true
         
-        
         ivMain.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
-        ivMain.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
         ivMain.widthAnchor.constraint(equalToConstant: 55).isActive = true
         ivMain.heightAnchor.constraint(equalToConstant: 55).isActive = true
+        
+        if App.screenHeight > 600 {
+            ivMain.centerYAnchor.constraint(equalTo: centerYAnchor).isActive = true
+        } else { // se,5s
+            ivMain.topAnchor.constraintEqualToSystemSpacingBelow(topAnchor, multiplier: 4).isActive = true
+        }
+        
         
         bottomView.centerXAnchor.constraint(equalTo: centerXAnchor).isActive = true
         bottomView.widthAnchor.constraint(equalTo: widthAnchor).isActive = true
@@ -122,10 +131,13 @@ class CollectionViewGridCell: UICollectionViewCell {
         lblMain.topAnchor.constraint(equalTo: ivSub.topAnchor).isActive = true
         lblMain.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 8).isActive = true
         lblMain.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor).isActive = true
+        lblMain.heightAnchor.constraint(equalToConstant: 15).isActive = true
         
         lblSub.topAnchor.constraint(equalTo: lblMain.bottomAnchor).isActive = true
         lblSub.leadingAnchor.constraint(equalTo: ivSub.trailingAnchor, constant: 8).isActive = true
         lblSub.trailingAnchor.constraint(equalTo: bottomView.trailingAnchor).isActive = true
+        lblSub.heightAnchor.constraint(equalToConstant: 15).isActive = true
+        
         
         ivFlagNew.topAnchor.constraint(equalTo: topAnchor).isActive = true
         ivFlagNew.trailingAnchor.constraint(equalTo: trailingAnchor).isActive = true

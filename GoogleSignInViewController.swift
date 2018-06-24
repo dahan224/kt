@@ -68,7 +68,7 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
             "Cookie": self.loginCookie
         ]
         
-        Alamofire.request(App.URL.server+"selectCloudId.json"
+        Alamofire.request(App.URL.hostIpServer+"selectCloudId.json"
             , method: .post
             , parameters:["userId":userId,"cloudKind":"D"]
             , encoding : JSONEncoding.default
@@ -293,6 +293,9 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
                                         print("file : \(file)")
                                         if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 {
                                             let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
+                                            if fileStruct.fileExtension == "nil" {
+                                                continue
+                                            }
                                             self.driveFileArray.append(fileStruct)
                                         }
                                     }
@@ -379,7 +382,7 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
     
     func syncCloudEmailToServer(cloudId: String){
         
-        let urlString = App.URL.server+"registCloudId.do"
+        let urlString = App.URL.hostIpServer+"registCloudId.do"
         let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": self.loginToken,

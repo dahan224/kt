@@ -14,6 +14,7 @@ class RemoteFileListCellController {
     
     var dv:HomeDeviceCollectionVC?
     var hv:HomeViewController?
+    var latelyView:LatelyUpdatedFileViewController?
     var viewController = ""
     var jsonHeader:[String:String] = [
         "Content-Type": "application/json",
@@ -36,7 +37,7 @@ class RemoteFileListCellController {
         cell.lblMain.text = folderArray[indexPath.row].fileNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
         
-        if(viewState == .search){
+        if(viewState == .search || viewState == .lately){
             cell.lblDevice.isHidden = false
             cell.lblDevice.text = folderArray[indexPath.row].devNm
         } else {
@@ -45,20 +46,16 @@ class RemoteFileListCellController {
             cell.lblDevice.text = size
         }
         
-        
-        cell.btnOption.isHidden = false
-        cell.btnShow.tag = indexPath.row
-        cell.btnShow.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionRemoteFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnAction.tag = indexPath.row
-        cell.btnAction.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionRemoteFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDwnld.tag = indexPath.row
-        cell.btnDwnld.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionRemoteFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionRemoteFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionRemoteFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionRemoteFileShowClicked(sender:)), for: .touchUpInside)
+        if multiCheckListState == .active {
+            if folderArray[indexPathRow].checked {
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            
+            
+        }
+      
         return cell
     }
     
@@ -83,29 +80,43 @@ class RemoteFileListCellController {
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
         let devNm = folderArray[indexPath.row].devNm
+        let nasSynchYn = folderArray[indexPath.row].nasSynchYn
+        let fileThumbYn = folderArray[indexPath.row].fileThumbYn
         
         var btn = "show"
         switch sender {
         case cell.btnShow:
             btn = "show"
             dv?.hideSelectedOptions(tag: sender.tag)
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
+//            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm, "fileThumbYn":fileThumbYn]
             print("fileIdDict : \(fileIdDict)")
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
             break
         case cell.btnDwnld:
+            print("nasSynchYn : \(nasSynchYn)")
             dv?.hideSelectedOptions(tag: sender.tag)
             let remoteDownLoadStyle = "remoteDownLoad"
             UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
             UserDefaults.standard.synchronize()
 
+            
             print("folder : \(folderArray[indexPath.row])")
             print("fileId: \(fileId) , fromUserId : \(fromUserId), fromDevUuid : \(fromDevUuid), fromFoldr : \(foldrWholePathNm)")
             let alertController = UIAlertController(title: nil, message: "해당 파일을 다운로드 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
-                self.remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+                if nasSynchYn == "Y" {
+                    let path = "\(fromDevUuid)/\(foldrWholePathNm)"
+                    print("path : \(path)")
+                    self.downloadFromRemote(userId: fromUserId, name: fileNm, path: path, fileId: fileId)
+                    
+                    
+                } else {
+                    self.remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+                }
+                
                 
             }
             let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
@@ -143,16 +154,32 @@ class RemoteFileListCellController {
         let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
         let foldrId = String(folderArray[intFolderArrayIndexPathRow].foldrId)
         let devNm = folderArray[intFolderArrayIndexPathRow].devNm
+        let nasSynchYn = folderArray[intFolderArrayIndexPathRow].nasSynchYn
+        var fromDevUuid = currentDevUuid
+        var finalFromOsCd = fromOsCd
+        var fromUserId = userId
+        if(folderArray[intFolderArrayIndexPathRow].devUuid != "nil"){
+            fromDevUuid = folderArray[indexPath.row].devUuid
+        }
+        if(folderArray[intFolderArrayIndexPathRow].userId != "nil"){
+            fromUserId = folderArray[indexPath.row].userId
+        }
+        if(folderArray[intFolderArrayIndexPathRow].osCd != "nil"){
+            finalFromOsCd = folderArray[indexPath.row].osCd
+        }
+        let fileThumbYn = folderArray[intFolderArrayIndexPathRow].fileThumbYn
         hv = deviceView
         viewController = "homeView"
         switch indexPath.row {
         case 0 :
             //파일 상세보기
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
             
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
+//            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm, "fileThumbYn":fileThumbYn]
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             
-            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            
             break
         case 1:
             
@@ -163,8 +190,27 @@ class RemoteFileListCellController {
             print("remoteDownLoad: \(String(describing: UserDefaults.standard.string(forKey: "remoteDownLoadStyle")))")
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
             print("folder : \(folderArray[indexPath.row])")
-            print("fileId: \(fileId) , fromUserId : \(userId), fromDevUuid : \(currentDevUuid), fromFoldr : \(foldrWholePathNm)")
-            remoteDownloadRequest(fromUserId: userId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+            print("fileId: \(fileId) , fromUserId : \(userId), fromDevUuid : \(currentDevUuid), fromFoldr : \(foldrWholePathNm), nasSynchYn: \(nasSynchYn)")
+            let alertController = UIAlertController(title: nil, message: "해당 파일을 다운로드 하시겠습니까?", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                if nasSynchYn == "Y" {
+                    let path = "\(fromDevUuid)/\(foldrWholePathNm)"
+                    print("path : \(path)")
+                    self.downloadFromRemote(userId: fromUserId, name: fileNm, path: path, fileId: fileId)
+                    
+                    
+                } else {
+                    self.remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+                    
+                }
+                
+                
+            }
+            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+            alertController.addAction(yesAction)
+            alertController.addAction(noAction)
+            deviceView.present(alertController, animated: true)
             break
             
         case 2:
@@ -190,12 +236,101 @@ class RemoteFileListCellController {
     
     
     
+    func remoteFileContextMenuCalledFromGridLately(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:LatelyUpdatedFileViewController, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, folderArray:[App.FolderStruct], intFolderArrayIndexPathRow:Int){
+        let fileNm = folderArray[intFolderArrayIndexPathRow].fileNm
+        //        let etsionNm = folderArray[intFolderArrayIndexPathRow].etsionNm
+        let amdDate = folderArray[intFolderArrayIndexPathRow].amdDate
+        let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePathNm
+        let fileId = String(folderArray[intFolderArrayIndexPathRow].fileId)
+        let foldrId = String(folderArray[intFolderArrayIndexPathRow].foldrId)
+        let devNm = folderArray[intFolderArrayIndexPathRow].devNm
+        let nasSynchYn = folderArray[intFolderArrayIndexPathRow].nasSynchYn
+        var fromDevUuid = currentDevUuid
+        var finalFromOsCd = fromOsCd
+        var fromUserId = userId
+        if(folderArray[intFolderArrayIndexPathRow].devUuid != "nil"){
+            fromDevUuid = folderArray[indexPath.row].devUuid
+        }
+        if(folderArray[intFolderArrayIndexPathRow].userId != "nil"){
+            fromUserId = folderArray[indexPath.row].userId
+        }
+        if(folderArray[intFolderArrayIndexPathRow].osCd != "nil"){
+            finalFromOsCd = folderArray[indexPath.row].osCd
+        }
+        let fileThumbYn = folderArray[intFolderArrayIndexPathRow].fileThumbYn
+        viewController = "latelyView"
+        switch indexPath.row {
+        case 0 :
+            //파일 상세보기
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            
+            //            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm]
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":devNm, "fileThumbYn":fileThumbYn]
+            NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
+            
+            
+            break
+        case 1:
+            
+            //다운로드
+            let remoteDownLoadStyle = "remoteDownLoad"
+            UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
+            UserDefaults.standard.synchronize()
+            print("remoteDownLoad: \(String(describing: UserDefaults.standard.string(forKey: "remoteDownLoadStyle")))")
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            print("folder : \(folderArray[indexPath.row])")
+            print("fileId: \(fileId) , fromUserId : \(userId), fromDevUuid : \(currentDevUuid), fromFoldr : \(foldrWholePathNm), nasSynchYn: \(nasSynchYn)")
+            let alertController = UIAlertController(title: nil, message: "해당 파일을 다운로드 하시겠습니까?", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                if nasSynchYn == "Y" {
+                    let path = "\(fromDevUuid)/\(foldrWholePathNm)"
+                    print("path : \(path)")
+                    self.downloadFromRemote(userId: fromUserId, name: fileNm, path: path, fileId: fileId)
+                    
+                    
+                } else {
+                    self.remoteDownloadRequest(fromUserId: fromUserId, fromDevUuid: fromDevUuid, fromOsCd: finalFromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: fileId)
+                    
+                }
+                
+                
+            }
+            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+            alertController.addAction(yesAction)
+            alertController.addAction(noAction)
+            deviceView.present(alertController, animated: true)
+            break
+            
+        case 2:
+            
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            //            let remoteDownLoadToNas = true
+            let remoteDownLoadStyle = "remoteDownLoadToNas"
+            UserDefaults.standard.setValue(remoteDownLoadStyle, forKey: "remoteDownLoadStyle")
+            UserDefaults.standard.synchronize()
+            
+            //            remoteDownloadRequestToNas(fromUserId: selectedDevUserId, fromDevUuid: currentDevUuid, fromOsCd: fromOsCd, fromFoldr: currentDevUuid, fromFileNm: fileNm, fromFileId: fileId)
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid]
+            print("fileDict : \(fileDict)")
+            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+            break
+            
+        default :
+            
+            break
+        }
+        
+    }
+    
+    
+    
     
     func remoteDownloadRequest(fromUserId:String, fromDevUuid:String, fromOsCd:String, fromFoldr:String, fromFileNm:String, fromFileId:String){
         print("remoteDownloadRequest called")
         
-        let urlString = App.URL.server+"reqFileDown.do"
-        var comnd = "R\(fromOsCd)LI"
+        let urlString = App.URL.hostIpServer+"reqFileDown.do"
+        let comnd = "R\(fromOsCd)LI"
         let paramas:[String : Any] = ["fromUserId":fromUserId,"fromDevUuid":fromDevUuid,"fromOsCd":fromOsCd,"fromFoldr":fromFoldr,"fromFileNm":fromFileNm,"fromFileId":fromFileId,"toDevUuid":Util.getUuid(),"toOsCd":"I","toFoldr":"/Mobile","toFileNm":fromFileNm,"comndOsCd":"I","comndDevUuid":App.defaults.userId,"comnd":comnd]
         print("notifyNasUploadFinish param : \(paramas)")
         Alamofire.request(urlString,
@@ -204,34 +339,75 @@ class RemoteFileListCellController {
                           encoding : JSONEncoding.default,
                           headers: jsonHeader).responseJSON { response in
                             switch response.result {
-                            case .success(let JSON):
-
-                                print(response.result.value)
-                                let responseData = JSON as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                print("remoteDownloadRequest : \(message)")                         
+                            case .success(let responseObject):
+                                
+                                let json = JSON(responseObject)
+                                let message = json["message"].string
+                                
                                 DispatchQueue.main.async {
-                                    let alertController = UIAlertController(title: nil, message: "\(message!)", preferredStyle: .alert)
+                                    let alertController = UIAlertController(title: nil, message: message, preferredStyle: .alert)
                                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                                         UIAlertAction in
                                         
                                     }
                                     alertController.addAction(yesAction)
                                     if self.viewController == "deviceView" {
-                                    self.dv?.present(alertController, animated: true, completion: nil)
-                                    } else {
+                                        self.dv?.present(alertController, animated: true, completion: nil)
+                                    } else if self.viewController == "homeView" {
                                         self.hv?.present(alertController, animated: true, completion: nil)
+                                    } else {
+                                        self.latelyView?.present(alertController, animated: true, completion: nil)
                                     }
                                     
                                 }
-                            
-                                break
+                                
                             case .failure(let error):
-
                                 print(error.localizedDescription)
+                                let alertController = UIAlertController(title: nil, message: "요청처리에 실패하였습니다.", preferredStyle: .alert)
+                                let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default)
+                                alertController.addAction(yesAction)
+                                if self.viewController == "deviceView" {
+                                    self.dv?.present(alertController, animated: true, completion: nil)
+                                } else if self.viewController == "homeView" {
+                                    self.hv?.present(alertController, animated: true, completion: nil)
+                                } else {
+                                    self.latelyView?.present(alertController, animated: true, completion: nil)
+                                }
                             }
         }
     }
+
     
-   
+    func downloadFromRemote(userId:String, name:String, path:String, fileId:String){
+        ContextMenuWork().downloadFromRemote(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
+            if let success = responseObject {
+                print(success)
+                if(success == "success"){
+                    
+                    if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                        print("aleady Syncing")
+                        
+                    } else {
+                        SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                    }
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
+                        //                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            
+                        }
+                        alertController.addAction(yesAction)
+                        print("download Success")
+                        let alertWindow = UIWindow(frame: UIScreen.main.bounds)
+                        alertWindow.rootViewController = UIViewController()
+                        alertWindow.windowLevel = UIWindowLevelAlert + 1;
+                        alertWindow.makeKeyAndVisible()
+                        alertWindow.rootViewController?.present(alertController, animated: true, completion: nil)
+                    }
+                }
+            }
+            return
+        }
+    }
 }

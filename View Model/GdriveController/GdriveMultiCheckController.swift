@@ -14,6 +14,7 @@ class GdriveMultiCheckController {
     var driveFileArray:[App.DriveFileStruct] = []
     var multiCheckedfolderArray: [App.DriveFileStruct] = []
     var homeViewController:HomeViewController?
+    var containerView:ContainerViewController?
     var homeDeviceCollectionVC:HomeDeviceCollectionVC?
     var flickState = HomeViewController.flickEnum.main
     var accessToken = ""
@@ -35,8 +36,10 @@ class GdriveMultiCheckController {
     var googleFolderIdsToDownLoad:[String] = []
     var folderPathToDownLoad:[String] = []
     var rootFolder = ""
-    
-    
+    var fromUserId = ""
+    var devUuid:String = ""
+    var deviceName:String = ""
+    var devFoldrId:String = ""
     func btnGoogleDriveMultiCheckClicked(sender:UIButton, getDriveArray:[App.DriveFileStruct], getHomeViewController:HomeViewController, getFlisckState:HomeViewController.flickEnum, parent:HomeDeviceCollectionVC){
         driveFileArray = getDriveArray
         homeViewController = getHomeViewController
@@ -47,27 +50,45 @@ class GdriveMultiCheckController {
         let indexPath = IndexPath(row: buttonRow, section: 0)
         //        print("superview : \(sender.superview?.superview)")
         if let cell = sender.superview as? GDriveFolderListCell {
-            if(cell.btnMultiChecked){
+            if(driveFileArray[sender.tag].checked){
                 cell.btnMultiChecked = false
+                driveFileArray[sender.tag].checked = false
                 cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
             } else {
                 cell.btnMultiChecked = true
+                driveFileArray[sender.tag].checked = true
                 cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
             }
             let checkedFile = getDriveArray[indexPath.row]
-            print("checkedFile:\(checkedFile)")
-            homeDeviceCollectionVC?.gDriveMultiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked, checkedFile:checkedFile)
+            //            print("checkedFile:\(checkedFile)")
+            homeDeviceCollectionVC?.gDriveMultiCheckedFolderArrayGrid(indexPath:indexPath, check:cell.btnMultiChecked, checkedFile:checkedFile, getFolderArray:driveFileArray)
         } else if let cell = sender.superview as? GDriveFileListCell {
-            if(cell.btnMultiChecked){
+            if(driveFileArray[sender.tag].checked){
                 cell.btnMultiChecked = false
+                driveFileArray[sender.tag].checked = false
                 cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
             } else {
                 cell.btnMultiChecked = true
+                driveFileArray[sender.tag].checked = true
                 cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
             }
             let checkedFile = getDriveArray[indexPath.row]
-            print("checkedFile:\(checkedFile)")
-            homeDeviceCollectionVC?.gDriveMultiCheckedFolderArray(indexPath:indexPath, check:cell.btnMultiChecked, checkedFile:checkedFile)
+            //            print("checkedFile:\(checkedFile)")
+            homeDeviceCollectionVC?.gDriveMultiCheckedFolderArrayGrid(indexPath:indexPath, check:cell.btnMultiChecked, checkedFile:checkedFile, getFolderArray:driveFileArray)
+        } else if let cell = sender.superview as? CollectionViewGridCell {
+            if(driveFileArray[sender.tag].checked){
+                cell.btnMultiChecked = false
+                driveFileArray[sender.tag].checked = false
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiChecked = true
+                driveFileArray[sender.tag].checked = true
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            let checkedFile = getDriveArray[indexPath.row]
+//            print("checkedFile:\(checkedFile)")
+            homeDeviceCollectionVC?.gDriveMultiCheckedFolderArrayGrid(indexPath:indexPath, check:cell.btnMultiChecked, checkedFile:checkedFile, getFolderArray:driveFileArray)
+            
         }
 
     }
@@ -90,7 +111,7 @@ class GdriveMultiCheckController {
                 }
             } else {
 //                let fullPathToSave = "\(pathToSave)/\(name)"
-                GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: name) { responseObject, error in
+                GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: name, startByte: 0, endByte: 102400) { responseObject, error in
                     if let fileUrl = responseObject {
                         var newArray = getFolderArray
                         self.multiCheckedfolderArray.remove(at: self.multiCheckedfolderArray.count - 1)
@@ -140,6 +161,7 @@ class GdriveMultiCheckController {
         gdriveFolderIdDict.updateValue(foldrId, forKey: currentFolderPath)
         getGDriveFolderIdsToDownload(foldrId: foldrId, currentFolderPath:currentFolderPath)
     }
+    
     func getGDriveFolderIdsToDownload(foldrId:String, currentFolderPath:String) {
         print("get folders")
         googleFolderIdsToDownLoad.append(foldrId)
@@ -160,20 +182,21 @@ class GdriveMultiCheckController {
                                     if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
                                         if serverList.count > 0 {
                                             for file in serverList {
-                                                let fileStruct = App.DriveFileStruct(device:file, foldrWholePaths:["sd"])
-                                                self.googleFolderIdsToDownLoad.append(fileStruct.fileId)
-                                                let editCurrentFolderPath = "\(currentFolderPath)/\(fileStruct.name)"
-                                                self.folderPathToDownLoad.append(editCurrentFolderPath)
-                                                self.gdriveFolderIdDict.updateValue(fileStruct.fileId, forKey: editCurrentFolderPath)
-                                                print("second return called")
-                                                self.folderChildrenCheck(foldrId: fileStruct.fileId) {
-                                                    response in
-                                                    if( response > 0){
-                                                        self.getGDriveFolderIdsToDownload(foldrId: fileStruct.fileId, currentFolderPath: editCurrentFolderPath)
-                                                        return
+                                                if let trashCheck = file["trashed"] as? Int, let sharedCheck = file["shared"] as? Int, let starredCheck = file["starred"] as? Int, trashCheck == 0 && sharedCheck == 0 && starredCheck == 0 {
+                                                    let fileStruct = App.DriveFileStruct(device:file, foldrWholePaths:["sd"])
+                                                    self.googleFolderIdsToDownLoad.append(fileStruct.fileId)
+                                                    let editCurrentFolderPath = "\(currentFolderPath)/\(fileStruct.name)"
+                                                    self.folderPathToDownLoad.append(editCurrentFolderPath)
+                                                    self.gdriveFolderIdDict.updateValue(fileStruct.fileId, forKey: editCurrentFolderPath)
+                                                    print("second return called")
+                                                    self.folderChildrenCheck(foldrId: fileStruct.fileId) {
+                                                        response in
+                                                        if( response > 0){
+                                                            self.getGDriveFolderIdsToDownload(foldrId: fileStruct.fileId, currentFolderPath: editCurrentFolderPath)
+                                                            return
+                                                        }
                                                     }
                                                 }
-                                                
                                                 
                                             }
                                         }
@@ -259,7 +282,7 @@ class GdriveMultiCheckController {
             if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
                 for file in serverList {
                     //                                            print("file : \(file)")
-                    if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 && file["mimeType"] as? String != Util.getGoogleMimeType(etsionNm: "folder"){
+                    if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 && file["mimeType"] as? String != Util.getGoogleMimeType(etsionNm: "folder") && file["fileExtension"] as? String != "nil"{
                         let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
                         
                         self.driveFileArray.append(fileStruct)
@@ -303,7 +326,7 @@ class GdriveMultiCheckController {
     }
     func callDownloadFromDriveFolder(fileId:String, mimeType:String,name:String, pathToSave:String, index:Int){
         let fullPathToSave = "\(pathToSave)/\(name)"
-        GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: fullPathToSave) { responseObject, error in
+        GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: fullPathToSave, startByte: 0, endByte: 102400) { responseObject, error in
             if let fileUrl = responseObject {
                 self.driveFileArray.remove(at: index)
                 self.downloadFileFromGDriveFolder()
@@ -316,7 +339,89 @@ class GdriveMultiCheckController {
         let foldrId:String = multiCheckedfolderArray[self.multiCheckedfolderArray.count - 1].fileId
         let fileDict = ["fileId":foldrId]
         NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
-        self.multiCheckedfolderArray.remove(at: self.multiCheckedfolderArray.count - 1)
-        self.callDwonLoad(getFolderArray: self.multiCheckedfolderArray, parent: self.homeDeviceCollectionVC!)
+        let lastIndex = self.multiCheckedfolderArray.count - 1
+        var newArray = self.multiCheckedfolderArray
+        newArray.remove(at: lastIndex)
+        self.callDwonLoad(getFolderArray: newArray, parent: self.homeDeviceCollectionVC!)
+    }
+    
+    func callMultiDelete(getFolderArray:[App.DriveFileStruct], parent:HomeDeviceCollectionVC, fromUserId:String, devUuid:String, deviceName:String, devFoldrId:String, containerView:ContainerViewController){
+        homeDeviceCollectionVC = parent
+        multiCheckedfolderArray = getFolderArray
+        self.fromUserId = fromUserId
+        self.devUuid = devUuid
+        self.deviceName = deviceName
+        self.devFoldrId = devFoldrId
+        self.containerView = containerView
+        print("devFoldrId : \(devFoldrId)")
+        
+        if (multiCheckedfolderArray.count > 0){
+            let index = getFolderArray.count - 1
+            let fileNm = getFolderArray[index].name
+            let amdDate = getFolderArray[index].createdTime
+            let foldrWholePathNm = getFolderArray[index].foldrWholePath
+            let fileId = getFolderArray[index].fileId
+            let mimeType = getFolderArray[index].mimeType
+            let fileExtension = getFolderArray[index].fileExtension
+            let size = getFolderArray[index].size
+            let createdTime = getFolderArray[index].createdTime
+            let modifiedTime = getFolderArray[index].modifiedTime
+            deleteGDriveFile(fileId: fileId)
+            return
+        }
+        DispatchQueue.main.async {
+            let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되었습니다.", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel){
+                UIAlertAction in
+                NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
+                if(devFoldrId == "root" || devFoldrId.isEmpty){
+                    if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+                        let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
+                        containerView.getFiles(accessToken: accessToken, root: "root")
+                    }
+                } else {
+                    self.homeDeviceCollectionVC?.showInsideListGDrive(userId: fromUserId, devUuid: devUuid, foldrId: devFoldrId, deviceName: deviceName)
+                    
+                }
+            }
+            
+            
+            alertController.addAction(yesAction)
+            parent.present(alertController, animated: true)
+        }
+        
+    }
+    func deleteGDriveFile(fileId:String) {
+        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+            
+            //            accessToken = DbHelper().getAccessToken(email: googleEmail)
+            accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
+            let url = "https://www.googleapis.com/drive/v3/files/\(fileId)"
+            let headers: HTTPHeaders = [
+                "Authorization": "Bearer " + accessToken
+            ]
+            Alamofire.request(url,
+                              method: .delete,
+                              //parameters: {},
+                encoding : JSONEncoding.default,
+                headers:headers
+                ).responseJSON{ (response) in
+                    print(response)
+                    switch response.result {
+                    case .success(let value):
+                        let json = JSON(value)
+                        if (json["code"].string != nil) {
+                            print(json["code"])
+                        } else {
+                            print("파일을 삭제하였습니다.")
+                            let lastIndex = self.multiCheckedfolderArray.count - 1
+                            self.multiCheckedfolderArray.remove(at: lastIndex)
+                            self.callMultiDelete(getFolderArray: self.multiCheckedfolderArray, parent: self.homeDeviceCollectionVC!, fromUserId: self.fromUserId, devUuid: self.devUuid, deviceName: self.deviceName, devFoldrId: self.devFoldrId, containerView:self.containerView!)
+                        }
+                    case .failure(let error):
+                        print(error)
+                    }
+            }
+        }
     }
 }

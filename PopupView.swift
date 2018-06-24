@@ -10,14 +10,19 @@ import UIKit
 import Alamofire
 import SwiftyJSON
 
-class PopupView: UIView {
+class PopupView: UIView, UITextFieldDelegate {
 
     @IBOutlet weak var popupView: UIView!
     @IBOutlet weak var lblTop: UILabel!
     @IBOutlet weak var lblInfo: UILabel!
     @IBOutlet weak var btnReSend: UIButton!
+    @IBOutlet weak var lblTimerText: UILabel!
     @IBOutlet weak var lblTimer: UILabel!
-    @IBOutlet weak var txtSmsNum: UITextField!
+    @IBOutlet weak var txtSmsNum: UITextField!{
+        didSet{
+            txtSmsNum.delegate = self
+        }
+    }
     
     @IBOutlet weak var btnAuth: UIButton!
     @IBOutlet weak var btnCancel: UIButton!
@@ -50,15 +55,32 @@ class PopupView: UIView {
     // An empty implementation adversely affects performance during animation.
     override func draw(_ rect: CGRect) {
         
+        lblTimer.numberOfLines = 1
+        lblTimer.heightAnchor.constraint(equalToConstant: 15).isActive = true
+        
         txtSmsNum.borderStyle = UITextBorderStyle.none
         txtSmsNum.addBorderBottom(height: 1, color: HexStringToUIColor().getUIColor(hex: App.Color.listBorder))
         
         btnReSend.addTarget(self, action: #selector(fnReSendSms), for: .touchUpInside) // 추가
         lblTop.textColor = HexStringToUIColor().getUIColor(hex: "ffffff")
         lblTop.font = lblTop.font.withSize(24)
+        
+        lblInfo.numberOfLines = 0
         lblInfo.text = "- 발송된 인증번호를 유효시간 안에 입력하세요.\n- 인증번호를 입력 후 확인 버튼을 클릭하세요.\n- 인증번호 미 수신시 재발송 버튼을 클릭하세요."
-        lblInfo.font = lblInfo.font.withSize(13)
-        lblInfo.setLineHeight(lineHeight: 8)
+        
+        if App.screenHeight > 600 {
+            lblInfo.heightAnchor.constraint(equalToConstant: 100).isActive = true
+            lblInfo.font = lblInfo.font.withSize(13)
+            lblInfo.setLineHeight(lineHeight: 8)
+            lblInfo.topAnchor.constraintEqualToSystemSpacingBelow(centerYAnchor, multiplier: 1.5)
+            lblTimer.font = lblTimer.font.withSize(16)
+            lblTimerText.font = lblTimerText.font.withSize(16)
+        } else {
+            lblInfo.heightAnchor.constraint(equalToConstant: 80).isActive = true
+            lblInfo.font = lblInfo.font.withSize(10.5)
+            lblInfo.setLineHeight(lineHeight: 4)
+        }
+        
         btnReSend.backgroundColor = HexStringToUIColor().getUIColor(hex: "717171")
         lblTimer.textColor = HexStringToUIColor().getUIColor(hex: "f39c12")
         
@@ -112,7 +134,7 @@ class PopupView: UIView {
                     
                     if ymd == smsYmd && todayTime > smsdayTime {
                         
-                        let urlString = App.URL.server + "smsCmplt.do"
+                        let urlString = App.URL.hostIpServer + "smsCmplt.do"
                         let param = ["userId":data.devBas.userId, "devUuid":data.devBas.devUuid]
                         Alamofire.request(urlString,
                                           method: .post,
@@ -149,42 +171,49 @@ class PopupView: UIView {
         let userId:String = UserDefaults.standard.string(forKey: "userId")!
         let uuid:String = Util.getUuid()
         
-         let urlString = App.URL.server+"smsReSend.do"
+         let urlString = App.URL.hostIpServer+"smsReSend.do"
          Alamofire.request(urlString,
          method: .post,
          parameters: ["userId":userId,"devUuid":uuid],
          encoding : JSONEncoding.default,
          headers: jsonHeader).responseJSON{ (response) in
-         switch response.result {
-         case .success(let value):
-             print(value)
-             let json = JSON(value)
-             let responseData = value as! NSDictionary
-             let message = responseData.object(forKey: "message")
-             print("smsAuth message : \(message)")
-             if let statusCode = json["statusCode"].int, statusCode != 100 {
-             
-             } else {
-                if let listData = responseData.object(forKey: "data") as? NSDictionary {
-                    self.data = App.smsInfo(sms: listData as! AnyObject)
-                    let alertView = UIAlertController(title: nil, message: "재발송 되었습니다.", preferredStyle: .alert)
-                    let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) { UIAlertAction in
-                        self.lblTimer.text = "\(self.timeFormatted(180))"
-                        self.totalTime = 179
-                        self.startTimer()
+             switch response.result {
+             case .success(let value):
+                 print(value)
+                 let json = JSON(value)
+                 let responseData = value as! NSDictionary
+                 let message = responseData.object(forKey: "message")
+//                 print("smsAuth message : \(message)")
+                 if let statusCode = json["statusCode"].int, statusCode != 100 {
+                 
+                 } else {
+                    if let listData = responseData.object(forKey: "data") as? NSDictionary {
+                        //self.data = App.smsInfo(sms: listData as! AnyObject)
+                        self.data.smsCrtfcKey = listData.object(forKey: "smsCrtfcKey") as! String
+                        self.data.smsCrtfcNo = listData.object(forKey: "smsCrtfcNo") as! String
+                        self.data.today = listData.object(forKey: "today") as! String
+                        let alertView = UIAlertController(title: nil, message: "재발송 되었습니다.", preferredStyle: .alert)
+                        let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) { UIAlertAction in
+                            self.lblTimer.text = "\(self.timeFormatted(180))"
+                            self.totalTime = 179
+                            self.startTimer()
+                        }
+                        alertView.addAction(confirmAction)
+                        UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
+                    } else {
+                        let alertView = UIAlertController(title: nil, message: "실패하였습니다. 다시 시도해주세요.", preferredStyle: .alert)
+                        let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        alertView.addAction(confirmAction)
+                        UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
                     }
-                    alertView.addAction(confirmAction)
-                    UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
-                } else {
-                    let alertView = UIAlertController(title: nil, message: "실패하였습니다. 다시 시도해주세요.", preferredStyle: .alert)
-                    let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
-                    alertView.addAction(confirmAction)
-                    UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
-                }
-             }
-         case .failure(let error):
-            NSLog(error.localizedDescription)
-        }
+                 }
+             case .failure(let error):
+                NSLog(error.localizedDescription)
+                let alertView = UIAlertController(title: nil, message: "실패하였습니다. 다시 시도해주세요.", preferredStyle: .alert)
+                let confirmAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                alertView.addAction(confirmAction)
+                UIApplication.shared.keyWindow?.rootViewController?.present(alertView, animated: true, completion: nil)
+            }
         }
     }
     
@@ -206,6 +235,12 @@ class PopupView: UIView {
         let seconds: Int = totalSeconds % 60
         let minutes: Int = (totalSeconds / 60) % 60
         return String(format: "%02d:%02d", minutes, seconds)
+    }
+    
+    func textFieldShouldReturn(_ textField: UITextField) -> Bool {
+        textField.resignFirstResponder()
+        fnAuth(btnAuth)
+        return true
     }
     
 }

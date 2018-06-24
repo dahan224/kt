@@ -13,9 +13,10 @@ class SetupFolderInsideCollectionView {
     class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton, lblSubNav:UILabel, downArrowButton:UIButton) {
         
         for view in searchView.subviews {
-            view.removeFromSuperview()
+            if searchView.contains(view){
+                view.removeFromSuperview()
+            }
         }
-        multiButton.removeFromSuperview()
         
         
         //let label = UILabel()
@@ -31,6 +32,8 @@ class SetupFolderInsideCollectionView {
         lblSubNav.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         lblSubNav.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         lblSubNav.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
+        lblSubNav.trailingAnchor.constraintEqualToSystemSpacingAfter(selectAllButton.leadingAnchor, multiplier: 2).isActive = true
+        lblSubNav.numberOfLines = 1
         
         /*
          label.textAlignment = .left
@@ -93,7 +96,7 @@ class SetupFolderInsideCollectionView {
             }
             selectAllButton.isHidden = true
         }
-        
+        print("searchview 1 finished")
         
         for view in customNavBar.subviews {
             view.removeFromSuperview()
@@ -126,11 +129,12 @@ class SetupFolderInsideCollectionView {
         
 //        lblSubNav.text = "\(getFolerName)"
         var navTxt = "> "
-        if getFolerName.contains("..") {
+        if getFolerName.contains("..") || getFolerName.contains(">") {
             navTxt = ""
         }
         lblSubNav.text = "\(navTxt)\(getFolerName)"
         navBarTitle.setTitle(getDeviceName, for: .normal)
+        print("searchview 2 finished")
         
     }
 }

@@ -36,8 +36,10 @@ class SendFolderToNasFromGDrive {
     var folderPathToDownLoad:[String] = []
     var driveFileArray:[App.DriveFileStruct] = []
     var rootFolder = ""
+    var gDriveMultiCheckedfolderArray:[App.DriveFileStruct] = []
+    var orginalFoldrId = ""
     
-    func downloadFolderFromGDrive(foldrId:String, getAccessToken: String, fileId:String, downloadRootFolderName:String, parent:NasSendController){
+    func downloadFolderFromGDrive(foldrId:String, getAccessToken: String, fileId:String, downloadRootFolderName:String, parent:NasSendController, gDriveMultiCheckedfolderArray:[App.DriveFileStruct]){
         
         accessToken = getAccessToken
         print("oldFoldrWholePathNm : \(oldFoldrWholePathNm)")
@@ -47,9 +49,11 @@ class SendFolderToNasFromGDrive {
         folderPathToDownLoad.removeAll()
         driveFileArray.removeAll()
         gdriveFolderIdDict.removeAll()
+        orginalFoldrId = foldrId
         print("call from downloadFolderFromNas")
+        self.gDriveMultiCheckedfolderArray = gDriveMultiCheckedfolderArray
+        let currentFolderPath = "\(downloadRootFolderName)"
         
-        let currentFolderPath = "/\(downloadRootFolderName)"
         self.folderPathToDownLoad.append(currentFolderPath)
         gdriveFolderIdDict.updateValue(foldrId, forKey: currentFolderPath)
         getGDriveFolderIdsToDownload(foldrId: foldrId, currentFolderPath:currentFolderPath)
@@ -76,10 +80,12 @@ class SendFolderToNasFromGDrive {
                                         if serverList.count > 0 {
                                             for file in serverList {
                                                 print("trashed : \(file["trashed"] as? Int ?? 0)")
-                                                if let trashCheck = file["trashed"] as? Int, trashCheck == 0 {
+                                                if let trashCheck = file["trashed"] as? Int, let sharedCheck = file["shared"] as? Int, let starredCheck = file["starred"] as? Int, trashCheck == 0 && sharedCheck == 0 && starredCheck == 0 {
                                                     let fileStruct = App.DriveFileStruct(device:file, foldrWholePaths:["sd"])
                                                     self.googleFolderIdsToDownLoad.append(fileStruct.fileId)
-                                                    let editCurrentFolderPath = "\(currentFolderPath)/\(fileStruct.name)"
+                                                    let newFolderPath:String = currentFolderPath.precomposedStringWithCanonicalMapping
+                                                    let newName:String = fileStruct.name.precomposedStringWithCanonicalMapping
+                                                    let editCurrentFolderPath = "\(newFolderPath)/\(newName)"
                                                     self.folderPathToDownLoad.append(editCurrentFolderPath)
                                                     self.gdriveFolderIdDict.updateValue(fileStruct.fileId, forKey: editCurrentFolderPath)
                                                     print("second return called")
@@ -88,15 +94,18 @@ class SendFolderToNasFromGDrive {
                                                         if( response > 0){
                                                             self.getGDriveFolderIdsToDownload(foldrId: fileStruct.fileId, currentFolderPath: editCurrentFolderPath)
                                                             return
+                                                        } else {
+                                                            let fileDict = ["fileId":foldrId]
+                                                            NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
                                                         }
                                                     }
                                                     
                                                 }
                                             }
+                                        } else {
+                                            print("json : \(json)")
+                                            self.printGoogleFolderPath()
                                         }
-                                        //                                        print("count : \(serverList.count)")
-                                        print("json : \(json)")
-                                        
                                         
                                     } else {
                                         print("no json file")
@@ -153,23 +162,13 @@ class SendFolderToNasFromGDrive {
         print("googleFolderIdsToDownLoad: \(googleFolderIdsToDownLoad)")
         print("gdriveFolderIdDict: \(gdriveFolderIdDict)")
         var localPathArray:[URL] = []
-        let fileManager = FileManager.default
-        if let documentDirectory = fileManager.urls(for: .documentDirectory, in: .userDomainMask).first {
-            let filePath = documentDirectory.appendingPathComponent("tmp")
-            if !fileManager.fileExists(atPath: filePath.path) {
-                do {
-                    try fileManager.createDirectory(atPath: filePath.path, withIntermediateDirectories: true, attributes: nil)
-                } catch {
-                    print(error.localizedDescription)
-                }
-            }
-        }
+        
         for (index, name) in folderPathToDownLoad.enumerated() {
             
-            print("folderName : /tmp\(name)")
-            let gDriveFolderName = "tmp\(name)"
+            print("folderName : /tmp/\(name)")
+            let gDriveFolderName = "tmp/\(name)"
             if index == 0 {
-                rootFolder = "/Mobile/tmp\(name)"
+                rootFolder = "/Mobile/tmp/\(name)"
             }
             let createdPath:URL = GoogleWork().createLocalFolder(folderName: gDriveFolderName)!
             localPathArray.append(createdPath)
@@ -207,7 +206,7 @@ class SendFolderToNasFromGDrive {
             if let serverList:[AnyObject] = json["files"].arrayObject as [AnyObject]? {
                 for file in serverList {
                     //                    print("file : \(file)")
-                    if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 && file["mimeType"] as? String != Util.getGoogleMimeType(etsionNm: "folder"){
+                    if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 && file["mimeType"] as? String != Util.getGoogleMimeType(etsionNm: "folder") && file["fileExtension"] as? String != "nil" {
                         let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
                         
                         self.driveFileArray.append(fileStruct)
@@ -245,6 +244,7 @@ class SendFolderToNasFromGDrive {
                         
                         let parentFolderPath = foldrIdStruct.key
                         callDownloadFromDriveFolder(fileId: downId, mimeType: mimeType, name: downFileName, pathToSave: parentFolderPath, index: index, getDriveFileArray:getDriveFileArray)
+                        return
                     }
                 }
                 return
@@ -255,26 +255,44 @@ class SendFolderToNasFromGDrive {
         
     }
     func callDownloadFromDriveFolder(fileId:String, mimeType:String,name:String, pathToSave:String, index:Int, getDriveFileArray:[App.DriveFileStruct]){
-        let fullPathToSave = "/tmp\(pathToSave)/\(name)"
-        print("fullPathToSave : \(fullPathToSave)")
+        let fullPathToSave = "\(pathToSave)/\(name)"
+        
+        let newPathToSave:String = pathToSave.precomposedStringWithCanonicalMapping
+        let newName:String = name.precomposedStringWithCanonicalMapping
+        let newFullPathToSave = "\(newPathToSave)/\(newName)"
+        print("fullPathToSave : \(fullPathToSave), newFullPathToSave: \(newFullPathToSave)")
         //downloadGdriveFileSend 는 파일 다운로드
-        GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: fullPathToSave) { responseObject, error in
+        GoogleWork().downloadGDriveFileToSendToNas(fileId: fileId, mimeType: mimeType, name: fullPathToSave, startByte: 0, endByte: 10204) { responseObject, error in
             if let fileUrl = responseObject {
                 var newDriveFiles = getDriveFileArray
                 newDriveFiles.remove(at: index)
                 self.downloadFileFromGDriveFolder(getDriveFileArray: newDriveFiles)
+                
             }
         }
         
     }
     
     func finishGDriveFolderDownload(){
-//        SyncLocalFilleToNas().callSyncToDownloadFronGDriveToSendToNas(view: "NasSendFolderSelectVC", parent: NasSendController!, rootFolder:  "/Mobile/\(rootFolder)")
-        SyncLocalFilleToNas().callSyncFomGdriveToNasSendFolder(view: "NasSendController", parent: nasSendController!, rootFolder: rootFolder)
+        //        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+        //            print("aleady Syncing")
+        //
+        //        } else {
+        //            SyncLocalFilleToNas().callSyncFomGdriveToNasSendFolder(view: "NasSendController", parent: nasSendController!, rootFolder: rootFolder)
+        //        }
+        
+        
         print("download finish")
-        print("send to nas")
-        // get folder id
-       
+        let fileDict = ["fileId":orginalFoldrId]
+        NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
+        if(gDriveMultiCheckedfolderArray.count > 0){
+            
+            let lastIndex = gDriveMultiCheckedfolderArray.count - 1
+            gDriveMultiCheckedfolderArray.remove(at: lastIndex)
+        }
+        nasSendController?.gDriveMultiCheckedfolderArray = gDriveMultiCheckedfolderArray
+        nasSendController?.startMultiGdriveToNas()
+        
     }
     
     //GdriveFolder다운로드 끝

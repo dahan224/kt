@@ -23,8 +23,10 @@ class GDriveFileListCellController:UIViewController {
         }
         
 //        let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].mimeType)
-        let etsionFromMimeType = Util.getEtsionFromMimetype(mimeType: folderArray[indexPath.row].mimeType)
-        let imageString = Util.getFileImageString(fileExtension: etsionFromMimeType)
+//        let etsionFromMimeType = Util.getEtsionFromMimetype(mimeType: folderArray[indexPath.row].mimeType)
+        let imageString = Util.getFileImageString(fileExtension: folderArray[indexPath.row].fileExtension)
+        
+
         
         cell.lblDevice.isHidden = false
         let size = FileUtil().covertFileSize(getSize: folderArray[indexPath.row].size)
@@ -36,17 +38,15 @@ class GDriveFileListCellController:UIViewController {
         cell.lblMain.text = folderArray[indexPath.row].name
         cell.lblSub.text = folderArray[indexPath.row].modifiedTime.components(separatedBy: ".")[0].replacingOccurrences(of: "T", with: " ")
         
-        cell.btnOption.isHidden = false
-        cell.btnShow.tag = indexPath.row
-        cell.btnShow.addTarget(self, action: #selector(parentView.optionGDriveFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDwnld.tag = indexPath.row
-        cell.btnDwnld.addTarget(self, action: #selector(parentView.optionGDriveFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(parentView.optionGDriveFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(parentView.optionGDriveFileShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(parentView.optionGDriveFileShowClicked(sender:)), for: .touchUpInside)
+        if multiCheckListState == .active {
+            if folderArray[indexPathRow].checked {
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+        
+        }
+        
         return cell
     }
     
@@ -61,19 +61,29 @@ class GDriveFileListCellController:UIViewController {
         let size = folderArray[indexPath.row].size
         let createdTime = folderArray[indexPath.row].createdTime
         let modifiedTime = folderArray[indexPath.row].modifiedTime
-        print("currentFOlderId : \(currentFolderId)")
+        let thumbnailLink = folderArray[indexPath.row].thumbnailLink
+//        print("currentFOlderId : \(currentFolderId)")
         switch sender {
             case cell.btnShow:
                 deviceView.hideSelectedOptions(tag: sender.tag)
                 print("fileId: \(fileId)")
-                let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName, "fileExtension":fileExtension,"size":String(size),"createdTime":createdTime,"modifiedTime":modifiedTime]
+                var fileThumbYn = "N"
+                if thumbnailLink != "nil"{
+                    fileThumbYn = "Y"
+                }
+                
+                let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName, "fileExtension":fileExtension,"size":String(size),"createdTime":createdTime,"modifiedTime":modifiedTime, "fileThumbYn":fileThumbYn, "fromOsCd":"D","thumbnailLink":"\(thumbnailLink)"]
+//                print("fileIdDict : \(fileIdDict), thumbnailLink : \(thumbnailLink)")
                 NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             case cell.btnDwnld:
+                
+                containerView.showIndicator()
                 deviceView.hideSelectedOptions(tag: sender.tag)
                 
                 if parentView == "device" {
                 print("parentView : \(parentView)")
                     deviceView.downloadGDriveFile(fileId: fileId, mimeType:mimeType, name:fileNm)
+                    
                 }
             case cell.btnNas:
                 deviceView.hideSelectedOptions(tag: sender.tag)
@@ -92,7 +102,7 @@ class GDriveFileListCellController:UIViewController {
             
             case cell.btnDelete:
                 deviceView.hideSelectedOptions(tag: sender.tag)
-                
+                containerView.showIndicator()
                 if parentView == "device" {
                     let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
                     let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
@@ -100,11 +110,9 @@ class GDriveFileListCellController:UIViewController {
                         GoogleWork().deleteGDriveFile(fileId: fileId)
                         DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                             if(currentFolderId == "root" || currentFolderId.isEmpty){
-                                if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-//                                    var accessToken = DbHelper().getAccessToken(email: googleEmail)
-                                    var accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
-                                    containerView.getFiles(accessToken: accessToken, root: "root")
-                                }                                
+                                let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
+                                containerView.getFiles(accessToken: accessToken, root: "root")
+                            
                             } else {
                                 deviceView.showInsideListGDrive(userId: userId, devUuid: currentDevUuid, foldrId: currentFolderId, deviceName: deviceName)
                                 
@@ -112,6 +120,7 @@ class GDriveFileListCellController:UIViewController {
                             let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                             let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                                 UIAlertAction in
+                                containerView.finishLoading()
                                
                             }
                             alertController.addAction(yesAction)
@@ -140,33 +149,46 @@ class GDriveFileListCellController:UIViewController {
         let size = folderArray[intFolderArrayIndexPathRow].size
         let createdTime = folderArray[intFolderArrayIndexPathRow].createdTime
         let modifiedTime = folderArray[intFolderArrayIndexPathRow].modifiedTime
-        
+        let thumbnailLink = folderArray[intFolderArrayIndexPathRow].thumbnailLink
         switch indexPath.row {
         case 0:
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
-            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName, "fileExtension":fileExtension,"size":size,"createdTime":createdTime,"modifiedTime":modifiedTime]
+            var fileThumbYn = "N"
+            if thumbnailLink != "nil"{
+                fileThumbYn = "Y"
+            }
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName, "fileExtension":fileExtension,"size":size,"createdTime":createdTime,"modifiedTime":modifiedTime,  "fileThumbYn":fileThumbYn, "fromOsCd":"D","thumbnailLink":"\(thumbnailLink)"]
+            
             print("fileIdDict : \(fileIdDict)")
             NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
             break
         case 1:
             NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
                 //deviceView.downloadGDriveFile(fileId: fileId, mimeType:mimeType, name:fileNm)
-                deviceView.homeViewToggleIndicator()
-                GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: fileNm) { responseObject, error in
+                containerView.showIndicator()
+
+            GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: fileNm, startByte: 0, endByte: 102400) { responseObject, error in
                 if let responseUrl = responseObject {
-                   
-                    let alertController = UIAlertController(title: nil, message: "다운로드를 성공하였습니다.", preferredStyle: .alert)
-                    let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                        UIAlertAction in
-                        deviceView.homeViewToggleIndicator()
-                        
+
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: "다운로드를 성공하였습니다.", preferredStyle: .alert)
+                        let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            containerView.finishLoading()
+                            if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                                print("aleady Syncing")
+                                
+                            } else {
+                                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                            }
+                        }
+                        alertController.addAction(yesAction)
+                        deviceView.present(alertController, animated: true)
                     }
-                    alertController.addAction(yesAction)
-                    deviceView.present(alertController, animated: true)
-                    
-                    
                 } else {
-                    deviceView.homeViewToggleIndicator()
+                    DispatchQueue.main.async {
+                        containerView.finishLoading()
+                    }
                 }
             }
         
@@ -193,14 +215,12 @@ class GDriveFileListCellController:UIViewController {
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
                 GoogleWork().deleteGDriveFile(fileId: fileId)
-                
+                containerView.showIndicator()
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
                     if(currentFolderId == "root" || currentFolderId.isEmpty){
-                        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
-//                            var accessToken = DbHelper().getAccessToken(email: googleEmail)
-                            var accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
-                            containerView.getFiles(accessToken: accessToken, root: "root")
-                        }
+                        let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
+                        containerView.getFiles(accessToken: accessToken, root: "root")
+                        
                     } else {
                         let fileDict = ["foldrId":currentFolderId]
                         NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
@@ -209,7 +229,7 @@ class GDriveFileListCellController:UIViewController {
                     let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
                     let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                         UIAlertAction in
-                       
+                       containerView.finishLoading()
                     }
                     alertController.addAction(yesAction)
                     deviceView.present(alertController, animated: true)
@@ -227,5 +247,115 @@ class GDriveFileListCellController:UIViewController {
         }
         
     }
-    
+    func ContextMenuCalledFromGridLately(indexPath:IndexPath, fileId:String, foldrWholePathNm:String, deviceName:String, parentView:String, deviceView:LatelyUpdatedFileViewController, userId:String, fromOsCd:String, currentDevUuid:String, currentFolderId:String, folderArray:[App.DriveFileStruct], intFolderArrayIndexPathRow:Int, containerView:ContainerViewController){
+        let fileNm = folderArray[intFolderArrayIndexPathRow].name
+        let amdDate = folderArray[intFolderArrayIndexPathRow].createdTime
+        let foldrWholePathNm = folderArray[intFolderArrayIndexPathRow].foldrWholePath
+        let fileId = folderArray[intFolderArrayIndexPathRow].fileId
+        let mimeType = folderArray[intFolderArrayIndexPathRow].mimeType
+        let fileExtension = folderArray[intFolderArrayIndexPathRow].fileExtension
+        let size = folderArray[intFolderArrayIndexPathRow].size
+        let createdTime = folderArray[intFolderArrayIndexPathRow].createdTime
+        let modifiedTime = folderArray[intFolderArrayIndexPathRow].modifiedTime
+        let thumbnailLink = folderArray[intFolderArrayIndexPathRow].thumbnailLink
+        switch indexPath.row {
+        case 0:
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            var fileThumbYn = "N"
+            if thumbnailLink != "nil"{
+                fileThumbYn = "Y"
+            }
+            let fileIdDict = ["fileId":fileId,"foldrWholePathNm":foldrWholePathNm,"deviceName":deviceName, "fileExtension":fileExtension,"size":size,"createdTime":createdTime,"modifiedTime":modifiedTime,  "fileThumbYn":fileThumbYn, "fromOsCd":"D","thumbnailLink":"\(thumbnailLink)"]
+            
+            print("fileIdDict : \(fileIdDict)")
+            NotificationCenter.default.post(name: Notification.Name("getFileIdFromBtnShow"), object: self, userInfo: fileIdDict)
+            break
+        case 1:
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            //deviceView.downloadGDriveFile(fileId: fileId, mimeType:mimeType, name:fileNm)
+            containerView.showIndicator()
+            
+            GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: fileNm, startByte: 0, endByte: 102400) { responseObject, error in
+                if let responseUrl = responseObject {
+                    
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: "다운로드를 성공하였습니다.", preferredStyle: .alert)
+                        let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            containerView.finishLoading()
+                            if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                                print("aleady Syncing")
+                                
+                            } else {
+                                SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+                            }
+                        }
+                        alertController.addAction(yesAction)
+                        deviceView.present(alertController, animated: true)
+                    }
+                } else {
+                    DispatchQueue.main.async {
+                        containerView.finishLoading()
+                    }
+                }
+            }
+            
+        case 2:
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":"gDrive","fromDevUuid":currentDevUuid, mimeType:mimeType,]
+            print("fileDict : \(fileDict)")
+            
+            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+            
+            break
+        case 3:
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"googleDrive","fromUserId":userId, "fromOsCd":"gDrive","fromDevUuid":currentDevUuid, mimeType:mimeType,]
+            print("fileDict : \(fileDict)")
+            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: fileDict)
+            
+            break
+            
+        case 4:
+            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self)
+            let alertController = UIAlertController(title: nil, message: "해당 파일을 삭제 하시겠습니까?", preferredStyle: .alert)
+            let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                UIAlertAction in
+                GoogleWork().deleteGDriveFile(fileId: fileId)
+                containerView.showIndicator()
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.5, execute: {
+                    if(currentFolderId == "root" || currentFolderId.isEmpty){
+                        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
+                            //                            var accessToken = DbHelper().getAccessToken(email: googleEmail)
+                            var accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
+                            containerView.getFiles(accessToken: accessToken, root: "root")
+                        }
+                    } else {
+                        let fileDict = ["foldrId":currentFolderId]
+                        NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
+                        
+                    }
+                    let alertController = UIAlertController(title: nil, message: "파일 삭제가 완료 되였습니다.", preferredStyle: .alert)
+                    let yesAction = UIKit.UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                        UIAlertAction in
+                        containerView.finishLoading()
+                        
+                    }
+                    alertController.addAction(yesAction)
+                    deviceView.present(alertController, animated: true)
+                })
+                
+            }
+            let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
+            alertController.addAction(yesAction)
+            alertController.addAction(noAction)
+            deviceView.present(alertController, animated: true)
+            break
+            
+        default:
+            break
+        }
+        
+    }
 }

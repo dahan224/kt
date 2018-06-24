@@ -53,7 +53,7 @@ class HomeContainerVCB: UIViewController, UICollectionViewDelegate, UICollection
 //            "X-Auth-Token": self.token,
 //            "Cookie": self.cookie
 //        ]
-//        let imageUrl = App.URL.server+"imgFileThum.do?fileId=\(fileId)"
+//        let imageUrl = App.URL.hostIpServer+"imgFileThum.do?fileId=\(fileId)"
 //        print("imageUrl: \(imageUrl)")
 //
 //        Alamofire.request(imageUrl, method: .get, encoding: URLEncoding.default, headers: headers).responseData { (response) in

@@ -15,34 +15,35 @@ import SwiftyJSON
 
 @UIApplicationMain
 class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
- 
+    
     struct Connectivity {
         static let sharedInstance = NetworkReachabilityManager()!
         static var isConnectedToInternet:Bool {
             return self.sharedInstance.isReachable
         }
     }
-
+    
     
     var backgroundTask:UIBackgroundTaskIdentifier?
     var window: UIWindow?
-
+    
     var serverURL: String?
     var notificationOnGoing = false
+    var appPlayYn = "N"
     
     func application(_ application: UIApplication,
                      didFinishLaunchingWithOptions launchOptions: [UIApplicationLaunchOptionsKey: Any]?) -> Bool {
         // Initialize sign-in
-//        FirebaseApp.configure()
-//        Messaging.messaging().remoteMessageDelegate = self
-
-      
+        //        FirebaseApp.configure()
+        //        Messaging.messaging().remoteMessageDelegate = self
+        
+        
         GIDSignIn.sharedInstance().clientID = "855259523788-p97fg9b2h94g9ghlv7btv90h60evnlnc.apps.googleusercontent.com"
         GIDSignIn.sharedInstance().delegate = self
         
         appVerCheck()
         
-
+        
         // iOS 10 support
         if #available(iOS 10, *) {
             UNUserNotificationCenter.current().requestAuthorization(options:[.badge, .alert, .sound]){ (granted, error) in }
@@ -63,7 +64,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             print(" iOS 7 support")
             application.registerForRemoteNotifications(matching: [.badge, .sound, .alert])
         }
-
+        
         return true
     }
     
@@ -87,9 +88,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                 if let dataString = aps["data"] as? String {
                     print("\(dataString)")
                     let data = dataString.data(using: .utf8, allowLossyConversion: false)
-                    let json = JSON(data)
+                    let json = JSON(data!)
                     print("json : \(json)")
-//                    let fromFileId = json["fromFileId"].string
+                    //                    let fromFileId = json["fromFileId"].string
                     let toDevUuid:String = json["toDevUuid"].stringValue
                     let fromFileNm:String = json["fromFileNm"].stringValue
                     let fromDevUuid:String = json["fromDevUuid"].stringValue
@@ -102,6 +103,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     let toOsCd = json["toOsCd"].stringValue
                     let fromUserId = json["fromUserId"].stringValue
                     let fromOsCd = json["fromOsCd"].stringValue
+                    appPlayYn = json["appPlay"].stringValue
                     
                     if(toDevUuid == Util.getUuid()){
                         print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
@@ -125,20 +127,20 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                                 
                             case "remoteDownLoadToExcute":
                                 
-                                let path = "\(fromDevUuid)\(fromFoldr)"
-                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
+                                let path = "\(fromDevUuid)/\(fromFoldr)"
+                                // let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId]
                                 downloadFromRemoteToExcute(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
                                 
                                 
                             case "remoteDownLoadMulti":
-                                let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "fromDevUuid":fromDevUuid]
+                                //let fileDict = ["fromUserId": fromUserId, "fromFileNm": fromFileNm, "fromFoldr": fromFoldr, "fromFileId": fromFileId, "fromDevUuid":fromDevUuid]
                                 let path = "\(fromDevUuid)/\(fromFoldr)"
                                 
                                 if(!notificationOnGoing){
-//                                    notificationOnGoing = true
+                                    //                                    notificationOnGoing = true
                                     print("noti get")
                                     downloadFromRemoteMulti(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
-//                                    downloadFromRemote(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
+                                    //                                    downloadFromRemote(userId: fromUserId, name: fromFileNm, path: path, fileId: fromFileId)
                                 }
                                 
                                 break
@@ -148,24 +150,25 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                                 NotificationCenter.default.post(name: Notification.Name("downloadFromRemoteToNas"), object: self, userInfo: fileDict)
                                 
                                 break
-                            
+                                
                                 
                             default:
                                 
                                 break
                             }
-                           
+                            
                         }
                         
                         
                     } else {
-                       
+                        
                         print("toOsCd : \(toOsCd)" )
                         print("fromFileNm: \(fromFileNm), fromFileId: \(fromFileId)")
                         if(toOsCd == "G" || toOsCd == "S"){
                             let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: fromFileNm, foldrWholePathNm: "/Mobile", amdDate: "self.amdDate")!
                             sendToNasFromLocal(url: fileUrl, name: fromFileNm, toOsCd:toOsCd, fileId: fromFileId, toUserId: toUserId, newFoldrWholePathNm:toFoldr)
                         } else {
+                            
                             showFileInfo(fileId: fromFileId, fileNm:fromFileNm, queId:queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
                         }
                         
@@ -176,16 +179,16 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             
         } else {
             print("background")
-
+            
             
             if let aps = userInfo["aps"] as? NSDictionary {
                 if let dataString = aps["data"] as? String {
                     print("\(dataString)")
                     let data = dataString.data(using: .utf8, allowLossyConversion: false)
-                    let json = JSON(data)
+                    let json = JSON(data!)
                     //                    let fromFileId = json["fromFileId"].string
                     let fromFileNm:String = json["fromFileNm"].stringValue
-                    let fromDevUuid:String = json["fromDevUuid"].stringValue
+                    //let fromDevUuid:String = json["fromDevUuid"].stringValue
                     let queId:String = json["queId"].stringValue
                     let intFileId = json["fromFileId"].intValue
                     let fromFileId = String(describing: intFileId)
@@ -198,13 +201,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                     //                    let fileUrl:URL = FileUtil().getFileUrl(fileNm: fromFileNm, amdDate: amdDate)
                     
                     
-//                    completionHandler(.newData)
+                    //                    completionHandler(.newData)
                 }
             }
         }
-
+        
         // Print full message.
-//        print(userInfo)
+        //        print(userInfo)
     }
     
     func downloadFromRemote(userId:String, name:String, path:String, fileId:String){
@@ -213,15 +216,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                 print(success)
                 if(success == "success"){
                     
-                    if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                    if UserDefaults.standard.bool(forKey: "syncOngoing") {
                         print("aleady Syncing")
-                        
                     } else {
                         SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
                     }
                     DispatchQueue.main.async {
                         let alertController = UIAlertController(title: nil, message: "파일 다운로드를 성공하였습니다.", preferredStyle: .alert)
-//                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
+                        //                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel)
                         let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                             UIAlertAction in
                             self.notificationOnGoing = false
@@ -243,8 +245,8 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         ContextMenuWork().downloadFromRemoteToExcute(userId:userId, fileNm:name, path:path, fileId:fileId){ responseObject, error in
             if let success = responseObject {
                 print(success)
-                 if(success.isEmpty){
-                 } else {
+                if(success.isEmpty){
+                } else {
                     print("localUrl : \(success)")
                     let url:URL = URL(string: success)!
                     let urlDict = ["url":url]
@@ -268,7 +270,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         }
     }
     
-  
+    
     func beginBackgroundTask() -> UIBackgroundTaskIdentifier {
         return UIApplication.shared.beginBackgroundTask(expirationHandler: {})
     }
@@ -284,11 +286,13 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             if(json["fileData"].exists()){
                 let fileData = json["fileData"]
                 let amdDate = fileData["amdDate"].stringValue
-                print("fileAmdDate : \(amdDate)")
-//                let fileUrl:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
-                let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: fileNm, foldrWholePathNm: "/Mobile", amdDate: amdDate)!
-                self.createTmpFolder(fileUrl: fileUrl, name: fileNm, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
-//                self.sendToNasFromLocalForDownload(url: fileUrl, name: fileNm, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
+                print("fileAmdDate : \(amdDate), fromFoldr: \(fromFoldr)")
+                //                let fileUrl:URL = FileUtil().getFileUrl(fileNm: fileNm, amdDate: amdDate)!
+                if let fileUrl:URL = FileUtil().getFileUrlWithFoldr(fileNm: fileNm, foldrWholePathNm: fromFoldr, amdDate: amdDate) {
+                    self.createTmpFolder(fileUrl: fileUrl, name: fileNm, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
+                }
+                
+                //                self.sendToNasFromLocalForDownload(url: fileUrl, name: fileNm, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
             }
             return
         }
@@ -299,34 +303,29 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         let credentialData = "\(App.nasFoldrFrontNm)\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
-        var headers = [
+        let headers = [
             "Authorization": "Basic \(base64Credentials)",
             "x-isi-ifs-target-type":"container"
         ]
         print("headers : \(headers)")
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(fromDevUuid)\(fromFoldr)?recursive=true"
+        var stringUrl = "\(App.URL.nasServer)\(App.nasFoldrFrontNm)\(userId)/\(fromDevUuid)\(fromFoldr)?recursive=true"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
-        let parameters: [String: AnyObject] // fill in your params
-
+        
         Alamofire.request(stringUrl,
                           method: .put,
                           encoding : JSONEncoding.default,
                           headers: headers).responseJSON { response in
-                            print(response.result.value)
+                            
                             let statusCode = (response.response?.statusCode)! //example : 200
                             print("create folder status code : \(statusCode)")
-                            switch response.result {
-                            case .success(let JSON):
-                                let responseData = JSON as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                print("message : \(message)")
+                            
+                            if statusCode == 200 || statusCode == 204 {
                                 self.sendToNasFromLocalForDownload(url: fileUrl, name: name, queId: queId, fromFoldr:fromFoldr, fromDevUuid:fromDevUuid)
-                                break
-                            case .failure(let error):
-                                print("create temp folder error : \(error.localizedDescription)")
-                                
+                            } else {
+                                // 실패
                             }
+                            
         }
     }
     
@@ -338,14 +337,14 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         let credentialData = "\(App.nasFoldrFrontNm)\(App.defaults.userId):\(password)".data(using: String.Encoding.utf8)!
         let base64Credentials = credentialData.base64EncodedString(options: [])
-        var headers = [
+        let headers = [
             "Authorization": "Basic \(base64Credentials)",
             "x-isi-ifs-target-type":"object"
             
         ]
-     
+        
         print("headers : \(headers)")
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(fromDevUuid)\(fromFoldr)/\(name)?overwrite=true"
+        var stringUrl = "\(App.URL.nasServer)\(App.nasFoldrFrontNm)\(userId)/\(fromDevUuid)\(fromFoldr)/\(name)?overwrite=true"
         stringUrl = stringUrl.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
         print("stringUrl : \(stringUrl)" )
         
@@ -354,41 +353,60 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         print("fileExtension : \(fileExtension)")
         print("file path : \(filePath)")
         
-        Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
-            .uploadProgress { progress in // main queue by default
-                print("Upload Progress: \(progress.fractionCompleted)")
-                
+
+        
+        var fileSize = 0.0
+        do {
+            let attribute = try FileManager.default.attributesOfItem(atPath: filePath)
+            if let size = attribute[FileAttributeKey.size] as? NSNumber {
+                fileSize =  size.doubleValue / 1000000.0
             }
-            .downloadProgress { progress in // main queue by default
-                print("Download Progress: \(progress.fractionCompleted)")
-            }
-            .responseString { response in
-//                print("Success: \(response.result.isSuccess)")
-                print("Response String : \(response)")
-                if let alamoError = response.result.error {
-                    print("upload error : \(alamoError.localizedDescription)")
-                    let alamoCode = alamoError._code
-//                    let statusCode = (response.response?.statusCode)!
-                } else { //no errors
-                    let statusCode = (response.response?.statusCode)! //example : 200
-                    print("statusCode : \(statusCode)")
-                    if(statusCode == 200){
-                        self.notifyNasUploadFinishToRemoteDownload(name: name, queId:queId)
-                    }
-                    
-                    
-                }
+        } catch {
+            print("Error: \(error)")
         }
+        print("FILE Yes AVAILABLE")
+        print("stream upload, fileSize : \(fileSize)")
+        
+        let stream:InputStream = InputStream(url: url)!
+        let newName = name.precomposedStringWithCanonicalMapping
+        
+        Alamofire.upload(multipartFormData: { multipartFormData in
+            //                    multipartFormData.append(url, withName: encodedSavedFileName)
+            multipartFormData.append(stream, withLength: UInt64(fileSize), name: "file", fileName: newName, mimeType: fileExtension)
+            
+        }, usingThreshold: UInt64.init(), to: stringUrl, method: .put, headers: headers,
+           encodingCompletion: { encodingResult in
+            switch encodingResult {
+            case .success(let upload, _, _):
+                upload.responseJSON { response in
+                    let statusCode = (response.response?.statusCode)! //example : 200
+                    print("statusCode : \(statusCode), response : \(response)")
+                    if(statusCode == 200) {
+                        self.notifyNasUploadFinishToRemoteDownload(name: newName, queId:queId)
+                    }
+                }
+                upload.uploadProgress { progress in
+                    
+                    print(progress.fractionCompleted)
+                }
+                break
+            case .failure(let encodingError):
+                print(encodingError.localizedDescription)
+                
+                break
+            }
+        })
+        
     }
     
     func notifyNasUploadFinishToRemoteDownload(name:String, queId:String){
-        let urlString = App.URL.server+"upldCmplt.do"
-        var jsonHeader:[String:String] = [
+        let urlString = App.URL.hostIpServer+"upldCmplt.do"
+        let jsonHeader:[String:String] = [
             "Content-Type": "application/json",
             "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
             "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
         ]
-        let paramas:[String : Any] = ["queId":queId,"nasStatusCode":"100"]
+        let paramas:[String : Any] = ["queId":queId,"nasStatusCode":"100","appPlay":appPlayYn]
         print("notifyNasUploadFinish param : \(paramas)")
         Alamofire.request(urlString,
                           method: .post,
@@ -397,20 +415,11 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                           headers: jsonHeader).responseJSON { response in
                             let statusCode = (response.response?.statusCode)! //example : 200
                             print("notifyNasUploadFinishToRemoteDownload  status code : \(statusCode)")
-                            switch response.result {
-                            case .success(let JSON):
-                                print(response.result.value)
-                                let responseData = JSON as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                print("message : \(message)")
+                            
+                            if statusCode == 200 {
                                 if let task = self.backgroundTask {
-                                        self.endBackgroundTask(taskID: task)
+                                    self.endBackgroundTask(taskID: task)
                                 }
-                                
-                                break
-                            case .failure(let error):
-                                
-                                print(error.localizedDescription)
                             }
         }
     }
@@ -418,7 +427,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     func sendToNasFromLocal(url:URL, name:String, toOsCd:String, fileId:String, toUserId:String, newFoldrWholePathNm:String){
         
         let password:String = UserDefaults.standard.string(forKey: "userPassword")!
-        var loginUserId = UserDefaults.standard.string(forKey: "userId")
+        let loginUserId = UserDefaults.standard.string(forKey: "userId")
         var userId:String = toUserId
         if(toUserId.isEmpty){
             userId = loginUserId!
@@ -446,49 +455,58 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             ]
         }
         print("headers : \(headers)")
-        var stringUrl = "https://araise.iptime.org/namespace/ifs/home/\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
+        var stringUrl = "\(App.URL.nasServer)\(App.nasFoldrFrontNm)\(userId)/\(userId)-gs\(newFoldrWholePathNm)/\(name)?overwrite=true"
         stringUrl =  stringUrl.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
-        print("stringUrl : \(stringUrl)" )
         
         let filePath = url.path
         let fileExtension = url.pathExtension
-        print("fileExtension : \(fileExtension)")
-        print("file path : \(filePath)")
         
-        
-        //되는 거
-        print("fileId : \(fileId)")
-        
-        Alamofire.upload(url, to: stringUrl, method: .put, headers: headers)
-            .uploadProgress { progress in // main queue by default
-                print("Upload Progress: \(progress.fractionCompleted)")
-                
+        var fileSize = 0.0
+        do {
+            let attribute = try FileManager.default.attributesOfItem(atPath: filePath)
+            if let size = attribute[FileAttributeKey.size] as? NSNumber {
+                fileSize =  size.doubleValue / 1000000.0
             }
-            .downloadProgress { progress in // main queue by default
-                //                print("Download Progress: \(progress.fractionCompleted)")
-            }
-            .responseString { response in
-                print("Success: \(response.result.isSuccess)")
-                print("Response String: \(response)")
-                if let alamoError = response.result.error {
-                    let alamoCode = alamoError._code
-                    let statusCode = (response.response?.statusCode)!
-                } else { //no errors
-                    let statusCode = (response.response?.statusCode)! //example : 200
-                    print("statusCode : \(statusCode)")
-                    if(statusCode == 200) {
-                        self.notifyNasUploadFinish(name: name, toOsCd:toOsCd, fileId:fileId, toUserId:toUserId, toFoldr:newFoldrWholePathNm)
-                    }
-                    
-                    
-                }
+        } catch {
+            print("Error: \(error)")
         }
+//        print("FILE Yes AVAILABLE")
+//        print("stream upload, fileSize : \(fileSize)")
+        
+        let stream:InputStream = InputStream(url: url)!
+        let newName = name.precomposedStringWithCanonicalMapping
+        Alamofire.upload(multipartFormData: { multipartFormData in
+            //                    multipartFormData.append(url, withName: encodedSavedFileName)
+            multipartFormData.append(stream, withLength: UInt64(fileSize), name: "file", fileName: newName, mimeType: fileExtension)
+            
+        }, usingThreshold: UInt64.init(), to: stringUrl, method: .put, headers: headers,
+           encodingCompletion: { encodingResult in
+            switch encodingResult {
+            case .success(let upload, _, _):
+                upload.responseJSON { response in
+                    let statusCode = (response.response?.statusCode)! //example : 200
+                    print("statusCode : \(statusCode), response : \(response)")
+                    if(statusCode == 200) {
+                        self.notifyNasUploadFinish(name: newName, toOsCd:toOsCd, fileId:fileId, toUserId:toUserId, toFoldr:newFoldrWholePathNm)
+                    }
+                }
+                upload.uploadProgress { progress in
+                    
+                    print(progress.fractionCompleted)
+                }
+                break
+            case .failure(let encodingError):
+                print(encodingError.localizedDescription)
+                
+                break
+            }
+        })
     }
     
     
     
     func notifyNasUploadFinish(name:String, toOsCd:String, fileId:String, toUserId:String, toFoldr:String){
-        let urlString = App.URL.server+"nasUpldCmplt.do"
+        let urlString = App.URL.hostIpServer+"nasUpldCmplt.do"
         var jsonHeader:[String:String] = [
             "Content-Type": "application/json",
             "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
@@ -510,7 +528,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
                                 print("message : \(message)")
-                                                              
+                                
                                 break
                             case .failure(let error):
                                 
@@ -531,18 +549,18 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         let deviceTokenString = deviceToken.reduce("", {$0 + String(format: "%02X", $1)})
         UserDefaults.standard.set(deviceTokenString, forKey: "notification_token")
         print( "노티피케이션 등록을 성공함, 디바이스 토큰 : \(deviceTokenString)" )
-//        self.createInitialTmpFolder(fromFoldr: "/Mobile", fromDevUuid: Util.getUuid())
+        //        self.createInitialTmpFolder(fromFoldr: "/Mobile", fromDevUuid: Util.getUuid())
         // With swizzling disabled you must set the APNs token here.
         // Messaging.messaging().apnsToken = deviceToken
     }
-
+    
     
     func applicationWillResignActive(_ application: UIApplication) {
         // Sent when the application is about to move from active to inactive state. This can occur for certain types of temporary interruptions (such as an incoming phone call or SMS message) or when the user quits the application and it begins the transition to the background state.
         // Use this method to pause ongoing tasks, disable timers, and invalidate graphics rendering callbacks. Games should use this method to pause the game.
         
     }
-
+    
     func applicationDidEnterBackground(_ application: UIApplication) {
         // Use this method to release shared resources, save user data, invalidate timers, and store enough application state information to restore your application to its current state in case it is terminated later.
         // If your application supports background execution, this method is called instead of applicationWillTerminate: when the user quits.
@@ -552,9 +570,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         
         
-
+        
     }
-
+    
     func applicationWillEnterForeground(_ application: UIApplication) {
         // Called as part of the transition from the background to the active state; here you can undo many of the changes made on entering the background.
         let starttime = UserDefaults.standard.object(forKey: "backgroundtime")
@@ -571,12 +589,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
             // app 버젼 확인
             appVerCheck()
         }
-
+        
     }
     func appVerCheck() {
         print("appVerCheck() in")
         
-        let versioncheckURL:String = "https://araise.iptime.org/GIGA_StorageAdmin/apps/checkLatestApp.do"
+        let versioncheckURL:String = App.URL.appCheck
         
         let bundleIdentifierS : String = (Bundle.main.bundleIdentifier)!
         let versionNumberS : String = (Bundle.main.infoDictionary?["CFBundleShortVersionString"]) as! String
@@ -628,8 +646,12 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
     func appupopen() {
         let notificationName = Notification.Name("updateWebView")
         NotificationCenter.default.post(name: notificationName, object: nil)
+        let time = DispatchTime.now() + .seconds(3)
+        DispatchQueue.main.asyncAfter(deadline: time) {
+            exit(0)
+        }
     }
-
+    
     
     func applicationDidBecomeActive(_ application: UIApplication) {
         // Restart any tasks that were paused (or not yet started) while the application was inactive. If the application was previously in the background, optionally refresh the user interface.
@@ -662,7 +684,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         NSLog("+=+=+=1")
         let cookie:String = UserDefaults.standard.string(forKey: "cookie")!
         let token:String = UserDefaults.standard.string(forKey: "token")!
-        let urlString = App.URL.server+"devStatusUpdate.do"
+        let urlString = App.URL.hostIpServer+"devStatusUpdate.do"
         let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": token,
@@ -694,7 +716,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         
         
     }
-
+    
     func applicationWillTerminate(_ application: UIApplication) {
         // Called when the application is about to terminate. Save data if appropriate. See also applicationDidEnterBackground:.
         print("applicationWillTerminate")
@@ -704,8 +726,9 @@ class AppDelegate: UIResponder, UIApplicationDelegate, GIDSignInDelegate {
         GIDSignIn.sharedInstance().signOut()
         
         
+        
     }
-  
+    
     
     func application(_ application: UIApplication,
                      open url: URL, sourceApplication: String?, annotation: Any) -> Bool {

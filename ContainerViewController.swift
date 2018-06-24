@@ -13,8 +13,8 @@ import Alamofire
 import SwiftyJSON
 import BEMCheckBox
 
-class ContainerViewController: UIViewController,UITableViewDelegate, UITableViewDataSource, GIDSignInDelegate, GIDSignInUIDelegate {
-    
+class ContainerViewController: UIViewController,UITableViewDelegate, UITableViewDataSource, GIDSignInDelegate, GIDSignInUIDelegate, UIDocumentInteractionControllerDelegate {
+    var documentController:UIDocumentInteractionController = UIDocumentInteractionController()
     var homeViewController:HomeViewController?
     var contextMenuWork:ContextMenuWork?
     var latelyUpdatedFileViewController:LatelyUpdatedFileViewController?
@@ -47,7 +47,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     let checkButton2 = BEMCheckBox()
     var segueCheck = 0
     var driveFileArray:[App.DriveFileStruct] = []
-    
+    var driveArrayWithoutUpfolder:[App.DriveFileStruct] = []
+    var driveArrayFolder:[App.DriveFileStruct] = []
     
     var multiCheckedfolderArray:[App.FolderStruct] = []
     var gDriveMultiCheckedfolderArray:[App.DriveFileStruct] = []
@@ -88,11 +89,14 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     var modifiedTime = ""
     var mimeType = ""
     var etsionNm = ""
+    var fileThumbYn = ""
+    var thumbnailLink = ""
     
     enum googleSignInSegueEnum: String {
         case loginForList = "loginForList"
         case loginForSend = "loginForSend"
         case loginForMultiSend = "loginForMultiSend"
+        case loginForSetting = "loginForSetting"
     }
     var googleSignInSegueState = googleSignInSegueEnum.loginForList
     
@@ -158,7 +162,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
+        documentController.delegate = self
         slideView.isHidden = true
         oneViewSortState = DbHelper.sortByEnum.none
         
@@ -167,7 +171,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         print("slideViewWith: \(slideViewWith)")
        
         
-        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(openDocument(urlDict:)),
+                                               name: NSNotification.Name("openDocument"),
+                                               object: nil)
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(openLicenseSegue),
                                                name: NSNotification.Name("openLicenseSegue"),
@@ -259,18 +266,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             activityIndicator.stopAnimating()
             indicatorAnimating = false
         } else {
-            print("activityIndicator")
+//            print("activityIndicator")
             activityIndicator.startAnimating()
             indicatorAnimating = true
         }
-    }
-    func setupDeviceListView(container: UIView){
-      
-     
-        
-        print("containerA setting called")
-        
-        
     }
     
     @objc func removeOneView(){
@@ -280,24 +279,25 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             previous.view.removeFromSuperview()
             previous.removeFromParentViewController()
         
-        let child = storyboard!.instantiateViewController(withIdentifier: "LatelyUpdatedFileViewController") as! LatelyUpdatedFileViewController
-        child.containerViewController = self
-        child.listViewStyleState = listViewStyleState
+        latelyUpdatedFileViewController = storyboard?.instantiateViewController(withIdentifier: "LatelyUpdatedFileViewController") as? LatelyUpdatedFileViewController
+        latelyUpdatedFileViewController?.containerViewController = self
+        latelyUpdatedFileViewController?.listViewStyleState = listViewStyleState
 //        self.willMove(toParentViewController: nil)
-        child.willMove(toParentViewController: parent)
-        self.addChildViewController(child)
+//        latelyUpdatedFileViewController.willMove(toParentViewController: parent)
+        self.addChildViewController(latelyUpdatedFileViewController!)
         
         let transition = CATransition()
         transition.type = kCATransitionPush
         transition.subtype = kCATransitionFromRight
         transition.speed = 1.8
         containerView.layer.add(transition, forKey: nil)
-        containerView.addSubview(child.view)
-        child.didMove(toParentViewController: parent)
+        containerView.addSubview(latelyUpdatedFileViewController!.view)
+        latelyUpdatedFileViewController?.didMove(toParentViewController: parent)
         
         let w = containerView.frame.size.width;
         let h = containerView.frame.size.height;
-        child.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+        latelyUpdatedFileViewController?.view.frame = CGRect(x: 0, y: 0, width: w, height: h)
+        
         
         print("containerA setting called")
     }
@@ -308,9 +308,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             previous.view.removeFromSuperview()
             previous.removeFromParentViewController()
         }
-        
-        
-        homeViewController = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as! HomeViewController
+        homeViewController = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as? HomeViewController
         homeViewController?.containerViewController = self
         homeViewController?.listViewStyleState = listViewStyleState
 //        self.willMove(toParentViewController: nil)
@@ -334,7 +332,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     }
     
     func clickDeviceFromSlideMenu(indexPath:IndexPath){
-        activityIndicator.startAnimating()
+        print("clickDeviceFromSlideMenu called")
+        showIndicator()
         if let previous = storyboard!.instantiateViewController(withIdentifier: "HomeViewController") as? HomeViewController {
             previous.willMove(toParentViewController: nil)
             previous.view.removeFromSuperview()
@@ -342,9 +341,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         }
         
         removeLatelyView()
-        
-        let indexPathRow = ["indexPathRow":"\(indexPath.row)"]
-        NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
+        homeViewController?.child?.clickDeviceItem2(indexPathRow: indexPath.row)
     }
     
    
@@ -359,6 +356,9 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 vc.size = self.size
                 vc.createdTime = self.createdTime
                 vc.modifiedTime = self.modifiedTime
+                vc.fileThumbYn = self.fileThumbYn
+                vc.fromOsCd = self.fromOsCd
+                vc.thumbnailLink = self.thumbnailLink
 
             }
         } else if segue.identifier == "googleSignInSegue" {
@@ -388,10 +388,16 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             
         } else if segue.identifier == "multiProgressSegue" {
             if let vc = segue.destination as? MultiStatusViewController {
+                vc.containerViewController = self
+
                 vc.fileIdArry = self.fileIdArry
                 vc.fileNmArry = self.fileNmArry
                 vc.fileSizeArry = self.fileSizeArry
                 vc.fileEtsionmArry = self.fileEtsionmArry
+            }
+        } else if segue.identifier == "showSettingSegue" {
+            if let vc = segue.destination as? SettingViewController {
+                vc.containerViewController = self
             }
         }
         
@@ -401,6 +407,16 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     @objc func getFileIdFromBtnShow(fileInfo: NSNotification) {
         print("sdfs")
         if let getFileId = fileInfo.userInfo?["fileId"] as? String, let getFoldrWholePathNm = fileInfo.userInfo?["foldrWholePathNm"] as? String, let getDeviceName = fileInfo.userInfo?["deviceName"] as? String {
+            if  let getFileThumbYn = fileInfo.userInfo?["fileThumbYn"] as? String {
+                fileThumbYn = getFileThumbYn
+            }
+            if let getFromOsCd = fileInfo.userInfo?["fromOsCd"] as? String {
+                fromOsCd = getFromOsCd
+            }
+            if let getthumbnailLink = fileInfo.userInfo?["thumbnailLink"] as? String {
+                thumbnailLink = getthumbnailLink
+            }
+            
             fileId = getFileId
             foldrWholePathNm = getFoldrWholePathNm
             deviceName = getDeviceName
@@ -470,6 +486,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         alertController.addAction(okAction)
         alertController.addAction(cancelButton)
         self.present(alertController,animated: true,completion: nil)
+        
     }
     func getPreviousSyncEmail(){
         let headers = [
@@ -479,8 +496,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         ]
         
         print("headers : \(headers)")
-        let userId:String = App.defaults.userId
-        Alamofire.request(App.URL.server+"selectCloudId.json"
+        let userId:String = UserDefaults.standard.string(forKey: "userId")!
+        Alamofire.request(App.URL.hostIpServer+"selectCloudId.json"
             , method: .post
             , parameters:["userId":userId,"cloudKind":"D"]
             , encoding : JSONEncoding.default
@@ -490,11 +507,11 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 switch response.result {
                 case .success(let value):
                     let responseData = value as! NSDictionary
-                    let message = responseData.object(forKey: "message")
-                    print("message : \(message)")
+//                    let message = responseData.object(forKey: "message")
+//                    print("message : \(message)")
                     if let listData = responseData.object(forKey: "data") {
-                        let data = listData as! NSDictionary
-                        let cloudId = data.object(forKey: "cloudId") as! String
+                        let data = listData as? NSDictionary
+                        let cloudId = data?.object(forKey: "cloudId") as! String
                         print("cloudId : \(cloudId)")
                         self.showPreviousSyncEmail(email:cloudId)
                     } else {
@@ -510,6 +527,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                     }
                     self.homeViewController?.cellStyle = 1
                     self.homeViewController?.showBottomIndicator()
+                    self.showErrorAlert()
                     
                     break
                 }
@@ -654,8 +672,8 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     
     func googleSignIn(){
-        print("googleSignIn")
-        GIDSignIn.sharedInstance().signOut()
+        
+//        GIDSignIn.sharedInstance().signOut()
         let userDefaults = UserDefaults.standard
         let dict = UserDefaults.standard.dictionaryRepresentation()
         for key in dict.keys {
@@ -669,17 +687,23 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         GIDSignIn.sharedInstance().uiDelegate = self
         GIDSignIn.sharedInstance().scopes = scopes
         GIDSignIn.sharedInstance().signIn()
-        
+        print("googleSignIn")
     }
     
     func loginWBySelectedEmail(){
         print("loginWBySelectedEmail called")
+        GIDSignIn.sharedInstance().delegate = self
+        GIDSignIn.sharedInstance().uiDelegate = self
+        GIDSignIn.sharedInstance().scopes = scopes
+        
         let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
-        print("loginState : \(loginState)")
+//        print("loginState : \(loginState)")
         print("loginWBySelectedEmail sigin in purpose : \(self.googleSignInSegueState)")
         if(loginState != "login") {
             googleSignIn()
+            print("!login")
         }  else {
+            print("login")
             GIDSignIn.sharedInstance().signInSilently()
         }
     }
@@ -717,20 +741,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 
             }
             q2.async(group:g) {
-                
-                
-//                let dbHelper = DbHelper()
-//                let check = dbHelper.googleEmailExistenceCheck(email: user.profile.email)
                 accessToken = GIDSignIn.sharedInstance().currentUser.authentication.accessToken
-//                print("check : \(check)")
-//                if(check){
-                
-//                    dbHelper.googleAccessTokenUpdate(getEmail: user.profile.email, getAccessToken: accessToken, getTime:stToday)
-//                } else {
-                
-//                    dbHelper.googleEmailToSqlite(getEmail: user.profile.email, getAccessToken : accessToken, getTime:stToday)
-                    
-//                }
                 print("logedIn")
             }
             g.notify(queue: DispatchQueue.main){
@@ -743,27 +754,20 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 
                 print("googleEmail : \(self.googleEmail)")
                 print("sigin in purpose : \(self.googleSignInSegueState)")
+                self.googleEmail = user.profile.email
+                self.googleDriveLoginState = .login
+                let defaults = UserDefaults.standard
+                defaults.set(self.googleEmail, forKey: "googleEmail")
+                defaults.set(accessToken, forKey: "googleAccessToken")
+                defaults.set(stToday, forKey: "googleLoginTime")
+                defaults.set("login", forKey: "googleDriveLoginState")
+                defaults.synchronize()
                 if(self.googleSignInSegueState == .loginForList) {
-                    self.googleEmail = user.profile.email
-                    self.googleDriveLoginState = .login
-                    let defaults = UserDefaults.standard
-                    defaults.set(self.googleEmail, forKey: "googleEmail")
-                    defaults.set(accessToken, forKey: "googleAccessToken")
-                    defaults.set(stToday, forKey: "googleLoginTime")
-                    defaults.set("login", forKey: "googleDriveLoginState")
-                    defaults.synchronize()
+                   
                     self.getFiles(accessToken: accessToken, root: "root")
                 } else if self.googleSignInSegueState == .loginForSend {
                     if(self.googleDriveLoginState != .login){
-                        self.googleEmail = user.profile.email
-                        self.googleDriveLoginState = .login
-                        let defaults = UserDefaults.standard
-                        defaults.set(self.googleEmail, forKey: "googleEmail")
-                        defaults.set(accessToken, forKey: "googleAccessToken")
-                        defaults.set(stToday, forKey: "googleLoginTime")
-                        defaults.set("login", forKey: "googleDriveLoginState")
-                        defaults.synchronize()
-                        let alertController = UIAlertController(title: "로그인 되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+                         let alertController = UIAlertController(title: "로그인 되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
                         
                         let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
                             self.halfBlackView.removeFromSuperview()
@@ -775,6 +779,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                         alertController.addAction(okAction)
                         self.present(alertController,animated: true,completion: nil)
                         return
+                    } else if self.googleSignInSegueState == .loginForSetting {
+                        //세팅 업데이트
+                        NotificationCenter.default.post(name: Notification.Name("loginStateUpdate"), object: self)
+                        
                     } else {
                         if(self.activityIndicator?.isAnimating)!{
                             self.activityIndicator?.stopAnimating()
@@ -784,34 +792,29 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                    
                 } else {
                     //multi
+                    print("nas to multi drive sing in success")
                     if(self.googleDriveLoginState != .login){
-                        self.googleEmail = user.profile.email
-                        self.googleDriveLoginState = .login
-                        let defaults = UserDefaults.standard
-                        defaults.set(self.googleEmail, forKey: "googleEmail")
-                        defaults.set("login", forKey: "googleDriveLoginState")
-                        defaults.set(accessToken, forKey: "googleAccessToken")
-                        defaults.set(stToday, forKey: "googleLoginTime")
-                        
-                        defaults.synchronize()
-                        let alertController = UIAlertController(title: "로그인 되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
-                        
-                        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
-                            self.halfBlackView.removeFromSuperview()
-                            if(self.activityIndicator?.isAnimating)!{
-                                self.activityIndicator?.stopAnimating()
+                        DispatchQueue.main.async {
+                            let alertController = UIAlertController(title: "로그인 되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+                            
+                            let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+                                self.finishLoading()
+                                NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
+                                
                             }
-                         NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
-                           
+                            alertController.addAction(okAction)
+                            self.present(alertController,animated: true,completion: nil)
                         }
-                        alertController.addAction(okAction)
-                        self.present(alertController,animated: true,completion: nil)
+                        
                         return
                     } else {
-                        if(self.activityIndicator?.isAnimating)!{
-                            self.activityIndicator?.stopAnimating()
+                        
+                        DispatchQueue.main.async {
+                            self.finishLoading()
+                            print("googleDriveLoginState : \(self.googleDriveLoginState), getFileDict : \(self.getFileDict) ")
+                            NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
                         }
-                        NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
+                        
                     }
                     
                 }
@@ -826,9 +829,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     }
     
     func getFiles(accessToken:String, root:String){
-        homeViewController?.homeViewToggleIndicator()
+        showIndicator()
         print("getFiles token : \(accessToken)")
         let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
+        print("getFiles token : \(accessToken)")
         self.driveFileArray.removeAll()
         var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false&access_token=\(accessToken)" + App.URL.gDriveFileOption // 0eun
         url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
@@ -843,35 +847,50 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                 if(json["error"].exists()){
                                     print("error: \(json["error"])")
                                     self.googleSignIn()
-                                   
-                                    
+
                                 } else {
-                                    if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
+                                    if let serverList:[AnyObject] = json["files"].arrayObject as [AnyObject]? {
+                                        self.driveFileArray.removeAll()
+                                        self.driveArrayFolder.removeAll()
+                                        self.driveArrayWithoutUpfolder.removeAll()
                                         for file in serverList {
 //                                            print("file : \(file)")
                                             if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 {
                                                 let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
+                                                if fileStruct.mimeType.contains("folder"){
+                                                    self.driveArrayFolder.append(fileStruct)
+                                                } else {
+                                                    if fileStruct.fileExtension == "nil" {
+                                                        continue
+                                                    }
+                                                    self.driveArrayWithoutUpfolder.append(fileStruct)
+                                                    
+                                                }
                                                 self.driveFileArray.append(fileStruct)
                                             }
                                         }
-                                        DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
+                                        
                                         self.syncCloudEmailToServer(cloudId: self.googleEmail)
                                         
                                     } else {
                                         print("error: \(json["errors"])")
                                         self.googleSignIn()
-                                        if(self.activityIndicator?.isAnimating)!{
-                                            self.activityIndicator?.stopAnimating()
-                                        }
+                                        self.finishLoading()
                                     }
                                 }
                                 
                             case .failure(let error):
                                 NSLog(error.localizedDescription)
-                                self.activityIndicator?.stopAnimating()
+                                DispatchQueue.main.async {
+                                    self.finishLoading()
+                                    self.showErrorAlert()
+                                }
+                                
+                                
                             }
                             
         }
+        
     }
     
     
@@ -930,7 +949,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     func syncCloudEmailToServer(cloudId: String){
         
-        let urlString = App.URL.server+"registCloudId.do"
+        let urlString = App.URL.hostIpServer+"registCloudId.do"
         let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
@@ -955,17 +974,20 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                 print("googleSignInSegueState : \(self.googleSignInSegueState)")
                                 if (self.googleSignInSegueState == .loginForList){
                                     if(self.activityIndicator.isAnimating){
-                                        self.activityIndicator.stopAnimating()
+                                        self.finishLoading()
                                     }
                                     let cellStyle = ["cellStyle":3]
                                       let folderName = ["folderName":"Google Drive","deviceName":"Google Drive", "devUuid":"googleDrive"]
                                     NotificationCenter.default.post(name: Notification.Name("setupFolderPathView"), object: self, userInfo: folderName)
-
+                                    self.homeViewController?.driveFileArray = self.driveFileArray
+                                    self.homeViewController?.driveArrayFolder = self.driveArrayFolder
+                                    self.homeViewController?.driveArrayWithoutUpfolder = self.driveArrayWithoutUpfolder
+                                    print("count : \(self.driveFileArray.count), \(self.driveArrayFolder.count), \(self.driveArrayWithoutUpfolder.count)")
                                     NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self, userInfo: cellStyle)
 //                                     0eun - end
                                 } else {
                                     if(self.activityIndicator.isAnimating){
-                                        self.activityIndicator.stopAnimating()
+                                        self.finishLoading()
                                     }
                                     NotificationCenter.default.post(name: Notification.Name("nasFolderSelectSegue"), object: self, userInfo: self.getFileDict)
                                 }
@@ -973,6 +995,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                                 break
                             case .failure(let error):
                                 NSLog(error.localizedDescription)
+                                DispatchQueue.main.async {
+                                    self.finishLoading()
+                                    self.showErrorAlert()
+                                }
                                 break
                             }
         }
@@ -980,16 +1006,15 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     
     func googleSignInCheck(name:String, path:String, fileDict:[String:String]){
-        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
             GIDSignIn.sharedInstance().delegate = self
             GIDSignIn.sharedInstance().uiDelegate = self
             GIDSignIn.sharedInstance().scopes = scopes
             activityIndicator.startAnimating()
-//            var accessToken = DbHelper().getAccessToken(email: googleEmail)
-            var accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
-            var getTokenTime = UserDefaults.standard.string(forKey: "googleLoginTime")!
+            getFileDict = fileDict
+            let accessToken:String = UserDefaults.standard.string(forKey: "googleAccessToken") ?? ""
+            let getTokenTime:String = UserDefaults.standard.string(forKey: "googleLoginTime") ?? ""
+//            print("accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
             if(!getTokenTime.isEmpty){
-                print("accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
                 let now = Date()
                 let dateGetTokenTime = Util.stringToDate(text: getTokenTime)
                 var userCalendar = Calendar.current
@@ -999,52 +1024,41 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 let timeDifference = userCalendar.dateComponents(requestedComponent, from: dateGetTokenTime, to: now)
                 //                        print(timeDifference.hour)
                 let hour = timeDifference.hour
-                if(hour! < 1){
+                let minute = timeDifference.minute
+//                print("token minute difference : \(minute)")
+                if(hour! < 1 && minute! < 50) {
                     //                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
                     let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
                     if(loginState == "login" && GIDSignIn.sharedInstance().hasAuthInKeychain()){
-                        print("get file")
-                        getFileDict = fileDict
                         googleSignInSegueState = .loginForSend
                         GIDSignIn.sharedInstance().signInSilently()
-                        
-                        
                     } else {
-                        
                         print("login called")
                         googleSignInSegueState = .loginForSend
                         googleSignInAlertShow()
                     }
-                    
                 } else {
                     print("token time expired")
                     googleSignInSegueState = .loginForSend
                     googleSignInAlertShow()
                 }
+            } else {
+                googleSignInSegueState = .loginForSend
+                googleSignInAlertShow()
             }
-           
-        } else {
-            print("google email")
-            googleSignInSegueState = .loginForSend
-            googleSignInAlertShow()
-        }
-   
+    
     }
     
     func googleSignInCheckForMulti(fileDict:[String:String], getMultiArray:[App.FolderStruct]){
-        if let googleEmail = UserDefaults.standard.string(forKey: "googleEmail"){
             GIDSignIn.sharedInstance().delegate = self
             GIDSignIn.sharedInstance().uiDelegate = self
             GIDSignIn.sharedInstance().scopes = scopes
             activityIndicator.startAnimating()
             multiCheckedfolderArray = getMultiArray
-          
-//            var accessToken = DbHelper().getAccessToken(email: googleEmail)
-            var accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
-            var getTokenTime =  ""
-            if !accessToken.isEmpty {
-                getTokenTime = DbHelper().getTokenTime(email: googleEmail)
-            }
+            getFileDict = fileDict
+            
+            let accessToken:String = UserDefaults.standard.string(forKey: "googleAccessToken") ?? ""
+            let getTokenTime:String = UserDefaults.standard.string(forKey: "googleLoginTime") ?? ""
             if(!getTokenTime.isEmpty){
                 print("accessToken : \(accessToken), getTokenTime : \(getTokenTime)")
                 let now = Date()
@@ -1056,43 +1070,39 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
                 let timeDifference = userCalendar.dateComponents(requestedComponent, from: dateGetTokenTime, to: now)
                 //                        print(timeDifference.hour)
                 let hour = timeDifference.hour
-                if(hour! < 1){
+                let minute = timeDifference.minute
+//                print("token minute difference : \(minute)")
+                if(hour! < 1 && minute! < 50) {
                     //                            if(GIDSignIn.sharedInstance().hasAuthInKeychain()){
                     let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
                     if(loginState == "login" && GIDSignIn.sharedInstance().hasAuthInKeychain()){
-                        print("get file")
-                        getFileDict = fileDict
                         googleSignInSegueState = .loginForMultiSend
                         GIDSignIn.sharedInstance().signInSilently()
-                        
-                        
                     } else {
-                        
-                        print("login called")
+//                        print("login called")
                         googleSignInSegueState = .loginForMultiSend
                         googleSignInAlertShow()
                     }
-                    
                 } else {
-                    print("token time expired")
+//                    print("token time expired")
                     googleSignInSegueState = .loginForMultiSend
                     googleSignInAlertShow()
                 }
+            } else {
+                googleSignInSegueState = .loginForMultiSend
+                googleSignInAlertShow()
             }
-            
-        } else {
-            print("google email")
-            googleSignInSegueState = .loginForMultiSend
-            googleSignInAlertShow()
-        }
+     
         
     }
+    
+    
+    
     
     @objc func nasFolderSelectSegue(fileDict:NSNotification){
         if let getFileId = fileDict.userInfo?["fileId"] as? String, let getFromDevUuid = fileDict.userInfo?["fromDevUuid"] as? String, let getUserId = fileDict.userInfo?["fromUserId"] as? String, let getOsCd = fileDict.userInfo?["fromOsCd"] as? String, let getToState = fileDict.userInfo?["toStorage"] as? String {
             fileId = getFileId
-            print("getFileId : \(fileId)")
-            
+//            print("getFileId : \(fileId)")
             foldrWholePathNm = fileDict.userInfo?["oldFoldrWholePathNm"] as? String ?? "nil"
             fileNm = fileDict.userInfo?["fileNm"] as? String ?? "nil"
             fromOsCd = getOsCd
@@ -1100,8 +1110,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             fromFoldr = fileDict.userInfo?["fromFoldr"] as? String ?? "nil"
             if let getDate =  fileDict.userInfo?["amdDate"] as? String {
                 amdDate = getDate
-            }
-            
+            }            
             if let getFromFoldrId = fileDict.userInfo?["fromFoldrId"] as? String {
                 fromFoldrId = getFromFoldrId
             }
@@ -1128,6 +1137,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
 
                 case "googleDriveMulti":
                     storageKind = .nas_gdrive_multi
+                break
+                
+            case "local_gdrive_multi":
+                storageKind = .local_gdrive_multi
                 break
                 default:
                 break
@@ -1159,10 +1172,14 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     
     @objc func dismissContainerView(){
       
+        NotificationCenter.default.post(name: NSNotification.Name("toggleSideMenu"), object: nil)
+        let rootView = UIApplication.shared.keyWindow?.rootViewController
+        print(rootView)
         dismiss(animated: false, completion: {
-            
-            NotificationCenter.default.post(name: Notification.Name("clearInputLogin"), object: nil)
+            print("dismiss completion")
         })
+        NotificationCenter.default.post(name: Notification.Name("clearInputLogin"), object: nil)
+
         
     }
     
@@ -1179,6 +1196,10 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
             storageKind = .local_gdrive_multi
         } else if toStorage == "nas_gdrive_multi" {
             storageKind = .nas_gdrive_multi
+        } else if toStorage == "gdrive_nas_multi" {
+            storageKind = .gdrive_nas_multi
+        } else if toStorage == "search_nas_multi" {
+            storageKind = .search_nas_multi
         } else {
             storageKind = .multi_nas_multi
         }
@@ -1190,7 +1211,7 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
         performSegue(withIdentifier: "nasFolderSelectSegue", sender: self)
     }
     func getGDriveMultiFolderArray(getArray:[App.DriveFileStruct], toStorage:String, fromUserId:String, fromOsCd:String,fromDevUuid:String){
-        print("getArray : \(getArray)")
+        print("getGDriveMultiFolderArray : \(getArray)")
         gDriveMultiCheckedfolderArray = getArray
         storageKind = .gdrive_nas_multi
         self.fromOsCd = fromOsCd
@@ -1201,34 +1222,33 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     }
     
     func showHalfBlackView(getContextMenuWork:ContextMenuWork){
-        view.addSubview(self.halfBlackView)
-        contextMenuWork = getContextMenuWork
-        halfBlackView.alpha = 0.3
-        halfBlackView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
-        halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
-        halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
-        halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
-        tapGesture = UITapGestureRecognizer(target: self, action: #selector(finishLoading))
-        tapGesture.cancelsTouchesInView = false
-        halfBlackView.addGestureRecognizer(tapGesture)
+        DispatchQueue.main.async {
+            self.view.addSubview(self.halfBlackView)
+            self.contextMenuWork = getContextMenuWork
+            self.halfBlackView.alpha = 0.3
+            self.halfBlackView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+            self.halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+            self.halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+            self.halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+            self.tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.finishLoading))
+            self.tapGesture.cancelsTouchesInView = false
+            self.halfBlackView.addGestureRecognizer(self.tapGesture)
+        }
+        
         
     }
     
     @objc func finishLoading(){
-        
-        if(self.activityIndicator.isAnimating){
-            self.activityIndicator.stopAnimating()
+        DispatchQueue.main.async {
+            if(self.activityIndicator.isAnimating){
+                self.activityIndicator.stopAnimating()
+            }
+            self.halfBlackView.removeGestureRecognizer(self.tapGesture)
+            self.halfBlackView.removeFromSuperview()
+            print("finish loading called")
         }
-        halfBlackView.removeGestureRecognizer(tapGesture)
-        self.halfBlackView.removeFromSuperview()
-//        contextMenuWork?.cancelAamofire()
         
-//        let alertController = UIAlertController(title: "작업이 취소되었습니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
-//        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
-//
-//        }
-//        alertController.addAction(okAction)
-//        self.present(alertController,animated: true,completion: nil)
+
         
     }
     func alamofireCompleted(){
@@ -1238,20 +1258,124 @@ class ContainerViewController: UIViewController,UITableViewDelegate, UITableView
     }
     
     func showIndicator(){
-        if(!self.activityIndicator.isAnimating){
-            self.activityIndicator.startAnimating()
+        DispatchQueue.main.async {
+            if(!self.activityIndicator.isAnimating){
+                self.activityIndicator.startAnimating()
+            }
+            self.view.addSubview(self.halfBlackView)
+            self.halfBlackView.alpha = 0.3
+            self.halfBlackView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+            self.halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+            self.halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+            self.halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+            self.tapGesture = UITapGestureRecognizer(target: self, action: #selector(self.finishLoading))
+            self.tapGesture.cancelsTouchesInView = false
+            self.halfBlackView.addGestureRecognizer(self.tapGesture)
+            self.view.bringSubview(toFront: self.activityIndicator)
+            self.activityIndicator.isHidden = false
         }
-        view.addSubview(self.halfBlackView)
-        halfBlackView.alpha = 0.3
-        halfBlackView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
-        halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
-        halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
-        halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
-        tapGesture = UITapGestureRecognizer(target: self, action: #selector(finishLoading))
-        tapGesture.cancelsTouchesInView = false
-        halfBlackView.addGestureRecognizer(tapGesture)
+        
     }
    
+    func inActiveMultiCheck(){
+        if homeViewController != nil {
+            homeViewController?.inActiveMultiCheck()
+        }
+        if latelyUpdatedFileViewController != nil {
+            latelyUpdatedFileViewController?.inActiveMultiCheck()
+        }
+        
+    }
+    public func showErrorAlert(){
+        let alertController = UIAlertController(title: "네트워크 에러로 잠시 후 재시도 부탁 드립니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+        }
+        alertController.addAction(okAction)
+        self.present(alertController,animated: true,completion: nil)
+    }
+    @objc func openDocument(urlDict:NSNotification){
+        
+        if let getUrl = urlDict.userInfo!["url"] as? URL {
+            documentController = UIDocumentInteractionController(url: getUrl)
+            documentController.delegate = self
+            //            documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
+            
+            if documentController.presentPreview(animated: true) {
+                print("present available")
+            } else {
+                print("present not available")
+                documentController.presentOptionsMenu(from: CGRect.zero, in: self.view, animated: true)
+            }
+        }
+    }
+    
+    func documentInteractionControllerViewControllerForPreview(_ controller: UIDocumentInteractionController) -> UIViewController {
+        return self
+    }
+    func documentInteractionControllerViewForPreview(_ controller: UIDocumentInteractionController) -> UIView? {
+        return self.view
+    }
+    
+    func documentInteractionControllerRectForPreview(_ controller: UIDocumentInteractionController) -> CGRect {
+        
+        return self.view.frame
+    }
+    func documentInteractionControllerWillBeginPreview(_ controller: UIDocumentInteractionController) {
+        print("documentInteractionControllerWillBeginPreview")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+            //           self.containerViewController?.activityIndicator.stopAnimating()
+            self.finishLoading()
+        })
+    }
+    
+    
+    
+    func documentInteractionControllerDidEndPreview(_ controller: UIDocumentInteractionController) {
+        print("documentInteractionControllerDidEndPreview")
+        //        homeViewToggleIndicator()
+        let fileIdDict = ["fileId":"0"]
+        if (listViewStyleState == .grid) {
+            //            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+        }
+        
+        //remove appplay file
+        let pathForRemove:String = FileUtil().getFilePath(fileNm: "AppPlay", amdDate: "amdDate")
+        print("pathForRemove : \(pathForRemove)")
+        if(pathForRemove.isEmpty){
+            
+        } else {
+            FileUtil().removeFile(path: pathForRemove)
+            SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
+        }
+    }
+    
+    
+    
+    func documentInteractionControllerWillPresentOptionsMenu(_ controller: UIDocumentInteractionController) {
+        print("documentInteractionControllerWillPresentOptionsMenu")
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1, execute: {
+            
+            self.activityIndicator.stopAnimating()
+        })
+    }
+    
+    func documentInteractionControllerDidDismissOptionsMenu(_ controller: UIDocumentInteractionController) {
+        print("documentInteractionControllerDidDismissOptionsMenu")
+        //        homeViewToggleIndicator()
+        let fileIdDict = ["fileId":"0"]
+        if (listViewStyleState == .grid) {
+            //            NotificationCenter.default.post(name: Notification.Name("toggleBottomMenu"), object: self, userInfo: fileIdDict)
+        }
+        
+        //remove appplay file
+        let pathForRemove:String = FileUtil().getFilePath(fileNm: "AppPlay", amdDate: "amdDate")
+        print("pathForRemove : \(pathForRemove)")
+        if(pathForRemove.isEmpty){
+            
+        } else {
+            FileUtil().removeFile(path: pathForRemove)
+        }
+    }
     
 }
 

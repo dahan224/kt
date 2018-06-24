@@ -196,6 +196,10 @@ class GDriveFolderListCell: UICollectionViewCell {
     func multiCheck(){
         
     }
+    func resetMultiCheck(){
+        btnMultiChecked = false
+        btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+    }
     
     
     @objc func setupFoldrView(){

@@ -71,20 +71,21 @@ class SendMultiToNasFromGDrive {
                                     if let serverList:[AnyObject] = json["files"].arrayObject as? [AnyObject] {
                                         if serverList.count > 0 {
                                             for file in serverList {
-                                                let fileStruct = App.DriveFileStruct(device:file, foldrWholePaths:["sd"])
-                                                self.googleFolderIdsToDownLoad.append(fileStruct.fileId)
-                                                let editCurrentFolderPath = "\(currentFolderPath)/\(fileStruct.name)"
-                                                self.folderPathToDownLoad.append(editCurrentFolderPath)
-                                                self.gdriveFolderIdDict.updateValue(fileStruct.fileId, forKey: editCurrentFolderPath)
-                                                print("second return called")
-                                                self.folderChildrenCheck(foldrId: fileStruct.fileId) {
-                                                    response in
-                                                    if( response > 0){
-                                                        self.getGDriveFolderIdsToDownload(foldrId: fileStruct.fileId, currentFolderPath: editCurrentFolderPath)
-                                                        return
+                                                if let trashCheck = file["trashed"] as? Int, let sharedCheck = file["shared"] as? Int, let starredCheck = file["starred"] as? Int, trashCheck == 0 && sharedCheck == 0 && starredCheck == 0 {
+                                                    let fileStruct = App.DriveFileStruct(device:file, foldrWholePaths:["sd"])
+                                                    self.googleFolderIdsToDownLoad.append(fileStruct.fileId)
+                                                    let editCurrentFolderPath = "\(currentFolderPath)/\(fileStruct.name)"
+                                                    self.folderPathToDownLoad.append(editCurrentFolderPath)
+                                                    self.gdriveFolderIdDict.updateValue(fileStruct.fileId, forKey: editCurrentFolderPath)
+                                                    print("second return called")
+                                                    self.folderChildrenCheck(foldrId: fileStruct.fileId) {
+                                                        response in
+                                                        if( response > 0){
+                                                            self.getGDriveFolderIdsToDownload(foldrId: fileStruct.fileId, currentFolderPath: editCurrentFolderPath)
+                                                            return
+                                                        }
                                                     }
                                                 }
-                                                
                                                 
                                             }
                                         }
@@ -170,7 +171,7 @@ class SendMultiToNasFromGDrive {
             if let serverList:[AnyObject] = json["files"].arrayObject as [AnyObject]? {
                 for file in serverList {
                     //                                            print("file : \(file)")
-                    if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 && file["mimeType"] as? String != Util.getGoogleMimeType(etsionNm: "folder"){
+                    if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 && file["mimeType"] as? String != Util.getGoogleMimeType(etsionNm: "folder") && file["fileExtension"] as? String != "nil"{
                         let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
                         
                         self.driveFileArray.append(fileStruct)
@@ -185,9 +186,9 @@ class SendMultiToNasFromGDrive {
         }
     }
     func downloadFileFromGDriveFolder(){
-//        for file in driveFileArray {
-            //            print("count : \(driveFileArray.count), download file : \(file)")
-//        }
+        //        for file in driveFileArray {
+        //            print("count : \(driveFileArray.count), download file : \(file)")
+        //        }
         print("driveFileArray.count  :\(driveFileArray.count)")
         if(driveFileArray.count > 0){
             let index = driveFileArray.count - 1
@@ -214,7 +215,7 @@ class SendMultiToNasFromGDrive {
     }
     func callDownloadFromDriveFolder(fileId:String, mimeType:String,name:String, pathToSave:String, index:Int){
         let fullPathToSave = "\(pathToSave)/\(name)"
-        GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: fullPathToSave) { responseObject, error in
+        GoogleWork().downloadGDriveFile(fileId: fileId, mimeType: mimeType, name: fullPathToSave, startByte: 0, endByte: 102400) { responseObject, error in
             if let fileUrl = responseObject {
                 self.driveFileArray.remove(at: index)
                 self.downloadFileFromGDriveFolder()
@@ -226,7 +227,7 @@ class SendMultiToNasFromGDrive {
     func finishGDriveFolderDownload(){
         
         SyncLocalFilleToNas().callSyncToDownloadFronGDriveToSendToNas(view: "NasSendController", parent: nasSendController!)
-       
+        
         
     }
     

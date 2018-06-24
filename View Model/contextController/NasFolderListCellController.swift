@@ -25,46 +25,45 @@ class NasFolderListCellController {
         cell.lblMain.text = folderArray[indexPath.row].foldrNm
         cell.lblSub.text = folderArray[indexPath.row].amdDate
     
-        cell.btnOption.isHidden = false
-        cell.btnShow.tag = indexPath.row
-        cell.btnShow.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDwnld.tag = indexPath.row
-        cell.btnDwnld.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnNas.tag = indexPath.row
-        cell.btnNas.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnGDrive.tag = indexPath.row
-        cell.btnGDrive.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionNasFolderShowClicked(sender:)), for: .touchUpInside)
-        cell.btnDelete.tag = indexPath.row
-        cell.btnDelete.addTarget(self, action: #selector(HomeDeviceCollectionVC.optionNasFolderShowClicked(sender:)), for: .touchUpInside)
+        if multiCheckListState == .active {
+            if folderArray[indexPathRow].checked {
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+            } else {
+                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+            }
+            
+            
+        }
         return cell
     }
     
     func NasFolderContextMenuCalled(cell:NasFolderListCell, indexPath:IndexPath, sender:UIButton, folderArray:[App.FolderStruct], deviceName:String, parentView:String, deviceView:HomeDeviceCollectionVC, userId:String, fromOsCd:String, currentDevUuid:String, selectedDevUserId:String, currentFolderId:String, containerView:ContainerViewController){
         dv = deviceView
         let fileNm = folderArray[indexPath.row].fileNm
-        let etsionNm = folderArray[indexPath.row].etsionNm
+//        let etsionNm = folderArray[indexPath.row].etsionNm
         let amdDate = folderArray[indexPath.row].amdDate
         let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
         let fileId = String(folderArray[indexPath.row].fileId)
         let foldrId = folderArray[indexPath.row].foldrId
         let upFoldrId = folderArray[indexPath.row].upFoldrId
         let foldrNm = folderArray[indexPath.row].foldrNm
-        let devNm = folderArray[indexPath.row].devNm
+//        let devNm = folderArray[indexPath.row].devNm
         let fromOsCd = folderArray[indexPath.row].osCd
-        let fromDevUuid = folderArray[indexPath.row].devUuid
+//        let fromDevUuid = folderArray[indexPath.row].devUuid
+        let devUserId = folderArray[indexPath.row].userId
         
-        print("foldrId : \(foldrId)")
+//        print("foldrId : \(foldrId), devUserId : \(devUserId)")
         
         switch sender {
         case cell.btnDwnld:
             
             self.dv?.hideSelectedOptions(tag: sender.tag)
-            
+//
             let alertController = UIAlertController(title: nil, message: "해당 폴더를 다운로드 하시겠습니까?", preferredStyle: .alert)
             let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
                 UIAlertAction in
-                ContextMenuWork().downloadFolderFromNas(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:userId, devUuid:currentDevUuid, deviceName:deviceName, dwldFoldrNm:foldrNm)
-                
+                ContextMenuWork().downloadFolderFromNas(foldrId: foldrId, foldrWholePathNm: foldrWholePathNm, userId:devUserId, devUuid:currentDevUuid, deviceName:deviceName, dwldFoldrNm:foldrNm)
+
                 }
             let noAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel)
             alertController.addAction(yesAction)
@@ -74,7 +73,7 @@ class NasFolderListCellController {
         case cell.btnNas:
             self.dv?.hideSelectedOptions(tag: sender.tag)
             
-            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":userId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId),"etsionNm":""]
+            let fileDict = ["fileId":fileId, "fileNm":fileNm,"amdDate":amdDate, "oldFoldrWholePathNm":foldrWholePathNm,"toStorage":"nas","fromUserId":devUserId, "fromOsCd":fromOsCd,"fromDevUuid":currentDevUuid,"fromFoldrId":String(foldrId),"etsionNm":""]
             
             
             print("fileDict : \(fileDict)")

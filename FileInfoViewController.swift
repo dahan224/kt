@@ -15,7 +15,9 @@ class FileInfoViewController: UIViewController {
     var size = ""
     var createdTime = ""
     var modifiedTime = ""
-
+    var fileThumbYn = ""
+    var fromOsCd = ""
+    var thumbnailLink = ""
     @IBOutlet weak var btnBack: UIButton!
     @IBOutlet weak var customNavBar: UIView!
     @IBOutlet weak var ivMain: UIImageView!
@@ -139,6 +141,29 @@ class FileInfoViewController: UIViewController {
             /* 이부분 수정 end */
             
         }
+        
+        if fileThumbYn == "Y" {
+            if fromOsCd.isEmpty {
+                Alamofire.request("\(App.URL.thumbnailLink)\(fileId)").responseImage { response in
+                    if let getImage = response.result.value {
+                        print("image downloaded: \(getImage)")
+                        self.ivMain.contentMode = .scaleAspectFit
+                        self.ivMain.image = getImage
+                        
+                    }
+                }
+            } else {
+                Alamofire.request("\(thumbnailLink)").responseImage { response in
+                    if let getImage = response.result.value {
+                        print("image downloaded: \(getImage)")
+                        self.ivMain.contentMode = .scaleAspectFit
+                        self.ivMain.image = getImage
+                        
+                    }
+                }
+            }
+            
+        }
     }
 
     override func didReceiveMemoryWarning() {
@@ -251,6 +276,8 @@ class FileInfoViewController: UIViewController {
         lblEmailFrom.topAnchor.constraint(equalTo: lblSendDate.bottomAnchor, constant: 3).isActive = true
         lblEmailFrom.text = emailFrom
         
+      
+        
 //        ivInfoTopConstraint.isActive = false
         ivInfoTopConstraint.constant = 150
         emailViewShowCheck = true
@@ -341,13 +368,15 @@ class FileInfoViewController: UIViewController {
         var convertedValue: Double = Double(getSize)!
         var multiplyFactor = 0
         let tokens = ["bytes", "KB", "MB", "GB", "TB", "PB",  "EB",  "ZB", "YB"]
-        while convertedValue > 1024 {
+        while convertedValue >= 1024 {
             convertedValue /= 1024
             multiplyFactor += 1
         }
-        return String(format: "%4.2f %@", convertedValue, tokens[multiplyFactor])
+        var result = String(format: "%4.2f", convertedValue)
+        result = "\(Float(result)!) \(tokens[multiplyFactor])"
+        
+        return result.replacingOccurrences(of: ".0 ", with: " ")
     }
-    
     
     @IBAction func btnEditClicked(_ sender: UIButton) {
         performSegue(withIdentifier: "fileTagEditSegue", sender: self)

@@ -64,7 +64,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     var folderSyncFinished = false
     var fileSyncFinished = false
-    
+    var previousUserId = ""
     @IBOutlet weak var idView: UIView! {
         didSet{
             idView.layer.borderColor = hexToUIColor.getUIColor(hex: "d1d2d4").cgColor
@@ -88,7 +88,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             textFieldId.tag = 0
             textFieldId.layer.borderColor = hexToUIColor.getUIColor(hex: "d1d2d4").cgColor
             textFieldId.layer.borderWidth = 1.0
-//            textFieldId.addBorderBottom(height: 1.0, color: hexToUIColor.getUIColor(hex: "D1D2D4"))
+            //            textFieldId.addBorderBottom(height: 1.0, color: hexToUIColor.getUIColor(hex: "D1D2D4"))
             textFieldId.addTarget(self,
                                   action: #selector(LoginViewController.textFieldDidChange),
                                   for: .editingDidBegin)
@@ -119,9 +119,9 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             NotificationCenter.default.addObserver(self, selector: #selector(keyboardWillHide(_:)), name: .UIKeyboardWillHide, object: nil)
             
             
-
+            
         }
-
+        
     }
     @objc func textFieldDidChange(textField: UITextField) {
         //your code
@@ -164,33 +164,16 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         "Cookie": ""
     ]
     
+    
     @IBOutlet weak var webView: UIWebView!
     override func viewDidLoad() {
         super.viewDidLoad()
         print("viewDidLoad")
-        if currentReachabilityStatus != .reachableViaWiFi {
-            print(UserDefaults.standard.bool(forKey: "isAgree"))
-            if !UserDefaults.standard.bool(forKey: "isAgree") {
-                // 사용자정의 팝업
-                let popup: WanInfoPopupView = UINib(nibName: "WanInfoPopupView", bundle: nil).instantiate(withOwner: self, options: nil)[0] as! WanInfoPopupView
-                
-                // 팝업뷰 배경
-                let viewColor = UIColor.black
-                popup.backgroundColor = viewColor.withAlphaComponent(0.3)
-                popup.frame = self.view.frame // 팝업뷰를 화면크기에 맞추기
-                
-                // 팝업창 배경
-                let baseViewColor = UIColor.white
-                popup.popupView.backgroundColor = baseViewColor.withAlphaComponent(1.0)
-                self.view.addSubview(popup)
-            }
-        } else {
-            loadLoginPage()
-        }
+        let defaults = UserDefaults.standard
+        defaults.set("logout", forKey: "googleDriveLoginState")
         
-    }
-    
-    func loadLoginPage() {
+        defaults.synchronize()
+        
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(clearInputLogin),
                                                name: NSNotification.Name("clearInputLogin"),
@@ -214,6 +197,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             idSaveCheckBox.setOn(true, animated: false)
         }
         
+        
+        
         let tapGesture = UITapGestureRecognizer(target: self, action: #selector(hideKeyboard))
         view.addGestureRecognizer(tapGesture)
         uuId = Util.getUuid()
@@ -221,8 +206,30 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         print("uuId : \(uuId)")
         print("model :\(deviceModel)")
         
-        autoLogin()
+        if currentReachabilityStatus != .reachableViaWiFi {
+            print(UserDefaults.standard.bool(forKey: "isAgree"))
+            if !UserDefaults.standard.bool(forKey: "isAgree") {
+                // 사용자정의 팝업
+                let popup: WanInfoPopupView = UINib(nibName: "WanInfoPopupView", bundle: nil).instantiate(withOwner: self, options: nil)[0] as! WanInfoPopupView
+                
+                // 팝업뷰 배경
+                let viewColor = UIColor.black
+                popup.backgroundColor = viewColor.withAlphaComponent(0.3)
+                popup.frame = self.view.frame // 팝업뷰를 화면크기에 맞추기
+                
+                // 팝업창 배경
+                let baseViewColor = UIColor.white
+                popup.popupView.backgroundColor = baseViewColor.withAlphaComponent(1.0)
+                self.view.addSubview(popup)
+            }
+        } else {
+            autoLogin()
+            
+        }
+        
     }
+    
+   
     
     @objc func updateWebView() {
         print("updateWebView()")
@@ -233,7 +240,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     }
     
     @IBAction func idSaveCheked(_ sender: BEMCheckBox) {
-        let idSaveChecked = autoLoginCheckBox.on
+        let idSaveChecked = idSaveCheckBox.on
         print("idSaveChecked : \(idSaveChecked)")
         let defaults = UserDefaults.standard
         defaults.set(idSaveChecked, forKey: "idSaveCheck")
@@ -266,16 +273,21 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
             loginWarningLabel.isHidden = false
         } else {
             userId = textFieldId.text!
+            previousUserId =  UserDefaults.standard.string(forKey: "userId") ?? "nil"
+           
             userPassword = textFieldPw.text!
             let defaults = UserDefaults.standard
             defaults.set(userId, forKey: "userId")
             defaults.set(userPassword, forKey: "userPassword")
+            defaults.synchronize()
+            
+            
             self.login()
             
         }
     }
     
-    
+   
     @objc func keyboardWillShow(_ sender: Notification) {
         self.view.frame.origin.y = -30
     }
@@ -291,7 +303,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
         
         loginWarningLabel.isHidden = true
-        let urlString = App.URL.server+"login.do"
+        let urlString = App.URL.hostIpServer+"login.do"
         let url = URL(string:urlString)
         let cstorage = HTTPCookieStorage.shared
         if let cookies = cstorage.cookies(for: url!) {
@@ -308,9 +320,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                             switch response.result {
                             case .success(let value) :
                                 let json = JSON(value)
-                                let responseData = value as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                print(message)
+                                let message = json["message"].string
+                                
                                 if let statusCode = json["statusCode"].int, statusCode != 100 {
                                     let url = URL(string:urlString)
                                     let cstorage = HTTPCookieStorage.shared
@@ -321,13 +332,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                     }
                                     DispatchQueue.main.async {
                                         self.loginWarningLabelHeight.constant = 60
-                                        self.loginWarningLabel.text = message as! String
+                                        self.loginWarningLabel.text = message
                                         self.loginWarningLabel.isHidden = false
                                         self.activityIndicator.stopAnimating()
                                         print("whatCalled")
                                     }
                                 } else {
-                                  
+                                    
                                     if let headerFields = response.response?.allHeaderFields as? [String: String]{
                                         if(headerFields["Cookie"] != nil){
                                             self.loginCookie = headerFields["Cookie"]!
@@ -359,9 +370,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                                         "X-Auth-Token": self.loginToken,
                                                         "Cookie": self.loginCookie
                                                     ]
+                                                   
                                                     self.registerDevice(jsonHeader:self.jsonHeader)
+                                                   
+                                                    
                                                 } else {
                                                     print("false")
+                                                    self.showErrorAlert()
                                                 }
                                                 
                                                 
@@ -377,6 +392,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                 DispatchQueue.main.async {
                                     self.loginWarningLabel.text = error.localizedDescription
                                     self.loginWarningLabel.isHidden = false
+                                    self.showErrorAlert()
                                 }
                                 
                                 break
@@ -385,39 +401,15 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
         
     }
-    func initDevice(){
-        
-        let urlString = App.URL.server+"devDataInita.do"
-        
-        Alamofire.request(urlString,
-                          method: .post,
-                          parameters: ["userId":self.userId,"devUuid":uuId,"comnd":"N"],
-                          encoding : JSONEncoding.default,
-                          headers: jsonHeader).responseJSON{ (response) in
-                            print("init device response : \(response)")
-                            switch response.result {
-                            case .success(let JSON):
-                                print(response)
-                                let responseData = JSON as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                print("initDevice message : \(String(describing: message))")
-                                break
-                            case .failure(let error):
-                                NSLog(error.localizedDescription)
-                                self.activityIndicator.stopAnimating()
-                                break
-                            }
-                            
-                            
-        }
-    }
+    
     
     func registerDevice(jsonHeader:[String:String]){
+        
         uuId = Util.getUuid()
         let notificationToken:String = UserDefaults.standard.string(forKey: "notification_token") ?? "nil_for_simulator"
         print("notificationToken : \(notificationToken)")
         let deviceParameter = App.DeviceInfo(userId: userId, devUuid: uuId, devNm: UIDevice.current.name, osCd: "I", osDesc: "IOS", mkngVndrNm: "apple", devAuthYn: "N", rootFoldrNm: "Mobile", lastUpdtId: userId, token: notificationToken)
-        let urlString = App.URL.server+"devAthn.do"
+        let urlString = App.URL.hostIpServer+"devAthn.do"
         print("register deviceParameter : \(deviceParameter)")
         Alamofire.request(urlString,
                           method: .post,
@@ -429,20 +421,22 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                             case .success(let value):
                                 print(response)
                                 let json = JSON(value)
-                                let responseData = value as! NSDictionary
-                                let message = responseData.object(forKey: "message")
+                                let message = json["message"].string
                                 print("registerDevice message : \(String(describing: message))")
                                 if let statusCode = json["statusCode"].int, statusCode != 100 {
-                                    
-                                    
+                                    let alertController = UIAlertController(title: nil, message: message, preferredStyle: UIAlertControllerStyle.alert)
+                                    let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+                                        self.activityIndicator.stopAnimating()
+                                    }
+                                    alertController.addAction(okAction)
+                                    self.present(alertController, animated: true,completion: nil)
                                 } else {
                                     self.smsAuth(device:deviceParameter)
                                 }
-                                
-                                break
                             case .failure(let error):
                                 self.activityIndicator.stopAnimating()
                                 NSLog(error.localizedDescription)
+                                self.showErrorAlert()
                                 break
                             }
                             
@@ -452,7 +446,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     func smsAuth(device:App.DeviceInfo) {
         
-        let urlString = App.URL.server+"smsAuth.do"
+        let urlString = App.URL.hostIpServer+"smsAuth.do"
         Alamofire.request(urlString,
                           method: .post,
                           parameters: device.getParameter,
@@ -463,12 +457,15 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                 print(value)
                                 let json = JSON(value)
                                 let responseData = value as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                print("smsAuth message : \(message)")
+                                let message = json["message"].string
                                 if let statusCode = json["statusCode"].int, statusCode != 100 {
-                                    
+                                    let alertController = UIAlertController(title: nil, message: message, preferredStyle: UIAlertControllerStyle.alert)
+                                    let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+                                        self.activityIndicator.stopAnimating()
+                                    }
+                                    alertController.addAction(okAction)
+                                    self.present(alertController, animated: true,completion: nil)
                                 } else {
-                                    
                                     if let listData = responseData.object(forKey: "data") as? NSDictionary {
                                         
                                         // 사용자정의 팝업
@@ -487,7 +484,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                                         popup.lblTop.textColor = UIColor.white
                                         
                                         //popup.devBas = App.DeviceStruct(device: data.object(forKey: "devBasVO") as! AnyObject)
-                                        popup.data = App.smsInfo(sms: listData as! AnyObject)
+                                        popup.data = App.smsInfo(sms: listData as AnyObject)
                                         
                                         self.view.addSubview(popup)
                                         
@@ -498,6 +495,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                             case .failure(let error):
                                 self.activityIndicator.stopAnimating()
                                 NSLog(error.localizedDescription)
+                                self.showErrorAlert()
                             }
         }
     }
@@ -509,15 +507,14 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
     
     func sysncFileInfo() {
         print("syncFileInfo called")
-        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+        if UserDefaults.standard.bool(forKey: "syncOngoing") {
             print("aleady Syncing")
             
         } else {
             SyncLocalFilleToNas().sync(view: "", getFoldrId: "")
         }
+        
         getDeviceList(sortBy: DbHelper.sortByEnum.none)
-        
-        
     }
     
     func getDeviceList(sortBy: DbHelper.sortByEnum){
@@ -554,7 +551,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                     self.segueToMain()
                 }
                 
-            }
+            } 
             return
         }
     }
@@ -564,7 +561,7 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         //        if(self.folderSyncFinished && self.fileSyncFinished){
         self.activityIndicator.stopAnimating()
         self.performSegue(withIdentifier: "LoginSegue", sender: nil)
-//        self.dismiss(animated: false, completion: nil)
+        //        self.dismiss(animated: false, completion: nil)
         
         //        }
     }
@@ -585,7 +582,13 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
         
         autoLoginCheckBox.setOn(false, animated: false)
     }
-    
+    public func showErrorAlert(){
+        let alertController = UIAlertController(title: "네트워크 에러로 잠시 후 재시도 부탁 드립니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+        }
+        alertController.addAction(okAction)
+        self.present(alertController,animated: true,completion: nil)
+    }
     
 }
 
@@ -607,4 +610,3 @@ extension UITextField {
         self.layer.addSublayer(border)
     }
 }
-

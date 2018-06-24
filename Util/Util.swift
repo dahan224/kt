@@ -33,7 +33,7 @@ class Util{
     class func stringToDate(text: String) -> Date {
         let dateFormatter = DateFormatter()
         dateFormatter.dateFormat = "yyyy-MM-dd HH:mm:ss"
-        let date = dateFormatter.date(from: text)        
+        let date = dateFormatter.date(from: text)
         return date!
     }
     
@@ -84,11 +84,11 @@ class Util{
         ["osNm": "iOS",  "image": "ico_device_mobile", "onoff": "N"],
         ["osNm": "D",  "image": "ico_device_googledrive_on", "onoff": "Y"],
         ["osNm": "D",  "image": "ico_device_googledrive", "onoff": "N"]
-        ]
+    ]
     
     class func getDeviceImageString(osNm:String, onoff:String) -> String {
         let result = Util().deviceImageCheck.filter({ $0["osNm"] == osNm && $0["onoff"] == onoff})
-//        print("result  \(String(describing: result[0]["image"]))")
+        //        print("result  \(String(describing: result[0]["image"]))")
         return result[0]["image"]!
     }
     
@@ -99,41 +99,69 @@ class Util{
         ["context": "GiGA NAS로 보내기",  "image": "ico_contextmenu_send"],
         ["context": "Google Drive로 보내기",  "image": "ico_contextmenu_send"],
         ["context": "삭제",  "image": "ico_contextmenu_del"]
-        ]
+    ]
     
     class func getContextImageString(context:String) -> String {
         let result = Util().contextImageCheck.filter({ $0["context"] == context})
-//        print("result  \(String(describing: result[0]["image"]))")
+        //        print("result  \(String(describing: result[0]["image"]))")
         return result[0]["image"]!
     }
     
     let fileImageCheck = [
-        ["etsionNm": "sound",  "image": "ico_24dp_filetype_sound"],
-        ["etsionNm": "code",  "image": "ico_24dp_filetype_code"],
+        ["etsionNm": "mp3",  "image": "ico_24dp_filetype_sound"],
+        ["etsionNm": "ogg",  "image": "ico_24dp_filetype_sound"],
+        ["etsionNm": "wma",  "image": "ico_24dp_filetype_sound"],
+        ["etsionNm": "wav",  "image": "ico_24dp_filetype_sound"],
+        ["etsionNm": "au",  "image": "ico_24dp_filetype_sound"],
+        ["etsionNm": "rm",  "image": "ico_24dp_filetype_sound"],
+        ["etsionNm": "mid",  "image": "ico_24dp_filetype_sound"],
+        
+        ["etsionNm": "css",  "image": "ico_24dp_filetype_code"],
+        ["etsionNm": "js",  "image": "ico_24dp_filetype_code"],
+        ["etsionNm": "xml",  "image": "ico_24dp_filetype_code"],
+        
         ["etsionNm": "doc",  "image": "ico_24dp_filetype_doc"],
         ["etsionNm": "docx",  "image": "ico_24dp_filetype_doc"],
+        
         ["etsionNm": "etc",  "image": "ico_24dp_filetype_etc"],
+        
         ["etsionNm": "exe",  "image": "ico_24dp_filetype_exe"],
-        ["etsionNm": "film",  "image": "ico_24dp_filetype_film"],
-//        ["etsionNm": "foldr",  "image": "file_format_folder_192_list"],
+        
+        ["etsionNm": "avi",  "image": "ico_24dp_filetype_film"],
+        ["etsionNm": "mp4",  "image": "ico_24dp_filetype_film"],
+        ["etsionNm": "mkv",  "image": "ico_24dp_filetype_film"],
+        ["etsionNm": "mpg",  "image": "ico_24dp_filetype_film"],
+        ["etsionNm": "mpeg",  "image": "ico_24dp_filetype_film"],
+        ["etsionNm": "wmv",  "image": "ico_24dp_filetype_film"],
+        ["etsionNm": "asf",  "image": "ico_24dp_filetype_film"],
+        
         ["etsionNm": "hwp",  "image": "ico_24dp_filetype_hwp"],
+        
         ["etsionNm": "img",  "image": "ico_24dp_filetype_img"],
         ["etsionNm": "jpg",  "image": "ico_24dp_filetype_img"],
         ["etsionNm": "png",  "image": "ico_24dp_filetype_img"],
+        
         ["etsionNm": "pdf",  "image": "ico_24dp_filetype_pdf"],
+        
         ["etsionNm": "ppt",  "image": "ico_24dp_filetype_ppt"],
         ["etsionNm": "pptx",  "image": "ico_24dp_filetype_ppt"],
+        
         ["etsionNm": "txt",  "image": "ico_24dp_filetype_txt"],
-        ["etsionNm": "webcode",  "image": "ico_24dp_filetype_webcode"],
+        
+        ["etsionNm": "htm",  "image": "ico_24dp_filetype_webcode"],
+        ["etsionNm": "html",  "image": "ico_24dp_filetype_webcode"],
+        
         ["etsionNm": "xls",  "image": "ico_24dp_filetype_xls"],
         ["etsionNm": "xlsx",  "image": "ico_24dp_filetype_xls"],
-        ["etsionNm": "zip",  "image": "ico_24dp_filetype_zip"]
+        
+        ["etsionNm": "zip",  "image": "ico_24dp_filetype_zip"],
+        ["etsionNm": "egg",  "image": "ico_24dp_filetype_zip"]
     ]
     class func getFileImageString(fileExtension:String) -> String {
         var imageString = ""
-        let result = Util().fileImageCheck.filter({ $0["etsionNm"] == fileExtension})
+        let result = Util().fileImageCheck.filter({ $0["etsionNm"] == fileExtension.lowercased()})
         if (!result.isEmpty){
-//            print("result  \(String(describing: result[0]["image"]))")
+            //            print("result  \(String(describing: result[0]["image"]))")
             imageString = result[0]["image"]!
         } else {
             imageString = "ico_24dp_filetype_etc"
@@ -142,28 +170,58 @@ class Util{
         return imageString
     }
     let thumbNailImageCheck = [
-        ["etsionNm": "sound",  "image": "file_format_sound"],
-        ["etsionNm": "code",  "image": "file_format_code"],
+        ["etsionNm": "mp3",  "image": "file_format_sound"],
+        ["etsionNm": "ogg",  "image": "file_format_sound"],
+        ["etsionNm": "wma",  "image": "file_format_sound"],
+        ["etsionNm": "wav",  "image": "file_format_sound"],
+        ["etsionNm": "au",  "image": "file_format_sound"],
+        ["etsionNm": "rm",  "image": "file_format_sound"],
+        ["etsionNm": "mid",  "image": "file_format_sound"],
+        
+        ["etsionNm": "css",  "image": "file_format_code"],
+        ["etsionNm": "js",  "image": "file_format_code"],
+        ["etsionNm": "xml",  "image": "file_format_code"],
+        
         ["etsionNm": "doc",  "image": "file_format_doc"],
+        ["etsionNm": "docx",  "image": "file_format_doc"],
+        
         ["etsionNm": "etc",  "image": "file_format_etc"],
+        
         ["etsionNm": "exe",  "image": "file_format_exe"],
-        ["etsionNm": "film",  "image": "file_format_film"],
-        //        ["etsionNm": "foldr",  "image": "file_format_folder_192_list"],
+        
+        ["etsionNm": "avi",  "image": "file_format_film"],
+        ["etsionNm": "mp4",  "image": "file_format_film"],
+        ["etsionNm": "mkv",  "image": "file_format_film"],
+        ["etsionNm": "mpg",  "image": "file_format_film"],
+        ["etsionNm": "mpeg",  "image": "file_format_film"],
+        ["etsionNm": "wmv",  "image": "file_format_film"],
+        ["etsionNm": "asf",  "image": "file_format_film"],
+        
         ["etsionNm": "hwp",  "image": "file_format_hwp"],
+        
         ["etsionNm": "img",  "image": "file_format_img"],
         ["etsionNm": "jpg",  "image": "file_format_img"],
         ["etsionNm": "png",  "image": "file_format_img"],
+        
         ["etsionNm": "pdf",  "image": "file_format_pdf"],
+        
         ["etsionNm": "ppt",  "image": "file_format_ppt"],
         ["etsionNm": "pptx",  "image": "file_format_ppt"],
+        
         ["etsionNm": "txt",  "image": "file_format_txt"],
-        ["etsionNm": "webcode",  "image": "file_format_webcode"],
+        
+        ["etsionNm": "htm",  "image": "file_format_webcode"],
+        ["etsionNm": "html",  "image": "file_format_webcode"],
+        
         ["etsionNm": "xls",  "image": "file_format_xls"],
-        ["etsionNm": "zip",  "image": "file_format_zip"]
+        ["etsionNm": "xlsx",  "image": "file_format_xls"],
+        
+        ["etsionNm": "zip",  "image": "file_format_zip"],
+        ["etsionNm": "egg",  "image": "file_format_zip"]
     ]
     class func getthumbNailImageString(fileExtension:String) -> String {
         var imageString = ""
-        let result = Util().thumbNailImageCheck.filter({ $0["etsionNm"] == fileExtension})
+        let result = Util().thumbNailImageCheck.filter({ $0["etsionNm"] == fileExtension.lowercased()})
         if (!result.isEmpty){
             //            print("result  \(String(describing: result[0]["image"]))")
             imageString = result[0]["image"]!
@@ -177,16 +235,16 @@ class Util{
         ["mimeType": "application/vnd.google-apps.document",  "image": "ico_24dp_filetype_etc"],
         ["mimeType": "image/jpeg",  "image": "file_format_img"],
         ["mimeType": "application/vnd.google-apps.folder",  "image": "ico_folder"],
-        ["mimeType": "image/png",  "image": "file_format_img"]        
+        ["mimeType": "image/png",  "image": "file_format_img"]
     ]
     class func getGoogleImageString(mimeType:String) -> String {
         var imageString = ""
-        let result = Util().googleImageCheck.filter({ $0["mimeType"] == mimeType})
+        let result = Util().googleImageCheck.filter({ $0["mimeType"] == mimeType.lowercased()})
         if (!result.isEmpty){
             imageString = result[0]["image"]!
         } else {
             imageString = "ico_24dp_filetype_etc"
-        }        
+        }
         return imageString
     }
     
@@ -237,22 +295,21 @@ class Util{
     
     class func getGoogleMimeType(etsionNm:String) -> String {
         var imageString = ""
-        let result = Util().googleMimeTypeCheck.filter({ $0["etsionNm"] == etsionNm})
+        let result = Util().googleMimeTypeCheck.filter({ $0["etsionNm"] == etsionNm.lowercased()})
         if (!result.isEmpty){
             imageString = result[0]["googleMimeType"]!
-        } 
+        }
         return imageString
     }
     
     class func getEtsionFromMimetype(mimeType:String) -> String {
         var imageString = ""
-        let result = Util().googleMimeTypeCheck.filter({ $0["googleMimeType"] == mimeType})
+        let result = Util().googleMimeTypeCheck.filter({ $0["googleMimeType"] == mimeType.lowercased()})
         if (!result.isEmpty){
             imageString = result[0]["etsionNm"]!
         }
         return imageString
     }
-    
 }
 
 extension CALayer {
@@ -297,6 +354,50 @@ extension UILabel {
             self.attributedText = attributeString
         }
     }
+    private struct AssociatedKeys {
+        static var padding = UIEdgeInsets()
+    }
+    
+    public var padding: UIEdgeInsets? {
+        get {
+            return objc_getAssociatedObject(self, &AssociatedKeys.padding) as? UIEdgeInsets
+        }
+        set {
+            if let newValue = newValue {
+                objc_setAssociatedObject(self, &AssociatedKeys.padding, newValue as UIEdgeInsets!, objc_AssociationPolicy.OBJC_ASSOCIATION_RETAIN_NONATOMIC)
+            }
+        }
+    }
+    
+    override open func draw(_ rect: CGRect) {
+        if let insets = padding {
+            self.drawText(in: UIEdgeInsetsInsetRect(rect, insets))
+        } else {
+            self.drawText(in: rect)
+        }
+    }
+    
+    override open var intrinsicContentSize: CGSize {
+        guard let text = self.text else { return super.intrinsicContentSize }
+        
+        var contentSize = super.intrinsicContentSize
+        var textWidth: CGFloat = frame.size.width
+        var insetsHeight: CGFloat = 0.0
+        
+        if let insets = padding {
+            textWidth -= insets.left + insets.right
+            insetsHeight += insets.top + insets.bottom
+        }
+        
+        let newSize = text.boundingRect(with: CGSize(width: textWidth, height: CGFloat.greatestFiniteMagnitude),
+                                        options: NSStringDrawingOptions.usesLineFragmentOrigin,
+                                        attributes: [NSAttributedStringKey.font: self.font], context: nil)
+        
+        contentSize.height = ceil(newSize.size.height) + insetsHeight
+        
+        return contentSize
+    }
+    
 }
 extension UISearchBar {
     var textField : UITextField{

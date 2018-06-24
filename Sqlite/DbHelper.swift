@@ -13,6 +13,7 @@ class DbHelper{
     var database: Connection!
     let oneViewListTable = Table("oneViewList")
     let googleDriveFileListTable = Table("googleDriveFileList")
+    let googleDriveFolderListTable = Table("googleDriveFolderListTable")
     let localFileListTable = Table("localFileListTable")
     let googleEmailListTable = Table("googleEmailListTable")
     
@@ -62,6 +63,17 @@ class DbHelper{
         case desc
     }
     var sortByState = sortByEnum.asc
+    
+    
+    enum gDriveSortByEnum{
+        case none
+        case asc
+        case desc
+        case new
+        case old
+        
+    }
+    var gDriveSortByState = gDriveSortByEnum.asc
     
     func jsonToSqlite(getArray: [App.DeviceStruct]){
         do {
@@ -202,7 +214,31 @@ class DbHelper{
             print(error)
         }
     }
-    
+    func createGoogleDriveFolderListTable(){
+        let createTable = self.googleDriveFolderListTable.create { (table) in
+            table.column(id, primaryKey: true)
+            table.column(fileId)
+            table.column(kind)
+            table.column(mimeType)
+            table.column(name)
+            table.column(createdTime)
+            table.column(modifiedTime)
+            table.column(parents)
+            table.column(fileExtension)
+            table.column(foldrWholePath)
+            table.column(size)
+            table.column(thumbnailLink)
+            
+        }
+        do {
+            try self.database.run(createTable)
+            print("createGoogleDriveFolderListTable")
+            
+        }catch{
+            print("Created table error : \(error)")
+            print(error)
+        }
+    }
     func localFileToSqlite(id: String, path:String){
         do {
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
@@ -325,7 +361,37 @@ class DbHelper{
         
     }
     
-    func googleDrivelistSqlite(sortBy:sortByEnum) -> [App.DriveFileStruct] {
+    func googleDriveFolderToSqlite(getArray: [App.DriveFileStruct]){
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleDriveFolderList").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        
+        if(tableExists(tableName: "googleDriveFolderList")){
+            dropTable(table:googleDriveFolderListTable)
+        }
+        
+        createGoogleDriveFolderListTable()
+        do {
+            try self.database.transaction {
+                for (index,device) in getArray.enumerated() {
+                    try self.database.run(self.googleDriveFolderListTable.insert(fileId <- getArray[index].fileId, kind <- getArray[index].kind, mimeType <- getArray[index].mimeType, name <- getArray[index].name, createdTime <- getArray[index].createdTime, modifiedTime <- getArray[index].modifiedTime, parents <- getArray[index].parents, fileExtension <- getArray[index].fileExtension, foldrWholePath <- getArray[index].foldrWholePath, size <- getArray[index].size, thumbnailLink <- getArray[index].thumbnailLink))
+                }
+            }
+        } catch {
+            
+        }
+        self.database = nil
+        
+    }
+    
+    
+    
+    func googleDrivelistSqlite(sortBy:gDriveSortByEnum) -> [App.DriveFileStruct] {
         do {
             let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
             let fileUrl = documentDirectory.appendingPathComponent("googleDriveFileList").appendingPathExtension("sqlite3")
@@ -347,6 +413,13 @@ class DbHelper{
                 break
             case .none:
                 tableOrder = self.googleDriveFileListTable.order()
+                break
+            case .new:
+                tableOrder = self.googleDriveFileListTable.order(modifiedTime.asc)
+                break
+            case .old:
+                tableOrder = self.googleDriveFileListTable.order(modifiedTime.desc)
+                break
             }
             let devices = try database.prepare(tableOrder)
             for device in devices {
@@ -363,7 +436,67 @@ class DbHelper{
                 let size = device[self.size]
                 let thumbnailLink = device[self.thumbnailLink]
                 
-                let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath, thumbnailLink:thumbnailLink)
+                let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath, thumbnailLink:thumbnailLink, checked:false)
+                
+                DriveFileArray.append(deviceStruct)
+            }
+            self.database = nil
+            return DriveFileArray
+            
+        }catch{
+            print(error)
+            self.database = nil
+            return DriveFileArray
+            
+        }
+        
+    }
+    func googleDriveFolderlistSqlite(sortBy:gDriveSortByEnum) -> [App.DriveFileStruct] {
+        do {
+            let documentDirectory = try FileManager.default.url(for: .applicationSupportDirectory, in: .allDomainsMask, appropriateFor: nil, create: true)
+            let fileUrl = documentDirectory.appendingPathComponent("googleDriveFolderList").appendingPathExtension("sqlite3")
+            let database = try Connection(fileUrl.path)
+            self.database = database
+        } catch {
+            print(error)
+        }
+        
+        self.DriveFileArray.removeAll()
+        var tableOrder = self.googleDriveFolderListTable.order()
+        do {
+            switch sortBy {
+            case .asc:
+                tableOrder = self.googleDriveFolderListTable.order(name.asc)
+                break
+            case .desc:
+                tableOrder = self.googleDriveFolderListTable.order(name.desc)
+                break
+            case .none:
+                tableOrder = self.googleDriveFolderListTable.order()
+                break
+            case .new:
+                tableOrder = self.googleDriveFolderListTable.order(modifiedTime.asc)
+                break
+            case .old:
+                tableOrder = self.googleDriveFolderListTable.order(modifiedTime.desc)
+                break
+            }
+            let devices = try database.prepare(tableOrder)
+            for device in devices {
+                //                print("table data: id : \(device[id]), deviceData : \(device)")
+                let fileId = "\(device[self.fileId])"
+                let kind = "\(device[self.kind])"
+                let mimeType = "\(device[self.mimeType])"
+                let name = "\(device[self.name])"
+                let createdTime = "\(device[self.createdTime])"
+                let modifiedTime = "\(device[self.modifiedTime])"
+                let parents = "\(device[self.parents])"
+                let fileExtension = "\(device[self.fileExtension])"
+                let foldrWholePath = "\(device[self.foldrWholePath])"
+                let size = device[self.size]
+                let thumbnailLink = device[self.thumbnailLink]
+                
+                let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath, thumbnailLink:thumbnailLink, checked:false)
                 
                 DriveFileArray.append(deviceStruct)
             }
@@ -417,7 +550,7 @@ class DbHelper{
                 let size = device[self.size]
                 let thumbnailLink = device[self.thumbnailLink]
                 if(name.contains(fileNm)){
-                    let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath, thumbnailLink:thumbnailLink)
+                    let deviceStruct = App.DriveFileStruct(fileId : fileId, kind : kind, mimeType : mimeType, name : name, createdTime:createdTime, modifiedTime:modifiedTime, parents:parents, fileExtension:fileExtension,  size:size, foldrWholePath:foldrWholePath, thumbnailLink:thumbnailLink, checked:false)
                     DriveFileArray.append(deviceStruct)
                 }
                 

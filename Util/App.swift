@@ -11,7 +11,8 @@ struct App {
     
     static let bundleID = Bundle.main.bundleIdentifier!
     
-    static let nasFoldrFrontNm = "gs-"
+    static let nasFoldrFrontNm = "gs-" // 내부,개발
+    //static let nasFoldrFrontNm = "" // LDAP
     
     struct Size {
         static let screenWidth = UIScreen.main.bounds.width
@@ -21,9 +22,33 @@ struct App {
     
     struct URL {
         static let google: String = ""
-        static let server: String = "https://araise.iptime.org/GIGA_Storage/webservice/rest/"
-//        static let NAS:String = "https://araise.iptime.org/namespace/ifs/home/gs-araise3/araise3-gs/GIGA_NAS/"
+        
+        static let loginServer: String = "https://araise.iptime.org/GIGA_Storage/webservice/rest/" // 개발
+        //static let loginServer: String = "https://storageos.kt.co.kr/GIGA_Storage_LDAP/webservice/rest/" // LDAP
+        //static let loginServer: String = "https://storageos.kt.co.kr/GIGA_Storage/webservice/rest/" // 내부
+        
+        /* https:// + hostIp + App.URL.api (LoginViewController.swift - login()에 정의)*/
+        static var hostIpServer: String = "https://araise.iptime.org/GIGA_Storage/webservice/rest/"
+        //static var hostIpServer: String = "https://storageos.kt.co.kr/GIGA_Storage_LDAP/webservice/rest/" // LDAP
+        //static var hostIpServer: String = "https://storageos.kt.co.kr/GIGA_Storage/webservice/rest/" // 내부
+        
+        static let api = "/GIGA_Storage/webservice/rest/" // 개발,내부
+        //static let api = "/GIGA_Storage_LDAP/webservice/rest/" // LDAP
+        
+        static let appCheck:String = "https://araise.iptime.org/GIGA_StorageAdmin/apps/checkLatestApp.do" // 개발
+        //static let appCheck:String = "https://storageos.kt.co.kr/GIGA_StorageAdmin_LDAP/apps/checkLatestApp.do" // LDAP
+        //static let appCheck:String = "https://storageos.kt.co.kr/GIGA_StorageAdmin/apps/checkLatestApp.do" //내부
+        
+        /* https:// + hostIp + App.URL.nasPath (LoginViewController.swift - login()에 정의) */
+        static var nasServer: String = "https://araise.iptime.org/namespace/ifs/home/" // 개발
+        //static var nasServer: String = "https://storageos.kt.co.kr/namespace/ifs/home/" // LDAP
+        //static var nasServer: String = "https://storageos.kt.co.kr/namespace/ifs/home/" //내부
+        static let nasPath: String = "/namespace/ifs/home/"
+        
         static let gDriveFileOption:String = "&orderBy=folder,createdTime desc&fields=nextPageToken,files(id, name, mimeType,size,createdTime,modifiedTime,parents,properties,fileExtension,fullFileExtension,trashed,shared,starred,thumbnailLink)"
+        static let thumbnailLink = "https://araise.iptime.org/GIGA_Storage/imgFileThum.do?fileId=" //개발
+        //static let thumbnailLink = "https://storageos.kt.co.kr/GIGA_StorageAdmin_LDAP/imgFileThum.do?fileId=" // LDAP
+        //static let thumbnailLink = "https://storageos.kt.co.kr/GIGA_StorageAdmin/imgFileThum.do?fileId=" // 내부
     }
     
     struct API {
@@ -33,16 +58,16 @@ struct App {
     
     struct defaults {
         static let userId = UserDefaults.standard.string(forKey: "userId")!
-       
     }
     
+    static let screenHeight = UIScreen.main.bounds.size.height
     
     struct Headrs{
         
         static let loginHeader:[String:String]  = [
             "Content-Type": "application/x-www-form-urlencoded"
         ]
-       
+        
     }
     
     struct DeviceInfo {
@@ -153,7 +178,7 @@ struct App {
         }
     }
     struct FolderStruct {
-    
+        
         var foldrNm:String
         var foldrId:Int
         var fileId:Int
@@ -172,10 +197,11 @@ struct App {
         var osCd: String
         var fileThumbYn:String
         var checked:Bool
+        var nasSynchYn:String
         init(data: AnyObject) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
             self.foldrId = data["foldrId"] as? Int ?? 0
-//            if(data.responds(to: "fileId")){
+            //            if(data.responds(to: "fileId")){
             var filnalFileId:Int? = 0
             if let getFileId = data["fileId"] as? Int {
                 filnalFileId = getFileId
@@ -183,10 +209,10 @@ struct App {
                 filnalFileId = Int(getStringFileId)
             }
             self.fileId = filnalFileId ?? 0
-//            } else {
-//                self.fileId = 0
-//            }
-//
+            //            } else {
+            //                self.fileId = 0
+            //            }
+            //
             self.userId = data["userId"] as? String ?? "nil"
             self.childCnt = data["childCnt"] as? Int ?? 0
             self.devUuid = data["devUuid"] as? String ?? "nil"
@@ -202,6 +228,7 @@ struct App {
             self.osCd = data["osCd"] as? String ?? "nil"
             self.checked = data["checked"] as? Bool ?? false
             self.fileThumbYn = data["fileThumbYn"] as? String ?? "nil"
+            self.nasSynchYn = data["nasSynchYn"] as? String ?? "N"
             
         }
         init(data: [String:Any]) {
@@ -223,9 +250,10 @@ struct App {
             self.osCd = data["osCd"] as? String ?? "nil"
             self.checked = data["checked"] as? Bool ?? false
             self.fileThumbYn = data["fileThumbYn"] as? String ?? "nil"
+            self.nasSynchYn = data["nasSynchYn"] as? String ?? "N"
         }
     }
-  
+    
     struct SearchedFileStruct {
         var foldrYn: String
         var userNm: String
@@ -267,7 +295,7 @@ struct App {
             
             self.syncFileId = data["syncFileId"] as? String ?? "nil"
         }
-      
+        
     }
     
     struct LatelyUpdatedFileStruct {
@@ -322,7 +350,7 @@ struct App {
         var foldrWholePathNm: String
         var cretDate : String
         var amdDate : String
-   
+        
         
         
         init(cmd : String, userId : String, devUuid : String, foldrNm : String, foldrWholePathNm: String, cretDate : String, amdDate : String) {
@@ -334,7 +362,7 @@ struct App {
             self.cretDate   = cretDate
             self.amdDate   = amdDate
         }
-     
+        
         init(data: AnyObject) {
             self.cmd   = "C"
             self.userId   = data["userId"] as! String
@@ -356,7 +384,7 @@ struct App {
                 "amdDate": amdDate
             ]
         }
-    
+        
         
     }
     
@@ -494,7 +522,7 @@ struct App {
         }
         init(data: AnyObject) {
             self.cmd   = "C"
-            self.userId   = data["userId"] as? String ?? App.defaults.userId
+            self.userId   = data["userId"] as? String ?? UserDefaults.standard.string(forKey: "userId")!
             self.devUuid   = data["devUuid"] as? String ?? Util.getUuid()
             self.fileNm   = data["fileNm"] as! String
             self.etsionNm   = data["etsionNm"] as? String ?? "nil"
@@ -503,7 +531,7 @@ struct App {
             self.amdDate   = data["amdDate"] as! String
             self.foldrWholePathNm = data["foldrWholePathNm"] as! String
             self.fileId = data["fileId"] as? Int ?? 0
-           
+            
         }
         var getParameter: [String: Any] {
             return [
@@ -570,7 +598,7 @@ struct App {
                 "foldrWholePathNm":foldrWholePathNm
             ]
         }
-       
+        
     }
     
     
@@ -587,6 +615,7 @@ struct App {
         var foldrWholePath:String
         var size:String
         var thumbnailLink:String
+        var checked:Bool
         
         init(device: AnyObject, foldrWholePaths: [String]) {
             self.fileId = device["id"] as? String ?? "nil"
@@ -604,8 +633,9 @@ struct App {
             }
             self.size = device["size"] as? String ?? "0"
             self.thumbnailLink = device["thumbnailLink"] as? String ?? "nil"
+            self.checked = device["checked"] as? Bool ?? false
         }
-        init(fileId : String, kind : String, mimeType : String, name : String, createdTime:String, modifiedTime:String, parents:String, fileExtension:String, size:String, foldrWholePath:String, thumbnailLink:String) {
+        init(fileId : String, kind : String, mimeType : String, name : String, createdTime:String, modifiedTime:String, parents:String, fileExtension:String, size:String, foldrWholePath:String, thumbnailLink:String, checked:Bool) {
             self.fileId   = fileId
             self.kind   = kind
             self.mimeType   = mimeType
@@ -617,9 +647,10 @@ struct App {
             self.size = size
             self.foldrWholePath = foldrWholePath
             self.thumbnailLink = thumbnailLink
+            self.checked = checked
         }
     }
-
+    
     struct FileTagStruct {
         var fileId:String
         var fileTag:String
@@ -642,14 +673,14 @@ struct App {
     func covertFileSize(getSize:String) -> String {
         var convertedValue: Double = Double(getSize)!
         var multiplyFactor = 0
-        let tokens = ["B", "KB", "MB", "GB", "TB", "PB",  "EB",  "ZB", "YB"]
-        while convertedValue > 1024 {
+        let tokens = ["bytes", "KB", "MB", "GB", "TB", "PB",  "EB",  "ZB", "YB"]
+        while convertedValue >= 1024 {
             convertedValue /= 1024
             multiplyFactor += 1
         }
+        var result = String(format: "%4.2f", convertedValue)
+        result = "\(Float(result)!) \(tokens[multiplyFactor])"
         
-        let result = String(format: "%4.2f %@", convertedValue, tokens[multiplyFactor])
-        
-        return result.replacingOccurrences(of: ".00", with: "")
+        return result.replacingOccurrences(of: ".0 ", with: " ")
     }
 }

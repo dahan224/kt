@@ -17,11 +17,13 @@ import SwiftyJSON
 
 
 
-class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDelegate, GIDSignInUIDelegate {
-   
-   
+class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDelegate, GIDSignInUIDelegate, UITableViewDelegate, UITableViewDataSource {
   
-
+    private let scopes = [kGTLRAuthScopeDriveFile, kGTLRAuthScopeDrive, kGTLRAuthScopeDriveReadonly ]
+    private let service = GTLRDriveService()
+    let signInButton = GIDSignInButton()
+    var googleEmailArray = [String]()
+    var googleEmail = ""
     @IBOutlet weak var customNavBar: UIView!
     var loginCookie = ""
     var loginToken = ""
@@ -159,10 +161,11 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
     let checkButton2 = BEMCheckBox()
     let autoLoginCheckButton = BEMCheckBox()
     
-    
+    var containerViewController:ContainerViewController?
     var userId = ""
     var autoLoginCheck = false
     
+    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     override func viewDidLoad() {
         super.viewDidLoad()
@@ -196,26 +199,26 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
         loginUserId.widthAnchor.constraint(equalToConstant: 100).isActive = true
         loginUserId.trailingAnchor.constraint(equalTo: loginView.trailingAnchor, constant: -25).isActive = true
         loginUserId.centerYAnchor.constraint(equalTo: loginView.centerYAnchor).isActive = true
-        loginUserId.heightAnchor.constraint(equalToConstant: 15).isActive = true
+        loginUserId.heightAnchor.constraint(equalToConstant: 17).isActive = true
         
-        
-        passwordView.widthAnchor.constraint(equalTo: self.view.widthAnchor).isActive = true
-        passwordView.heightAnchor.constraint(equalToConstant: 70).isActive = true
-        passwordView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
-        passwordView.topAnchor.constraint(equalTo: self.loginView.bottomAnchor, constant: 1).isActive = true
-        addLeftLabel(view: passwordView, label: passwordLabel, text: "비밀번호 변경")
-        passwordView.addSubview(passwordButton)
-        passwordButton.widthAnchor.constraint(equalToConstant: 36).isActive = true
-        passwordButton.heightAnchor.constraint(equalToConstant: 36).isActive = true
-        passwordButton.trailingAnchor.constraint(equalTo: passwordView.trailingAnchor, constant: -20).isActive = true
-        passwordButton.centerYAnchor.constraint(equalTo: passwordView.centerYAnchor).isActive = true
-        passwordButton.addTarget(self, action: #selector(changePasswordButton), for: .touchUpInside)
+//
+//        passwordView.widthAnchor.constraint(equalTo: self.view.widthAnchor).isActive = true
+//        passwordView.heightAnchor.constraint(equalToConstant: 70).isActive = true
+//        passwordView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
+//        passwordView.topAnchor.constraint(equalTo: self.loginView.bottomAnchor, constant: 1).isActive = true
+//        addLeftLabel(view: passwordView, label: passwordLabel, text: "비밀번호 변경")
+//        passwordView.addSubview(passwordButton)
+//        passwordButton.widthAnchor.constraint(equalToConstant: 36).isActive = true
+//        passwordButton.heightAnchor.constraint(equalToConstant: 36).isActive = true
+//        passwordButton.trailingAnchor.constraint(equalTo: passwordView.trailingAnchor, constant: -20).isActive = true
+//        passwordButton.centerYAnchor.constraint(equalTo: passwordView.centerYAnchor).isActive = true
+//        passwordButton.addTarget(self, action: #selector(changePasswordButton), for: .touchUpInside)
         
         
         autoLoginView.widthAnchor.constraint(equalTo: self.view.widthAnchor).isActive = true
         autoLoginView.heightAnchor.constraint(equalToConstant: 70).isActive = true
         autoLoginView.centerXAnchor.constraint(equalTo: self.view.centerXAnchor).isActive = true
-        autoLoginView.topAnchor.constraint(equalTo: self.passwordView.bottomAnchor, constant: 1).isActive = true
+        autoLoginView.topAnchor.constraint(equalTo: self.loginView.bottomAnchor, constant: 1).isActive = true
         addLeftLabel(view: autoLoginView, label: autoLoginLabel, text: "자동 로그인")
         autoLoginView.addSubview(autoLoginCheckButton)
         autoLoginCheckButton.boxType = BEMBoxType.square
@@ -238,8 +241,8 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
         googleDriveLoginEmail.textColor = HexStringToUIColor().getUIColor(hex: "ff0000")
         googleDriveLoginEmail.widthAnchor.constraint(equalTo: googleDriveEmailView.widthAnchor).isActive = true
         googleDriveLoginEmail.trailingAnchor.constraint(equalTo: googleDriveEmailView.trailingAnchor, constant: -25).isActive = true
-        googleDriveLoginEmail.bottomAnchor.constraint(equalTo: googleDriveEmailView.bottomAnchor, constant: -15).isActive = true
-        googleDriveLoginEmail.heightAnchor.constraint(equalToConstant: 15).isActive = true
+        googleDriveLoginEmail.bottomAnchor.constraint(equalTo: googleDriveEmailView.bottomAnchor, constant: -17).isActive = true
+        googleDriveLoginEmail.heightAnchor.constraint(equalToConstant: 17).isActive = true
         
         
         
@@ -374,7 +377,7 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
                 "Cookie": UserDefaults.standard.string(forKey: "cookie")!
             ]
             
-            let url = App.URL.server + "modifyPassword.do"
+            let url = App.URL.hostIpServer + "modifyPassword.do"
             
             Alamofire.request(url, method:.post,parameters:["userId":userId, "password":pwd],encoding:JSONEncoding.default, headers:jsonHeader).responseJSON { response in
                 
@@ -456,8 +459,10 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
             
             let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
 //                self.getPreviousSyncEmail()
-                self.performSegue(withIdentifier: "googleSignInFromSetting", sender: self)
-                self.halfBlackView.removeFromSuperview()
+//                self.performSegue(withIdentifier: "googleSignInFromSetting", sender: self)
+//                self.halfBlackView.removeFromSuperview()
+                self.containerViewController?.googleSignInSegueState = .loginForSetting
+                self.googleSignInAlertShow()
             }
             let cancelButton = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
                 self.halfBlackView.removeFromSuperview()
@@ -491,6 +496,7 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
     
     
     
+    
     func logout(){
         googleDriveLoginState = .logout
         googleDriveLogInLabel.text = "Google Drive 로그인"
@@ -513,8 +519,293 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
     }
    
     
+    func googleSignInAlertShow(){
+//        let transition = CATransition()
+//        transition.type = kCATransitionPush
+//        transition.subtype = kCATransitionFromRight
+//        view.layer.add(transition, forKey: nil)
+        view.addSubview(self.halfBlackView)
+        
+        halfBlackView.topAnchor.constraint(equalTo: self.view.topAnchor).isActive = true
+        halfBlackView.leadingAnchor.constraint(equalTo: self.view.leadingAnchor).isActive = true
+        halfBlackView.trailingAnchor.constraint(equalTo: self.view.trailingAnchor).isActive = true
+        halfBlackView.bottomAnchor.constraint(equalTo: self.view.bottomAnchor).isActive = true
+        
+        let alertController = UIAlertController(title: "Google Drive에 로그인\n하시겠습니까?",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+            //                self.getPreviousSyncEmail()
+            
+            self.getPreviousSyncEmail()
+            //            self.performSegue(withIdentifier: "googleSignInSegue", sender: self)
+            //            self.halfBlackView.removeFromSuperview()
+        }
+        let cancelButton = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
+            self.halfBlackView.removeFromSuperview()
+            if(self.activityIndicator?.isAnimating)!{
+                self.activityIndicator?.stopAnimating()
+            }
+        }
+        alertController.addAction(okAction)
+        alertController.addAction(cancelButton)
+        self.present(alertController,animated: true,completion: nil)
+        
+    }
+    func getPreviousSyncEmail(){
+        let headers = [
+            "Content-Type": "application/json",
+            "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
+            "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
+        ]
+        
+        print("headers : \(headers)")
+        let userId:String = App.defaults.userId
+        Alamofire.request(App.URL.hostIpServer+"selectCloudId.json"
+            , method: .post
+            , parameters:["userId":userId,"cloudKind":"D"]
+            , encoding : JSONEncoding.default
+            , headers: headers
+            ).responseJSON { response in
+                
+                switch response.result {
+                case .success(let value):
+                    let responseData = value as! NSDictionary
+                    let message = responseData.object(forKey: "message")
+                    print("message : \(message)")
+                    if let listData = responseData.object(forKey: "data") {
+                        let data = listData as! NSDictionary
+                        let cloudId = data.object(forKey: "cloudId") as! String
+                        print("cloudId : \(cloudId)")
+                        self.showPreviousSyncEmail(email:cloudId)
+                    } else {
+                        self.showRadioAlert()
+                    }
+                    
+                    break
+                case .failure(let error):
+                    NSLog(error.localizedDescription)
+                    self.halfBlackView.removeFromSuperview()
+                    if(self.activityIndicator?.isAnimating)!{
+                        self.activityIndicator?.stopAnimating()
+                    }
+                    
+                    break
+                }
+        }
+    }
+    func showPreviousSyncEmail(email:String){
+        let alertController = UIAlertController(title: "동기화 ID는\n\(email)\n입니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+            self.showRadioAlert()
+        }
+        
+        alertController.addAction(okAction)
+        
+        self.present(alertController, animated: true,completion: nil)
+    }
+    
+    
+    func showRadioAlert(){
+        googleEmailArray = DbHelper().googleEmailListArray()
+        googleEmailArray.append("계정 추가")
+        var checkButtons:[BEMCheckBox] = [BEMCheckBox]()
+        checkButtons.removeAll()
+        
+        let alertController = UIAlertController(title: "계정 선택",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        var alertHeight:CGFloat = 40
+        if(googleEmailArray.count > 0) {
+            alertHeight = CGFloat(40 * (googleEmailArray.count + 1))
+        }
+        
+        let customView = UIView()
+        customView.isUserInteractionEnabled = true
+        customView.translatesAutoresizingMaskIntoConstraints = false
+        alertController.view.addSubview(customView)
+        customView.centerYAnchor.constraint(equalTo: alertController.view.centerYAnchor).isActive = true
+        customView.leadingAnchor.constraint(equalTo: alertController.view.leadingAnchor).isActive = true
+        customView.trailingAnchor.constraint(equalTo: alertController.view.trailingAnchor).isActive = true
+        var customViewHeightAnchor:NSLayoutConstraint?
+        customViewHeightAnchor = customView.heightAnchor.constraint(equalToConstant: alertHeight)
+        customViewHeightAnchor?.isActive = true
+        
+        
+        let tableView = UITableView()
+        tableView.translatesAutoresizingMaskIntoConstraints = false
+        tableView.register(GoogleEmailTableViewCell.self, forCellReuseIdentifier: "GoogleEmailTableViewCell")
+        customView.addSubview(tableView)
+        
+        tableView.topAnchor.constraint(equalTo: customView.topAnchor).isActive = true
+        tableView.leadingAnchor.constraint(equalTo: customView.leadingAnchor).isActive = true
+        tableView.trailingAnchor.constraint(equalTo: customView.trailingAnchor).isActive = true
+        tableView.bottomAnchor.constraint(equalTo: customView.bottomAnchor).isActive = true
+        tableView.backgroundColor = UIColor.clear
+        tableView.delegate = self
+        tableView.dataSource = self
+        tableView.isScrollEnabled = false
+        tableView.separatorStyle = .none
+        
+        tableView.reloadData()
+        
+        let height:NSLayoutConstraint = NSLayoutConstraint(item: alertController.view, attribute: NSLayoutAttribute.height, relatedBy: NSLayoutRelation.equal, toItem: nil, attribute: NSLayoutAttribute.notAnAttribute, multiplier: 1, constant: alertHeight + 100)
+        alertController.view.addConstraint(height);
+        
+        
+        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
+            self.halfBlackView.removeFromSuperview()
+            print("emailSelectState : \(self.emailSelectState)")
+            if(self.emailSelectState == .add) {
+                
+                self.googleSignIn()
+                
+            } else {
+                //                self.googleSignInSilently()
+                self.loginWBySelectedEmail()
+            }
+            
+        }
+        let cancelAction = UIAlertAction(title: "취소", style: UIAlertActionStyle.cancel){ (action: UIAlertAction) in
+            self.halfBlackView.removeFromSuperview()
+            if(self.activityIndicator?.isAnimating)!{
+                self.activityIndicator?.stopAnimating()
+            }
+            
+        }
+        
+        alertController.addAction(okAction)
+        alertController.addAction(cancelAction)
+        self.present(alertController,animated: true,completion: nil)
+    }
+    
+    
+    func tableView(_ tableView: UITableView, numberOfRowsInSection section: Int) -> Int {
+        return googleEmailArray.count
+    }
+    
+    
+    
+    
+    
+    func tableView(_ tableView: UITableView, cellForRowAt indexPath: IndexPath) -> UITableViewCell {
+        let cell = tableView.dequeueReusableCell(withIdentifier: "GoogleEmailTableViewCell") as! GoogleEmailTableViewCell
+        cell.lblMain.text = googleEmailArray[indexPath.row]
+        cell.btnCheck.setOn(false, animated: false)
+        
+        return cell
+    }
+    func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
+        let height:CGFloat = 50.0
+        
+        return height
+    }
+    
+    func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
+        tableView.deselectRow(at: indexPath, animated: true)
+        print(indexPath.section)
+        print(indexPath.row)
+        for (index, string) in googleEmailArray.enumerated() {
+            let otherIndexPath = IndexPath(row: index, section: 0)
+            if (otherIndexPath != indexPath){
+                if let otherCell = tableView.cellForRow(at: otherIndexPath) as? GoogleEmailTableViewCell{
+                    otherCell.btnCheck.setOn(false, animated: true)
+                }
+            } else {
+                
+                let clickedCell = tableView.cellForRow(at: indexPath) as? GoogleEmailTableViewCell
+                clickedCell?.btnCheck.setOn(true, animated: true)
+            }
+            
+        }
+        googleEmail = googleEmailArray[indexPath.row]
+        print("googleEmailArray.count : \(googleEmailArray.count)")
+        if(indexPath.row == googleEmailArray.count - 1){
+            emailSelectState = .add
+            print("emailSelectState : \(emailSelectState)")
+        } else {
+            emailSelectState = .previous
+            print("emailSelectState : \(emailSelectState)")
+        }
+        
+    }
+    
+    func googleSignIn(){
+        print("googleSignIn")
+        GIDSignIn.sharedInstance().signOut()
+        let userDefaults = UserDefaults.standard
+        let dict = UserDefaults.standard.dictionaryRepresentation()
+        for key in dict.keys {
+            if key == "GID_AppHasRunBefore" || key == "token" || key == "cookie" || key == "userId" || key == "autoLoginCheck" || key == "userId" || key == "userPassword" || key == "googleDriveLoginState" || key == "idSaveCheck"{
+                continue
+            }
+            userDefaults.removeObject(forKey: key);
+        }
+        UserDefaults.standard.synchronize()
+        GIDSignIn.sharedInstance().delegate = self
+        GIDSignIn.sharedInstance().uiDelegate = self
+        GIDSignIn.sharedInstance().scopes = scopes
+        GIDSignIn.sharedInstance().signIn()
+        
+    }
+    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!,
+              withError error: Error!) {
+        if let error = error {
+            print("error: \(error)")
+            GIDSignIn.sharedInstance().signOut()
+            let userDefaults = UserDefaults.standard
+            let dict = UserDefaults.standard.dictionaryRepresentation()
+            for key in dict.keys {
+                if key == "GID_AppHasRunBefore" || key == "token" || key == "cookie" || key == "userId" || key == "autoLoginCheck" || key == "userId" || key == "userPassword" || key == "googleDriveLoginState" {
+                    continue
+                }
+                userDefaults.removeObject(forKey: key);
+            }
+            UserDefaults.standard.synchronize()
+            DispatchQueue.main.async {
+                self.service.authorizer = nil
+                
+                self.showAlert(title: "Authentication Error", message: "재 시도 부탁 드립니다.")
+                
+            }
+            if(self.activityIndicator?.isAnimating)!{
+                self.activityIndicator?.stopAnimating()
+            }
+            
+        } else {
+            var accessToken:String = ""
+                accessToken = GIDSignIn.sharedInstance().currentUser.authentication.accessToken
+                print("final")
+                let today = Date()
+                let stToday = Util.date(text: today)
+                print("stToday : \(stToday)")
+                self.signInButton.isHidden = true
+                self.service.authorizer = user.authentication.fetcherAuthorizer()
+                print("googleEmail : \(self.googleEmail)")
+                self.googleEmail = user.profile.email
+                self.googleDriveLoginState = .login
+                let defaults = UserDefaults.standard
+                defaults.set(self.googleEmail, forKey: "googleEmail")
+                defaults.set(accessToken, forKey: "googleAccessToken")
+                defaults.set(stToday, forKey: "googleLoginTime")
+                defaults.set("login", forKey: "googleDriveLoginState")
+                defaults.synchronize()
+                if(self.activityIndicator?.isAnimating)!{
+                    self.activityIndicator?.stopAnimating()
+                }
+                NotificationCenter.default.post(name: Notification.Name("loginStateUpdate"), object: self)
+        }
+    }
+    func loginWBySelectedEmail(){
+        print("loginWBySelectedEmail called")
+        let loginState = UserDefaults.standard.string(forKey: "googleDriveLoginState")
+        if(loginState != "login") {
+            googleSignIn()
+        }  else {
+            GIDSignIn.sharedInstance().signInSilently()
+        }
+    }
     
     @IBAction func backToHome(_ sender: UIButton) {
+        NotificationCenter.default.post(name: NSNotification.Name("backToOneView"), object: nil)
         NotificationCenter.default.post(name: NSNotification.Name("toggleSideMenu"), object: nil)
         dismiss(animated: false, completion: nil)
     }
@@ -524,16 +815,25 @@ class SettingViewController: UIViewController, BEMCheckBoxDelegate, GIDSignInDel
         super.didReceiveMemoryWarning()
         // Dispose of any resources that can be recreated.
     }
-    func sign(_ signIn: GIDSignIn!, didSignInFor user: GIDGoogleUser!,
-              withError error: Error!) {
-       
-    }
     override func viewWillAppear(_ animated: Bool) {
          loginStateUpdate()
         
         
     }
-   
+    func showAlert(title : String, message: String) {
+        let alert = UIAlertController(
+            title: title,
+            message: message,
+            preferredStyle: UIAlertControllerStyle.alert
+        )
+        let ok = UIAlertAction(
+            title: "OK",
+            style: UIAlertActionStyle.default,
+            handler: nil
+        )
+        alert.addAction(ok)
+        present(alert, animated: true, completion: nil)
+    }
 
     /*
     // MARK: - Navigation
