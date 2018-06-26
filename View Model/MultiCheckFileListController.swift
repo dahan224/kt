@@ -45,95 +45,98 @@ class MultiCheckFileListController {
         
         print("btnMultiCheckClicked indexpath row : \(indexPath.row)")
         //        print("superview : \(sender.superview?.superview)")
-        if let cell = sender.superview as? NasFileListCell {
-            if(folderArray[indexPath.row].checked){
-                cell.btnMultiChecked = false
-                newFolderArray[sender.tag].checked = false
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-            } else {
-                cell.btnMultiChecked = true
-                newFolderArray[sender.tag].checked = true
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+        if newFolderArray.count > indexPath.row {
+            if let cell = sender.superview as? NasFileListCell {
+                if(folderArray[indexPath.row].checked){
+                    cell.btnMultiChecked = false
+                    newFolderArray[sender.tag].checked = false
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                } else {
+                    cell.btnMultiChecked = true
+                    newFolderArray[sender.tag].checked = true
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
+            } else if let cell = sender.superview as? NasFolderListCell {
+                if(folderArray[indexPath.row].checked){
+                    cell.btnMultiChecked = false
+                    newFolderArray[sender.tag].checked = false
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                } else {
+                    cell.btnMultiChecked = true
+                    newFolderArray[sender.tag].checked = true
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
+            } else if let cell = sender.superview as? CollectionViewGridCell {
+                if(folderArray[indexPath.row].checked){
+                    cell.btnMultiChecked = false
+                    newFolderArray[sender.tag].checked = false
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                } else {
+                    cell.btnMultiChecked = true
+                    newFolderArray[sender.tag].checked = true
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
+            } else if let cell = sender.superview as? RemoteFileListCell {
+                if(folderArray[indexPath.row].checked){
+                    cell.btnMultiChecked = false
+                    newFolderArray[sender.tag].checked = false
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                } else {
+                    cell.btnMultiChecked = true
+                    newFolderArray[sender.tag].checked = true
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
+            } else if let cell = sender.superview as? LocalFileListCell {
+                if(folderArray[indexPath.row].checked){
+                    cell.btnMultiChecked = false
+                    newFolderArray[sender.tag].checked = false
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                } else {
+                    cell.btnMultiChecked = true
+                    newFolderArray[sender.tag].checked = true
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
+            } else if let cell = sender.superview as? LocalFolderListCell {
+                if(folderArray[indexPath.row].checked){
+                    cell.btnMultiChecked = false
+                    newFolderArray[sender.tag].checked = false
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                } else {
+                    cell.btnMultiChecked = true
+                    newFolderArray[sender.tag].checked = true
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
+            } else if let cell = sender.superview as? GDriveFolderListCell {
+                if(folderArray[indexPath.row].checked){
+                    cell.btnMultiChecked = false
+                    newFolderArray[sender.tag].checked = false
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                } else {
+                    cell.btnMultiChecked = true
+                    newFolderArray[sender.tag].checked = true
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
+            } else if let cell = sender.superview as? GDriveFileListCell {
+                if(folderArray[indexPath.row].checked){
+                    cell.btnMultiChecked = false
+                    newFolderArray[sender.tag].checked = false
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
+                } else {
+                    cell.btnMultiChecked = true
+                    newFolderArray[sender.tag].checked = true
+                    cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
+                }
+                dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
             }
-            dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
-        } else if let cell = sender.superview as? NasFolderListCell {
-            if(folderArray[indexPath.row].checked){
-                cell.btnMultiChecked = false
-                newFolderArray[sender.tag].checked = false
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-            } else {
-                cell.btnMultiChecked = true
-                newFolderArray[sender.tag].checked = true
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            }
-            dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
-        } else if let cell = sender.superview as? CollectionViewGridCell {
-            if(folderArray[indexPath.row].checked){
-                cell.btnMultiChecked = false
-                newFolderArray[sender.tag].checked = false
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-            } else {
-                cell.btnMultiChecked = true
-                newFolderArray[sender.tag].checked = true
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            }
-            dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
-        } else if let cell = sender.superview as? RemoteFileListCell {
-            if(folderArray[indexPath.row].checked){
-                cell.btnMultiChecked = false
-                newFolderArray[sender.tag].checked = false
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-            } else {
-                cell.btnMultiChecked = true
-                newFolderArray[sender.tag].checked = true
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            }
-            dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
-        } else if let cell = sender.superview as? LocalFileListCell {
-            if(folderArray[indexPath.row].checked){
-                cell.btnMultiChecked = false
-                newFolderArray[sender.tag].checked = false
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-            } else {
-                cell.btnMultiChecked = true
-                newFolderArray[sender.tag].checked = true
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            }
-            dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
-        } else if let cell = sender.superview as? LocalFolderListCell {
-            if(folderArray[indexPath.row].checked){
-                cell.btnMultiChecked = false
-                newFolderArray[sender.tag].checked = false
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-            } else {
-                cell.btnMultiChecked = true
-                newFolderArray[sender.tag].checked = true
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            }
-            dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
-        } else if let cell = sender.superview as? GDriveFolderListCell {
-            if(folderArray[indexPath.row].checked){
-                cell.btnMultiChecked = false
-                newFolderArray[sender.tag].checked = false
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-            } else {
-                cell.btnMultiChecked = true
-                newFolderArray[sender.tag].checked = true
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            }
-            dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
-        } else if let cell = sender.superview as? GDriveFileListCell {
-            if(folderArray[indexPath.row].checked){
-                cell.btnMultiChecked = false
-                newFolderArray[sender.tag].checked = false
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_bk").withRenderingMode(.alwaysOriginal), for: .normal)
-            } else {
-                cell.btnMultiChecked = true
-                newFolderArray[sender.tag].checked = true
-                cell.btnMultiCheck.setImage(#imageLiteral(resourceName: "multi_check_on-1").withRenderingMode(.alwaysOriginal), for: .normal)
-            }
-            dv?.multiCheckedFolderArrayGrid(indexPath:indexPath, check:newFolderArray[indexPath.row].checked, getFolderArray:newFolderArray)
         }
+        
     }
     
     

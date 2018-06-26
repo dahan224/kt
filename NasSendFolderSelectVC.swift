@@ -114,6 +114,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
+        
         print("fromDevUuid : \(fromDevUuid), fromFoldrId: \(fromFoldrId), oldFoldrWholePathNm : \(oldFoldrWholePathNm), originalFileId : \(originalFileId), storageState : \(storageState), gDriveMultiCheckedfolderArray : \(gDriveMultiCheckedfolderArray.count)")
         
         contextMenuWork = ContextMenuWork()
@@ -404,6 +405,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     }
     
     @objc func btnChekced(sender:UIButton){
+        print("btnChekced called")
         let buttonRow = sender.tag
         checkedButtonRow = buttonRow
         let indexPath = IndexPath(row: buttonRow, section: 0)
@@ -798,7 +800,8 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     
     
     @IBAction func selectFinish(_ sender: UIButton) {
-        
+        print("selectFinish called")
+//        return
         let accessToken:String = UserDefaults.standard.string(forKey: "googleAccessToken") ?? ""
             toOsCd = "G"
             if(toUserId != UserDefaults.standard.string(forKey: "userId")){
@@ -869,11 +872,10 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     
                     break
                 case .gdrive_nas_multi:
-                    print("multi gDrive to nas")
                     //                startMultiGdriveToNas()
                     NasSendController().handleNasSend(getToOsCd: toOsCd, getToUserId: toUserId, getOriginalFileName: originalFileName, getAmdDate: amdDate, getOriginalFileId: originalFileId, oldFoldrWholePathNm: oldFoldrWholePathNm, newFoldrWholePathNm: newFoldrWholePathNm, multiCheckedfolderArray: multiCheckedfolderArray, etsionNm:etsionNm, storageState:storageState, listState: listState, driveFileArray: driveFileArray, checkedButtonRow: checkedButtonRow, driveFolderNameArray: driveFolderNameArray, driveFolderIdArray: driveFolderIdArray, fromOsCd: fromOsCd, fromDevUuid: fromDevUuid, accessToken: accessToken, googleDriveFileIdPath: googleDriveFileIdPath, deviceName:deviceName, fromUserId:fromUserId, containerViewController:containerViewController!, currentDevUuId: currentDevUuId, newFoldrId: newFoldrId, fromFoldrId:fromFoldrId, mimeType:mimeType, gDriveMultiCheckedfolderArray:gDriveMultiCheckedfolderArray)
-                    let filedict = ["getDriveMultiCheckedfolderArray":gDriveMultiCheckedfolderArray]
-                    
+                    //nas 보내기 완료 후 업데이트
+                    let filedict = ["getDriveMultiCheckedfolderArray":gDriveMultiCheckedfolderArray]//
                     NotificationCenter.default.post(name: Notification.Name("setGdriveMultiProgressFileDict"), object:self, userInfo:filedict)
 
                     Util().dismissFromLeft(vc: self)

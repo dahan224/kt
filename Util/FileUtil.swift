@@ -110,8 +110,8 @@ class FileUtil {
                 let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
                 let localFilFullName = "\(fileName).\(fileExtension)"
                 let decodedFileName:String = localFilFullName.removingPercentEncoding!
-                print("fileExtension : \(fileExtension)")
-                print("fileSavedPath : \(fileSavedPath)")
+//                print("fileExtension : \(fileExtension)")
+//                print("fileSavedPath : \(fileSavedPath)")
                 let stringModifiedDate = Util.date(text: modifiedDate)
                 print("fileNm : \(fileNm), localFilFullName : \(localFilFullName), decodedFileName: \(decodedFileName), amdDate: \(amdDate) , stringModifiedDate : \(stringModifiedDate)")
                 //                    if(fileNm == decodedFileName && amdDate == stringModifiedDate){

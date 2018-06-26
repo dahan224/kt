@@ -1314,7 +1314,7 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
         } else if fromOsCd == "D" {
             bottomListState = .bottomMultiListGDrive
             
-        }else if selectedDevUuid != Util.getUuid() {
+        } else if selectedDevUuid != Util.getUuid() {
             style = "remote"
             bottomListState = .bottomMultiListRemote
         } else {

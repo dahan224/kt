@@ -43,6 +43,7 @@ class NasSendController {
     var fromFoldrId:String = ""
     var mimeType:String = ""
     var gDriveMultiCheckedfolderArray:[App.DriveFileStruct] = []
+    var gDriveMultiCheckedfolderArrayForCompleteCheck:[App.DriveFileStruct] = []
     var listState = NasSendFolderSelectVC.listEnum.deviceRoot
     
     
@@ -73,6 +74,7 @@ class NasSendController {
         self.containerViewController = containerViewController
         self.storageState = storageState
         self.gDriveMultiCheckedfolderArray = gDriveMultiCheckedfolderArray
+        self.gDriveMultiCheckedfolderArrayForCompleteCheck = gDriveMultiCheckedfolderArray
         self.listState = listState
         
         switch storageState {
@@ -168,7 +170,7 @@ class NasSendController {
                 } else {
                     print("accessToken :\(accessToken)")
                     containerViewController.showIndicator()
-                    SendFolderToNasFromGDrive().downloadFolderFromGDrive(foldrId: getOriginalFileId, getAccessToken: accessToken, fileId: getOriginalFileId, downloadRootFolderName:getOriginalFileName, parent:self, gDriveMultiCheckedfolderArray:gDriveMultiCheckedfolderArray)
+                    SendFolderToNasFromGDrive().downloadFolderFromGDrive(foldrId: getOriginalFileId, getAccessToken: accessToken, fileId: getOriginalFileId, downloadRootFolderName:getOriginalFileName, parent:self, gDriveMultiCheckedfolderArray:gDriveMultiCheckedfolderArray, callType:"download")
                     
                 }
             } else {
@@ -415,7 +417,8 @@ class NasSendController {
     }
     
     func startMultiGdriveToNas(){
-        print("gDriveMultiCheckedfolderArray : \(gDriveMultiCheckedfolderArray.count)")
+        
+//        print("gDriveMultiCheckedfolderArray : \(gDriveMultiCheckedfolderArray.count)")
         if(gDriveMultiCheckedfolderArray.count > 0){
             
             let index = gDriveMultiCheckedfolderArray.count - 1
@@ -434,9 +437,9 @@ class NasSendController {
                             //sync -> get file id > upload to nas from local
                             if(self.gDriveMultiCheckedfolderArray.count > 0){
                                 let lastIndex = self.gDriveMultiCheckedfolderArray.count - 1
-                                let fileId = self.gDriveMultiCheckedfolderArray[lastIndex].fileId
-                                let fileDict = ["fileId":fileId]
-                                NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
+//                                let fileId = self.gDriveMultiCheckedfolderArray[lastIndex].fileId
+//                                let fileDict = ["fileId":fileId]
+//                                NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
                                 self.gDriveMultiCheckedfolderArray.remove(at: lastIndex)
                             }
                             self.startMultiGdriveToNas()
@@ -445,19 +448,21 @@ class NasSendController {
                 }
                 return
             } else {
-                SendFolderToNasFromGDrive().downloadFolderFromGDrive(foldrId: originalFileId, getAccessToken: accessToken, fileId: originalFileId, downloadRootFolderName:originalFileName, parent:self, gDriveMultiCheckedfolderArray:gDriveMultiCheckedfolderArray)
+                SendFolderToNasFromGDrive().downloadFolderFromGDrive(foldrId: originalFileId, getAccessToken: accessToken, fileId: originalFileId, downloadRootFolderName:originalFileName, parent:self, gDriveMultiCheckedfolderArray:gDriveMultiCheckedfolderArray, callType:"send")
                 return
             }
-        }
-        print("start upload file")
-        
-        containerViewController?.inActiveMultiCheck()
-        if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
-            print("aleady Syncing")
-        } else {
             
-            SyncLocalFilleToNas().callSyncFomGdriveToNasSendFolder(view: "NasSendController", parent: self, rootFolder: "/Mobile/tmp")
+        } else {
+            print("start upload file")
+            
+            containerViewController?.inActiveMultiCheck()
+            if let syncOngoing:Bool = UserDefaults.standard.bool(forKey: "syncOngoing"), syncOngoing == true {
+                print("aleady Syncing")
+            } else {
+                SyncLocalFilleToNas().callSyncFomGdriveToNasSendFolder(view: "NasSendController", parent: self, rootFolder: "/Mobile/tmp")
+            }
         }
+        
         
     }
     
@@ -1251,7 +1256,7 @@ class NasSendController {
     func notifiedSyncFinish(rootFolder:String){
         
         //gdrive to nas
-        //        print("notifiedSyncFinish called rootFolder: \(rootFolder)")
+        print("notifiedSyncFinish called rootFolder: \(rootFolder)")
         if rootFolder.isEmpty {
             let loginUserId = UserDefaults.standard.string(forKey: "userId")
             GetListFromServer().getMobileFileLIst(devUuid: Util.getUuid(), userId:loginUserId!, deviceName:"sdf"){ responseObject, error in
@@ -1313,9 +1318,9 @@ class NasSendController {
             //get folder Id
             print("폴더 업로드 시작")
             print("start upload folder to nas")
-            print("newFoldrWholePathNm : \(newFoldrWholePathNm)  rootFolder : \(rootFolder), fromOsCd : \(fromOsCd)")
+            print("newFoldrWholePathNm : \(newFoldrWholePathNm)  rootFolder : \(rootFolder), fromOsCd : \(fromOsCd) gDriveMultiCheckedfolderArray : \(gDriveMultiCheckedfolderArray.count), gDriveMultiCheckedfolderArrayForCompleteCheck :  \(gDriveMultiCheckedfolderArrayForCompleteCheck)")
             if(self.storageState == .gdrive_nas_multi || self.fromOsCd == "gDrive"){
-                ToNasFromLocalFomGDriveFolder().readyCreatFolders(getToUserId:self.toUserId, getNewFoldrWholePathNm:self.newFoldrWholePathNm, getOldFoldrWholePathNm:rootFolder, getMultiArray:self.gDriveMultiCheckedfolderArray, parent:self, containerViewController:containerViewController!, toOsCd: toOsCd)
+                ToNasFromLocalFomGDriveFolder().readyCreatFolders(getToUserId:self.toUserId, getNewFoldrWholePathNm:self.newFoldrWholePathNm, getOldFoldrWholePathNm:rootFolder, getMultiArray:self.gDriveMultiCheckedfolderArrayForCompleteCheck, parent:self, containerViewController:containerViewController!, toOsCd: toOsCd)
                 self.containerViewController?.showIndicator()
             } else {
                 print("ToNasFromLocalFolder().readyCreatFoldersFromNasSendControlle")

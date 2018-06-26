@@ -114,7 +114,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("HomeDeviceCollectionVC did load")
+        print("HomeDeviceCollectionVC did load fromOsCd : \(fromOsCd)")
         contextMenuWork = ContextMenuWork()
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
@@ -195,11 +195,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                                selector: #selector(showAlert(messageDict:)),
                                                name: NSNotification.Name("showAlert"),
                                                object: nil)
-        
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(handleMultiCheckFolderArray(fileDict:)),
-                                               name: NSNotification.Name("handleMultiCheckFolderArray"),
-                                               object: nil)
+    
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(countRemoteDownloadFinished),
@@ -2441,7 +2437,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
     
     
-    @objc func handleMultiCheckFolderArray(fileDict:[String:Any]) {
+    func handleMultiCheckFolderArray(fileDict:[String:Any]) {
     
         if let getAction = fileDict["action"] as? String, let getFromOsCd = fileDict["fromOsCd"] as? String {
             if getAction == "nasfromSearchView" {
@@ -2588,7 +2584,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         homeViewController?.inActiveMultiCheck()
                         break
                     case "nas":
-                        print("gdrive_nas_multi 보내기")
+                        print("gdrive_nas보내기 from : \(fromOsCd)")
+                        
                         containerViewController?.getGDriveMultiFolderArray(getArray:gDriveMultiCheckedfolderArray, toStorage:"gdrive_nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
                         break
                     

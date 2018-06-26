@@ -542,14 +542,14 @@
         <scene sceneID="Zgn-Av-bAF">
             <objects>
                 <viewController id="cGv-DV-gXn" customClass="DeviceManageVC" customModule="KT" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" ambiguous="YES" id="4US-N3-ivP">
+                    <view key="view" contentMode="scaleToFill" id="4US-N3-ivP">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="xtB-3H-ekj">
+                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="xtB-3H-ekj">
                                 <rect key="frame" x="0.0" y="20" width="414" height="60"/>
                                 <subviews>
-                                    <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Cgf-MI-tJC">
+                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="Cgf-MI-tJC">
                                         <rect key="frame" x="20" y="16" width="28" height="28"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="28" id="rHt-ja-xHy"/>
@@ -560,7 +560,7 @@
                                             <action selector="backToHome:" destination="eOn-4p-ri2" eventType="touchUpInside" id="ipV-V1-bI8"/>
                                         </connections>
                                     </button>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="디바이스 관리" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HJY-gn-aQ8">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="디바이스 관리" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="HJY-gn-aQ8">
                                         <rect key="frame" x="53" y="20" width="150" height="20.666666666666671"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="150" id="1gJ-Ki-244"/>
@@ -1364,14 +1364,14 @@
         <scene sceneID="H4g-p0-3Y1">
             <objects>
                 <viewController id="eOn-4p-ri2" customClass="SettingViewController" customModule="KT" customModuleProvider="target" sceneMemberID="viewController">
-                    <view key="view" contentMode="scaleToFill" id="eLY-3E-0au">
+                    <view key="view" contentMode="scaleToFill" ambiguous="YES" id="eLY-3E-0au">
                         <rect key="frame" x="0.0" y="0.0" width="414" height="736"/>
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
-                            <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="udq-F8-sPd">
+                            <view contentMode="scaleToFill" ambiguous="YES" translatesAutoresizingMaskIntoConstraints="NO" id="udq-F8-sPd">
                                 <rect key="frame" x="0.0" y="20" width="414" height="60"/>
                                 <subviews>
-                                    <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ESk-0J-KBn">
+                                    <button opaque="NO" contentMode="scaleToFill" ambiguous="YES" contentHorizontalAlignment="center" contentVerticalAlignment="center" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ESk-0J-KBn">
                                         <rect key="frame" x="20" y="16" width="28" height="28"/>
                                         <constraints>
                                             <constraint firstAttribute="height" constant="28" id="Q7q-4q-QYg"/>
@@ -1382,7 +1382,7 @@
                                             <action selector="backToHome:" destination="eOn-4p-ri2" eventType="touchUpInside" id="P0E-k4-TIU"/>
                                         </connections>
                                     </button>
-                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="사용자 설정" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vSD-KC-szA">
+                                    <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" ambiguous="YES" text="사용자 설정" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="vSD-KC-szA">
                                         <rect key="frame" x="53" y="20" width="150" height="20.666666666666671"/>
                                         <constraints>
                                             <constraint firstAttribute="width" constant="150" id="IYA-0a-KWX"/>

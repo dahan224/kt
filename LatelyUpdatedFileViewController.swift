@@ -885,10 +885,6 @@ class LatelyUpdatedFileViewController: UIViewController, UITableViewDelegate, UI
         let fileDict = ["action":"nas","fromOsCd":"multi"]
         print("lately multi check count : \(multiCheckedfolderArray.count)")
         latelyViewToggleBottomMenu()
-//        NotificationCenter.default.post(name: Notification.Name("handleMultiCheckFolderArray"), object: self, userInfo:fileDict)
-//        child?.handleMultiCheckFromLatelyView()
-//        inActiveMultiCheck()
-        
         
         switch bottomListState {
         

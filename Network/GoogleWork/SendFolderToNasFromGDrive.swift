@@ -38,12 +38,13 @@ class SendFolderToNasFromGDrive {
     var rootFolder = ""
     var gDriveMultiCheckedfolderArray:[App.DriveFileStruct] = []
     var orginalFoldrId = ""
+    var callType = "download"
     
-    func downloadFolderFromGDrive(foldrId:String, getAccessToken: String, fileId:String, downloadRootFolderName:String, parent:NasSendController, gDriveMultiCheckedfolderArray:[App.DriveFileStruct]){
+    func downloadFolderFromGDrive(foldrId:String, getAccessToken: String, fileId:String, downloadRootFolderName:String, parent:NasSendController, gDriveMultiCheckedfolderArray:[App.DriveFileStruct], callType:String){
         
         accessToken = getAccessToken
         print("oldFoldrWholePathNm : \(oldFoldrWholePathNm)")
-        
+        self.callType = callType
         nasSendController = parent
         googleFolderIdsToDownLoad.removeAll()
         folderPathToDownLoad.removeAll()
@@ -95,8 +96,11 @@ class SendFolderToNasFromGDrive {
                                                             self.getGDriveFolderIdsToDownload(foldrId: fileStruct.fileId, currentFolderPath: editCurrentFolderPath)
                                                             return
                                                         } else {
-                                                            let fileDict = ["fileId":foldrId]
-                                                            NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
+                                                            if self.callType == "download"{
+                                                                let fileDict = ["fileId":foldrId]
+                                                                NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
+                                                            }
+                                                            
                                                         }
                                                     }
                                                     
@@ -283,8 +287,11 @@ class SendFolderToNasFromGDrive {
         
         
         print("download finish")
-        let fileDict = ["fileId":orginalFoldrId]
-        NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
+        if callType == "download" {
+            let fileDict = ["fileId":orginalFoldrId]
+            NotificationCenter.default.post(name: Notification.Name("completeFileProcess"), object: self, userInfo:fileDict)
+        }
+        
         if(gDriveMultiCheckedfolderArray.count > 0){
             
             let lastIndex = gDriveMultiCheckedfolderArray.count - 1
