@@ -2776,6 +2776,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             let amdDate = folderArray[indexPath.row].amdDate
             let foldrWholePathNm = folderArray[indexPath.row].foldrWholePathNm
             let foldrId = String(folderArray[indexPath.row].foldrId)
+            let nasSynchYn = folderArray[indexPath.row].nasSynchYn
             print("fromOsCd : \(fromOsCd), devUuid : \(devUuid)")
             if(fileId == 0){
             } else {
@@ -2814,7 +2815,26 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     print("fileId: \(fileId) , fromUserId : \(userId), fromDevUuid : \(selectedDevUuid), fromFoldr : \(foldrWholePathNm)")
                     let createdPath:URL = ContextMenuWork().createLocalFolder(folderName: "AppPlay")!
                     let AppPlayYn:String = "Y"
-                    ContextMenuWork().remoteDownloadRequest(fromUserId: userId, fromDevUuid: selectedDevUuid, fromOsCd: fromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: String(fileId), AppPlayYn:AppPlayYn)
+                    
+                    if nasSynchYn == "Y" {
+                        ContextMenuWork().downloadFromRemoteToExcute(userId:userId, fileNm:fileNm, path:"\(devUuid)/\(foldrWholePathNm)", fileId:String(fileId)){ responseObject, error in
+                            if let success = responseObject {
+                                print(success)
+                                if(success.isEmpty){
+                                } else {
+                                    print("localUrl : \(success)")
+                                    let url:URL = URL(string: success)!
+                                    let urlDict = ["url":url]
+                                    NotificationCenter.default.post(name: Notification.Name("openDocument"), object: self, userInfo: urlDict)
+                                }
+                            }
+                            return
+                        }
+                    } else {
+                        ContextMenuWork().remoteDownloadRequest(fromUserId: userId, fromDevUuid: selectedDevUuid, fromOsCd: fromOsCd, fromFoldr: foldrWholePathNm, fromFileNm: fileNm, fromFileId: String(fileId), AppPlayYn:AppPlayYn)
+                    }
+                    
+                    
                 }
               
             }

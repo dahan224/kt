@@ -221,6 +221,8 @@ class LoginViewController: UIViewController, UITextFieldDelegate {
                 let baseViewColor = UIColor.white
                 popup.popupView.backgroundColor = baseViewColor.withAlphaComponent(1.0)
                 self.view.addSubview(popup)
+            } else {
+                autoLogin()
             }
         } else {
             autoLogin()
