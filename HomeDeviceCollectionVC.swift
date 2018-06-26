@@ -114,7 +114,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        print("HomeDeviceCollectionVC did load fromOsCd : \(fromOsCd)")
+        print("HomeDeviceCollectionVC did load")
         contextMenuWork = ContextMenuWork()
         GIDSignIn.sharedInstance().delegate = self
         GIDSignIn.sharedInstance().uiDelegate = self
@@ -195,7 +195,11 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                                selector: #selector(showAlert(messageDict:)),
                                                name: NSNotification.Name("showAlert"),
                                                object: nil)
-    
+        
+        NotificationCenter.default.addObserver(self,
+                                               selector: #selector(handleMultiCheckFolderArray(fileDict:)),
+                                               name: NSNotification.Name("handleMultiCheckFolderArray"),
+                                               object: nil)
         
         NotificationCenter.default.addObserver(self,
                                                selector: #selector(countRemoteDownloadFinished),
@@ -1315,8 +1319,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             if(multiCheckListState == .active){
                 
                 if listViewStyleState == .list { // 리스트뷰
-                    switch mainContentState {
-                    case .oneViewList:
+                    //switch mainContentState {
+                    //case .oneViewList:
                         if flickState == .lately {
                             selectedDevUuid = folderArray[indexPath.row].devUuid
                             selectedDevOsCd = folderArray[indexPath.row].osCd
@@ -1356,40 +1360,47 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                 }
                             }
                         }
-                    case .googleDriveList:
+                    /*case .googleDriveList:
+                        
                         if(!driveFileArray[indexPath.row].mimeType.contains("folder")){ // 파일
                             let currentItem = collectionView.cellForItem(at: indexPath) as! GDriveFileListCell
                             currentItem.btnMultiCheck.tag = indexPath.row
                             btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
                         } else { // 폴더
-                            let currentItem = collectionView.cellForItem(at: indexPath) as! GDriveFolderListCell
-                            currentItem.btnMultiCheck.tag = indexPath.row
-                            btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                            if(!(driveFileArray[indexPath.row].name == "..")) {
+                                let currentItem = collectionView.cellForItem(at: indexPath) as! GDriveFolderListCell
+                                currentItem.btnMultiCheck.tag = indexPath.row
+                                btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                            }
                         }
-                    }
+                    }*/
                 } else { // 카드뷰
-                    switch mainContentState {
-                        case .oneViewList:
-                        if flickState == .lately {
-                        selectedDevUuid = folderArray[indexPath.row].devUuid
-                        selectedDevOsCd = folderArray[indexPath.row].osCd
-                        }
-                        if folderArray[indexPath.row].fileNm == "nil" { // 폴더
-                        if fromOsCd == "S" || fromOsCd == "G" || selectedDevUuid == Util.getUuid() {
-                        let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
-                        currentItem.btnMultiCheck.tag = indexPath.row
-                        btnMultiCheckClicked(sender: currentItem.btnMultiCheck)
-                        }
-                        } else { // 파일
-                        let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
-                        currentItem.btnMultiCheck.tag = indexPath.row
-                        btnMultiCheckClicked(sender: currentItem.btnMultiCheck)
-                        }
-                        case .googleDriveList:
-                        let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
-                        currentItem.btnMultiCheck.tag = indexPath.row
-                        btnMultiCheckClicked(sender: currentItem.btnMultiCheck)
-                    }
+                    //switch mainContentState {
+                        //case .oneViewList:
+                            if flickState == .lately {
+                                selectedDevUuid = folderArray[indexPath.row].devUuid
+                                selectedDevOsCd = folderArray[indexPath.row].osCd
+                            }
+                            if folderArray[indexPath.row].fileNm == "nil" { // 폴더
+                                if fromOsCd == "S" || fromOsCd == "G" || selectedDevUuid == Util.getUuid() {
+                                    if(!(folderArray[indexPath.row].foldrNm == "..")){
+                                        let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
+                                        currentItem.btnMultiCheck.tag = indexPath.row
+                                        btnMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                                    }
+                                }
+                            } else { // 파일
+                                let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
+                                currentItem.btnMultiCheck.tag = indexPath.row
+                                btnMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                            }
+                        /*case .googleDriveList:
+                     
+                                let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
+                                currentItem.btnMultiCheck.tag = indexPath.row
+                                btnMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                     
+                    }*/
                 }
                 
                 return
@@ -1519,14 +1530,24 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                             currentItem.btnMultiCheck.tag = indexPath.row
                             btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
                         } else { // 폴더
-                            let currentItem = collectionView.cellForItem(at: indexPath) as! GDriveFolderListCell
-                            currentItem.btnMultiCheck.tag = indexPath.row
-                            btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                            if(!(driveFileArray[indexPath.row].name == "..")) {
+                                let currentItem = collectionView.cellForItem(at: indexPath) as! GDriveFolderListCell
+                                currentItem.btnMultiCheck.tag = indexPath.row
+                                btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                            }
                         }
                     } else { // 카드뷰
-                        let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
-                        currentItem.btnMultiCheck.tag = indexPath.row
-                        btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                        if(!driveFileArray[indexPath.row].mimeType.contains("folder")){ // 파일
+                            let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
+                            currentItem.btnMultiCheck.tag = indexPath.row
+                            btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                        } else { // 폴더
+                            if(!(driveFileArray[indexPath.row].name == "..")) {
+                                let currentItem = collectionView.cellForItem(at: indexPath) as! CollectionViewGridCell
+                                currentItem.btnMultiCheck.tag = indexPath.row
+                                btnGoogleDriveMultiCheckClicked(sender: currentItem.btnMultiCheck)
+                            }
+                        }
                     }
                     return
                     
@@ -2437,7 +2458,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     
     
     
-    func handleMultiCheckFolderArray(fileDict:[String:Any]) {
+    @objc func handleMultiCheckFolderArray(fileDict:[String:Any]) {
     
         if let getAction = fileDict["action"] as? String, let getFromOsCd = fileDict["fromOsCd"] as? String {
             if getAction == "nasfromSearchView" {
@@ -2584,8 +2605,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         homeViewController?.inActiveMultiCheck()
                         break
                     case "nas":
-                        print("gdrive_nas보내기 from : \(fromOsCd)")
-                        
+                        print("gdrive_nas_multi 보내기")
                         containerViewController?.getGDriveMultiFolderArray(getArray:gDriveMultiCheckedfolderArray, toStorage:"gdrive_nas_multi", fromUserId:selectedDevUserId, fromOsCd:fromOsCd,fromDevUuid:selectedDevUuid)
                         break
                     
