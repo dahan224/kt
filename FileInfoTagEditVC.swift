@@ -12,7 +12,6 @@ import Alamofire
 
 class FileInfoTagEditVC: UIViewController, UITextFieldDelegate {
 
-    @IBOutlet weak var activityIndicator: UIActivityIndicatorView!
     
     var fileId = ""
     @IBOutlet weak var customNavBar: UIView!
@@ -260,43 +259,35 @@ class FileInfoTagEditVC: UIViewController, UITextFieldDelegate {
         
     }
     func updateTage(){
-        activityIndicator.startAnimating()
         tagArrayToUpdate.removeAll()
         if(self.fileTagArray.count>0){
             for fileTag in fileTagArray {
                 tagArrayToUpdate.append(fileTag.getParameter)
             }
             print(tagArrayToUpdate)
-            
-        } else {
-            tagArrayToUpdate = [["fileId":fileId, "fileTag":""]]
-        }
-        ContextMenuWork().editFileTag(parameters: tagArrayToUpdate){ responseObject, error in
-            let json = JSON(responseObject!)
-            let message = responseObject?.object(forKey: "message")
-            print("\(message), \(json["statusCode"].int)")
-            
-            if let statusCode = json["statusCode"].int, statusCode == 100 {
-                DispatchQueue.main.async {
-                    let alertController = UIAlertController(title: nil, message: "요청 처리가 완료되었습니다.", preferredStyle: .alert)
-                    
-                    let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
-                        UIAlertAction in
-                        //Do you Success button Stuff here
-                        self.activityIndicator.stopAnimating()
-                        NotificationCenter.default.post(name: Notification.Name("showFileInfo"), object: self)
-                        self.dismiss(animated: false, completion: nil)
-                        Util().dismissFromLeft(vc: self)
+            ContextMenuWork().editFileTag(parameters: tagArrayToUpdate){ responseObject, error in
+                let json = JSON(responseObject!)
+                let message = responseObject?.object(forKey: "message")
+                print("\(message), \(json["statusCode"].int)")
+                
+                if let statusCode = json["statusCode"].int, statusCode == 100 {
+                    DispatchQueue.main.async {
+                        let alertController = UIAlertController(title: nil, message: "요청 처리가 완료되었습니다.", preferredStyle: .alert)
+                        
+                        let yesAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default) {
+                            UIAlertAction in
+                            //Do you Success button Stuff here
+                            NotificationCenter.default.post(name: Notification.Name("showFileInfo"), object: self)
+                            self.dismiss(animated: false, completion: nil)
+                            
+                        }
+                        alertController.addAction(yesAction)
+                        self.present(alertController, animated: true)
                         
                     }
-                    alertController.addAction(yesAction)
-                    self.present(alertController, animated: true)
-                    
                 }
-            } else {
-                
+                return
             }
-            
         }
     }
 

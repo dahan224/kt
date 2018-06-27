@@ -12,9 +12,9 @@ import SwiftyJSON
 
 class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableViewDataSource, UICollectionViewDataSource, UICollectionViewDelegate, UICollectionViewDelegateFlowLayout {
   
-    @IBOutlet weak var lblUserId: UILabel!
+
     let hexStringToUIColor = HexStringToUIColor()
-    var containViewController:ContainerViewController?
+    
     @IBOutlet weak var collectionViewHeightConstraint: NSLayoutConstraint!
     
     @IBOutlet weak var collectionVIew: UICollectionView!
@@ -65,28 +65,15 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
     
     override func viewDidLoad() {
         super.viewDidLoad()
-        
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(tableScrollTop),
-                                               name: NSNotification.Name("tableScrollTop"),
-                                               object: nil)
-        NotificationCenter.default.addObserver(self,
-                                               selector: #selector(reloadSlideDev),
-                                               name: NSNotification.Name("reloadSlideDev") ,
-                                               object: nil)
-        
         print("slide view called")
         screenSize = self.view.bounds
         screenWidth = screenSize.width
         screenHeight = screenSize.height
         
-        lblUserId.text = UserDefaults.standard.string(forKey: "userId")
         let swipeLeft = UISwipeGestureRecognizer(target: self,
                                                  action: #selector(SlideMenuViewController.swipedLeft))
         swipeLeft.direction = UISwipeGestureRecognizerDirection.left
         self.view.addGestureRecognizer(swipeLeft)
-        
-        tableView.backgroundColor = HexStringToUIColor().getUIColor(hex: "333333")
         
         tableView.delegate = self
         tableView.dataSource = self
@@ -101,7 +88,6 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         self.sortData()
         self.tableView.reloadData()
         
-      
     }
     
     
@@ -123,52 +109,10 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
         self.present(alertController,animated: true,completion: nil)
 
     }
-    
-    func deviceOff(){
-        let cookie:String = UserDefaults.standard.string(forKey: "cookie")!
-        let token:String = UserDefaults.standard.string(forKey: "token")!
-        let urlString = App.URL.hostIpServer+"devStatusUpdate.do"
-        let headers = [
-            "Content-Type": "application/json",
-            "X-Auth-Token": token,
-            "Cookie": cookie
-        ]
-        let params:[String:Any] = ["userId": App.defaults.userId, "devUuid":Util.getUuid(), "onoff":"N"]
-        print("cookie: \(cookie), token : \(token)")
-        Alamofire.request(urlString,
-                          method: .post,
-                          parameters : params,
-                          encoding : JSONEncoding.default,
-                          headers: headers).responseJSON { response in
-                            switch response.result {
-                            case .success(let JSON):
-                                
-                                print(response.result.value as Any)
-                                let responseData = JSON as! NSDictionary
-                                let message = responseData.object(forKey: "message")
-                                print("deviceOff message : \(String(describing: message))")
-                                DispatchQueue.main.async {
-                                    print("call dismiss")
-                                    if UserDefaults.standard.bool(forKey: "autoLoginCheck") {
-                                        UserDefaults.standard.set(true, forKey: "idSaveCheck")
-                                        UserDefaults.standard.set(false, forKey: "autoLoginCheck")
-                                    }
-                                    NotificationCenter.default.post(name: NSNotification.Name("dismissContainerView"), object: nil)
-                                }
-                                break
-                            case .failure(let error):
-//                                print("error : \(error)")
-                                self.showErrorAlert()
-                            }
-        }
-        
-
-    }
-    
     func logout(){
         let cookie:String = UserDefaults.standard.string(forKey: "cookie")!
         let token:String = UserDefaults.standard.string(forKey: "token")!
-        let urlString = App.URL.hostIpServer+"logout.do"
+        let urlString = App.URL.server+"logout.do"
         let headers = [
             "Content-Type": "application/x-www-form-urlencoded",
             "X-Auth-Token": token,
@@ -185,11 +129,12 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
                                 let responseData = JSON as! NSDictionary
                                 let message = responseData.object(forKey: "message")
                                  print("message : \(String(describing: message))")
-                                //기기 상태 off
-                                self.deviceOff()
+                                 
+                                NotificationCenter.default.post(name: NSNotification.Name("dismissContainerView"), object: nil)
+                              
                                 break
                             case .failure(let error):
-                                self.showErrorAlert()
+                                
                                 print(error)
                             }
         }
@@ -276,9 +221,7 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
                 cell2.lblManage.text = data["title"]
                 cell2.btnManage.setImage(UIImage(named: data["button"]!), for: .normal)
                 cell2.btnManage.transform = CGAffineTransform(rotationAngle: CGFloat.pi)
-                cell2.btnManage.tag = indexPath.row
-                cell2.btnManage.addTarget(self, action: #selector(clickBtn(_:)), for: .touchUpInside)
-
+                
                 break
                 
             case (2) :
@@ -308,21 +251,13 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
             NotificationCenter.default.post(name: NSNotification.Name("showSettingSegue"), object: nil)
         }
         
-        if(indexPath.section == 2 && indexPath.row == 2) {
-            NotificationCenter.default.post(name: NSNotification.Name("openLicenseSegue"), object: nil)
-        }
-        tableScrollTop()
+        
     }
     func showVersionInfo(){
-        var version = "1.0"
-        if let ver = Bundle.main.infoDictionary?["CFBundleShortVersionString"] as? String {
-            version = ver
-        }
-        let alertController = UIAlertController(title: "App Version : \(version)",message: "", preferredStyle: UIAlertControllerStyle.alert)
+        let alertController = UIAlertController(title: "App Version : 5.7 v",message: "", preferredStyle: UIAlertControllerStyle.alert)
         let cancelButton = UIAlertAction(title: "확인", style: UIAlertActionStyle.cancel, handler: nil)
         alertController.addAction(cancelButton)
         self.present(alertController,animated: true,completion: nil)
-
     }
     
     func tableView(_ tableView: UITableView, heightForRowAt indexPath: IndexPath) -> CGFloat {
@@ -360,39 +295,13 @@ class SlideMenuViewController: UIViewController, UITableViewDelegate, UITableVie
     
     func collectionView(_ collectionView: UICollectionView, didSelectItemAt indexPath: IndexPath) {
         NotificationCenter.default.post(name: NSNotification.Name("toggleSideMenu"), object: nil)
-        
-        containViewController?.clickDeviceFromSlideMenu(indexPath: indexPath)
+        let indexPathRow = ["indexPathRow":"\(indexPath.row)"]
+        NotificationCenter.default.post(name: Notification.Name("clickDeviceItem"), object: self, userInfo: indexPathRow)
         
     }
 
-    @objc func tableScrollTop() {
-        tableView.setContentOffset(CGPoint.zero, animated: true)
-    }
     
-    
-    @objc func clickBtn(_ sender: UIButton) {
-        switch sender.tag {
-        case 0:
-            NotificationCenter.default.post(name: NSNotification.Name("deviceManageSegue"), object: nil)
-        case 1:
-            NotificationCenter.default.post(name: NSNotification.Name("showSettingSegue"), object: nil)
-        default:
-            break
-        }
-    }
 
-    @objc func reloadSlideDev() {
-        self.DeviceArray = DbHelper().listSqlite(sortBy: DbHelper.sortByEnum.none)
-        self.sortData()
-        self.tableView.reloadData()
-    }
   
-    public func showErrorAlert(){
-        let alertController = UIAlertController(title: "네트워크 에러로 잠시 후 재시도 부탁 드립니다.",message: "", preferredStyle: UIAlertControllerStyle.alert)
-        let okAction = UIAlertAction(title: "확인", style: UIAlertActionStyle.default){ (action: UIAlertAction) in
-        }
-        alertController.addAction(okAction)
-        self.present(alertController,animated: true,completion: nil)
-    }
 }
 

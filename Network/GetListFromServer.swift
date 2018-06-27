@@ -11,26 +11,23 @@ import Alamofire
 import SwiftyJSON
 
 class GetListFromServer {
+    var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
+    var loginToken = UserDefaults.standard.string(forKey: "token")!
     var uuid = Util.getUuid()
-    var userId = UserDefaults.standard.string(forKey: "userId") ?? "nil"
+    var userId = UserDefaults.standard.string(forKey: "userId")!
     var SearchedFileArray:[App.SearchedFileStruct] = []
     
     
-    var jsonHeader:[String:String] = [
-        "Content-Type": "application/json",
-        "X-Auth-Token": UserDefaults.standard.string(forKey: "token") ?? "nil",
-        "Cookie": UserDefaults.standard.string(forKey: "cookie") ?? "nil"
-    ]
     func getDevice(completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId]
        
         //모바일 폴더 동기화 리스트
-        Alamofire.request(App.URL.hostIpServer+"listOneview.json"
+        Alamofire.request(App.URL.server+"listOneview.json"
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: jsonHeader
+            , headers: App.Headrs.jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {
@@ -48,12 +45,12 @@ class GetListFromServer {
     func getFoldrList(devUuid:String, userId:String, deviceName:String,completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         var params:[String:Any] = [String:Any]()
         params = ["userId":userId,"devUuid":devUuid]
-        let filnalUrl = "listFoldr.json"
-        Alamofire.request(App.URL.hostIpServer+filnalUrl
+        var filnalUrl = "listFoldr.json"
+        Alamofire.request(App.URL.server+filnalUrl
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: jsonHeader
+            , headers: App.Headrs.jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {
@@ -69,85 +66,14 @@ class GetListFromServer {
                 }
         }
     }
-    func getMobileFileLIst(devUuid:String, userId:String, deviceName:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
-        let filnalUrl = "mobileFileList.json"
-        var params:[String:Any] = [String:Any]()
-        params = ["userId":userId,"devUuid":devUuid]        
-        Alamofire.request(App.URL.hostIpServer+filnalUrl
-            , method: .post
-            , parameters:params
-            , encoding : JSONEncoding.default
-            , headers: jsonHeader
-            ).responseJSON { response in
-                
-                switch response.result {
-                case .success(let value):
-                    completionHandler(value as? NSDictionary, nil)
-                    
-                    break
-                case .failure(let error):
-                    NSLog(error.localizedDescription)
-                    completionHandler(nil, error as NSError)
-                    break
-                    
-                }
-        }
-    }
-    func getMobileFoldrLIst(devUuid:String, userId:String, deviceName:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
-        let filnalUrl = "mobileFoldrList.json"
-        var params:[String:Any] = [String:Any]()
-        params = ["userId":userId,"devUuid":devUuid]
-        Alamofire.request(App.URL.hostIpServer+filnalUrl
-            , method: .post
-            , parameters:params
-            , encoding : JSONEncoding.default
-            , headers: jsonHeader
-            ).responseJSON { response in
-                
-                switch response.result {
-                case .success(let value):
-                    completionHandler(value as? NSDictionary, nil)
-                    
-                    break
-                case .failure(let error):
-                    NSLog(error.localizedDescription)
-                    completionHandler(nil, error as NSError)
-                    break
-                    
-                }
-        }
-    }
-    func getNasFolderLIst(devUuid:String, userId:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
-        let filnalUrl = "listNasFoldr.json"
-        var params:[String:Any] = [String:Any]()
-        params = ["userId":userId,"devUuid":devUuid]
-        Alamofire.request(App.URL.hostIpServer+filnalUrl
-            , method: .post
-            , parameters:params
-            , encoding : JSONEncoding.default
-            , headers: jsonHeader
-            ).responseJSON { response in
-                
-                switch response.result {
-                case .success(let value):
-                    completionHandler(value as? NSDictionary, nil)
-                    
-                    break
-                case .failure(let error):
-                    NSLog(error.localizedDescription)
-                    completionHandler(nil, error as NSError)
-                    break
-                    
-                }
-        }
-    }
+    
     func showInsideFoldrList(params:[String:Any], deviceName:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
         let filnalUrl = "listFoldr.json"
-        Alamofire.request(App.URL.hostIpServer+filnalUrl
+        Alamofire.request(App.URL.server+filnalUrl
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default
-            , headers: jsonHeader
+            , headers: App.Headrs.jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {
@@ -163,33 +89,7 @@ class GetListFromServer {
                 }
         }
     }
-    
-    
-    func getFileList(params:[String:Any], completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
-        let filnalUrl = "listFile.json"
-        Alamofire.request(App.URL.hostIpServer+filnalUrl
-            , method: .post
-            , parameters:params
-            , encoding : JSONEncoding.default
-            , headers: jsonHeader
-            ).responseJSON { response in
-                
-                switch response.result {
-                case .success(let value):
-                    completionHandler(value as? NSDictionary, nil)
-                    
-                    break
-                case .failure(let error):
-                    NSLog(error.localizedDescription)
-                    completionHandler(nil, error as NSError)
-                    break
-                    
-                }
-        }
-    }
-   
-
-   
+ 
 }
 
 

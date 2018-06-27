@@ -14,17 +14,16 @@ class SearchFileList {
     var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
     var loginToken = UserDefaults.standard.string(forKey: "token")!
     var uuid = Util.getUuid()
-//    var userId = UserDefaults.standard.string(forKey: "userId")!
+    var userId = UserDefaults.standard.string(forKey: "userId")!
     var SearchedFileArray:[App.SearchedFileStruct] = []
   
    
-    func searchFile(userId:String, searchKeyword:String, searchStep: HomeViewController.searchStepEnum, searchId:String, foldrWholePathNm:String, sortBy:String, searchGubun:String, devUuid:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
+    func searchFile(searchKeyword:String, searchStep: HomeViewController.searchStepEnum, searchId:String, foldrWholePathNm:String, sortBy:String, searchGubun:String, completionHandler: @escaping (NSDictionary?, NSError?) -> ()){
          let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": loginToken,
             "Cookie": loginCookie
         ]
-        let encodedSearchKeyword = searchKeyword.addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed)!
         var params:[String:Any] = [String:Any]()
         switch searchStep {
         case .all:
@@ -32,16 +31,16 @@ class SearchFileList {
             params = ["userId":userId, "searchKeyword":searchKeyword,"sortBy":sortBy,"searchGubun":searchGubun]
             break
         case .device:
-            params = ["userId":userId, "searchKeyword":searchKeyword,"devUuid":devUuid,"sortBy":sortBy,"searchGubun":searchGubun]
+            params = ["userId":userId, "searchKeyword":searchKeyword,"devUuid":searchId,"sortBy":sortBy,"searchGubun":searchGubun]
             break
         case .folder:
-            params = ["userId":userId, "searchKeyword":searchKeyword,"devUuid":devUuid, "foldrWholePathNm":foldrWholePathNm,"sortBy":sortBy,"searchGubun":searchGubun]
+            params = ["userId":userId, "searchKeyword":searchKeyword,"devUuid":searchId, "foldrWholePathNm":foldrWholePathNm,"sortBy":sortBy,"searchGubun":searchGubun]
             break
         
         }
         print("search param : \(params)")
         //모바일 폴더 동기화 리스트
-        Alamofire.request(App.URL.hostIpServer+"listSearch.json"
+        Alamofire.request(App.URL.server+"listSearch.json"
             , method: .post
             , parameters:params
             , encoding : JSONEncoding.default

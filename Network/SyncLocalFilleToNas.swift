@@ -15,7 +15,6 @@ import Alamofire
 class SyncLocalFilleToNas {
     
     var localFolderArray:[App.Folders] = []
-    var tempLocalDirectoryArray:[URL] = []
     var folderPathArray = [String]()
     var folderArrayToCreate:[[String:Any]] = []
     var folderArrayToUpdate:[[String:Any]] = []
@@ -31,63 +30,26 @@ class SyncLocalFilleToNas {
     
     var folderSyncFinished = false
     var fileSyncFinished = false
-    var loginCookie = UserDefaults.standard.string(forKey: "cookie")!
-    var loginToken = UserDefaults.standard.string(forKey: "token")!
-    var userId = UserDefaults.standard.string(forKey: "userId")!
+    var loginToken:String = App.defaults.loginToken
+    var loginCookie:String = App.defaults.loginCookie
+    var userId = App.defaults.userId
     var uuId = Util.getUuid()
-    var requestView = ""
-    var currentFolderId = ""
-    var nasSendFolderSelectVC:NasSendFolderSelectVC?
-    var containerViewController:ContainerViewController?
-    var nasSendController:NasSendController?
-    var getRootFolder = ""
-    func callSyncFomGdriveToNasSendFolder(view:String, parent:NasSendController, rootFolder:String){
-        requestView = view
-        nasSendController = parent
-        getRootFolder = rootFolder
-        getFileList()
-    }
     
-    func callSyncFomNasSend(view:String, parent:NasSendFolderSelectVC){
-        requestView = view
-        nasSendFolderSelectVC = parent
-        
-        getFileList()
-    }
-    
-    func callSyncToDownloadFronGDriveToSendToNas(view:String, parent:NasSendController){
-        requestView = view
-        nasSendController = parent
+    func sync(){
         getFileList()
     }
     
     
-    func sync(view:String, getFoldrId:String){
-        currentFolderId = getFoldrId
-        requestView = view
-        if(requestView == "home"){
-            //            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-        }
-        self.userId = UserDefaults.standard.string(forKey: "userId")!
-        print("userId : \(userId)")
-        getFileList()
-    }
-    
-    var jsonHeader:[String:String] = [
-        "Content-Type": "application/json",
-        "X-Auth-Token": UserDefaults.standard.string(forKey: "token")!,
-        "Cookie": UserDefaults.standard.string(forKey: "cookie")!
-    ]
     
     func sysncFoldrInfo() {
         print("syncFolerInfo Called")
         folderArrayToCreate.removeAll()
         //모바일 폴더 동기화 리스트
-        Alamofire.request(App.URL.hostIpServer+"mobileFoldrList.json"
+        Alamofire.request(App.URL.server+"mobileFoldrList.json"
             , method: .post
             , parameters:["userId":userId, "devUuid":uuId as Any]
             , encoding : JSONEncoding.default
-            , headers: jsonHeader
+            , headers: App.Headrs.jsonHeader
             ).responseJSON { response in
                 
                 switch response.result {
@@ -96,61 +58,63 @@ class SyncLocalFilleToNas {
                     if let statusCode = json["statusCode"].int, statusCode == 100 {
                         let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                         if(json["listData"].exists()){
+                            print()
                             if(serverList.count < 1){
-                                //                                print(serverList.count)
+//                                print(serverList.count)
                                 for (_, folder) in self.localFolderArray.enumerated() {
                                     let parameter = folder.getParameter
-                                    //                                    print("parameter : \(parameter)")
+                                    print("parameter : \(parameter)")
                                     self.folderArrayToCreate.append(parameter)
                                 }
                             } else {
-                                //                                print("jsonlistData: \(json["listData"])")
+                                print("jsonlistData: \(json["listData"])")
+                                
                                 var serverFolderPathArray:[String] = []
-                                var localFolderPathArray:[String] = []
-                                for serverFolder in serverList{
-                                    let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String)"
-                                    serverFolderPathArray.append(serverFolderPath)
-                                }
-                                for localFolder in self.localFolderArray {
-                                    let localFolderPath = "\(localFolder.foldrWholePathNm)"
-                                    print("localFolderPath : \(localFolderPath)")
-                                    if(!serverFolderPathArray.contains(localFolderPath)){
-                                        self.folderArrayToCreate.append(localFolder.getParameter)
-                                    }
-                                }
-                                for localFolder in self.localFolderArray {
-                                    let localFolderPath = "\(localFolder.foldrWholePathNm)"
-                                    localFolderPathArray.append(localFolderPath)
-                                }
-                                print("localFolderPathArray : \(localFolderPathArray)")
                                 
                                 for serverFolder in serverList{
-                                    let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String)"
-                                    print("serverFolderPath : \(serverFolderPath)")
-                                    if(!localFolderPathArray.contains(serverFolderPath)){
-                                        let deleteFolder = App.Folders(data: serverFolder)
-                                        let deleteFolderParameter = App.FoldersToEdit(folder:deleteFolder, cmd:"D").getParameter
-                                        self.folderArrayToDelete.append(deleteFolderParameter)
+                                    print("serverFile[folderNm] : \(serverFolder["foldrNm"])")
+                                    for localFolder in self.localFolderArray {
+                                        let serverFolderPath = "\(serverFolder["foldrWholePathNm"] as! String))"
+                                        let localFolderPath = "\(localFolder.foldrWholePathNm)"
+                                        print("serverFolderPath : \(serverFolderPath), localFolderPath: \(localFolderPath)")
+                                        if(serverFolderPath == localFolderPath){
+                                        } else {
+                                            self.folderArrayToCreate.append(localFolder.getParameter)
+                                            print("folderArrayToCreate : \(self.folderArrayToCreate)")
+                                        }
                                     }
-                                    
                                 }
+//                                for localFileArray
+//                                    if(!serverList.contains(where: {$0["foldrWholePathNm"] as! String == localFolder.foldrWholePathNm})){
+//
+//                                    } else if (!self.localFolderArray.contains(where: {$0.foldrWholePathNm == serverFolder["foldrWholePathNm"] as! String})) {
+//                                        let deleteFolder = App.Folders(data: serverFolder)
+//                                        let deleteFolderParameter = App.FoldersToEdit(folder:deleteFolder, cmd:"D").getParameter
+//                                        self.folderArrayToDelete.append(deleteFolderParameter)
+//                                        print("folderArrayToDelete : \(self.folderArrayToDelete)")
+//                                    }
+//
+//                                }
+                                print("sysncFoldrInfo : \(serverList)")
+                            }
+                            if(self.folderArrayToCreate.count > 0){
+                                print("createfolder : \(self.folderArrayToCreate)")
+                                self.createFolderListToServer(parameters: self.folderArrayToCreate)
+                            }
+                            if(self.folderArrayToUpdate.count > 0){
+                                self.createFolderListToServer(parameters: self.folderArrayToUpdate)
+                                print("updateefolder : \(self.folderArrayToDelete)")
                             }
                             if(self.folderArrayToDelete.count > 0){
-                                self.deleteFolderListToServer(parameters: self.folderArrayToDelete)
+                                self.createFolderListToServer(parameters: self.folderArrayToDelete)
                                 print("deletefolder : \(self.folderArrayToDelete)")
-                            } else {
-                                if(self.folderArrayToCreate.count > 0){
-                                    print("createfolder : \(self.folderArrayToCreate)")
-                                    self.createFolderListToServer(parameters: self.folderArrayToCreate)
-                                } else {
-                                    self.sysncFileInfo()
-                                }
-                                
                             }
-                            
                             self.folderSyncFinished = true
-                            
+//                            self.sysncFileInfo()
                         }
+                        
+                        
+                        
                     }
                     break
                 case .failure(let error):
@@ -163,164 +127,187 @@ class SyncLocalFilleToNas {
     }
     
     func sysncFileInfo() {
-        print("syncFileInfo called ????")
+        print("syncFileInfo called")
         FileParameterArrayForUpload.removeAll()
         fileArrayToUpdate.removeAll()
         fileArrayToDelete.removeAll()
         fileArrayToCreate.removeAll()
-        let userId = UserDefaults.standard.string(forKey: "userId")!
-        print("userId: \(userId)")
-        GetListFromServer().getMobileFileLIst(devUuid: uuId, userId:userId, deviceName:"sdf"){ responseObject, error in
+        
+        GetListFromServer().getFoldrList(devUuid: uuId, userId:App.defaults.userId, deviceName:"sdf"){ responseObject, error in
             let json = JSON(responseObject!)
             if(json["listData"].exists()){
                 let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
-                print("nasfileList :\(serverList)")
-                var serverFilePathArray:[String] = []
-                for serverFile in serverList{
-                    //                    print("server : \(serverFile)")
-                    let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
-                    let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
-                    var foldrWholePathNm = "\(serverFilePath)/\(serverFileNm)"
-                    print("server foldrWholePathNm : \(foldrWholePathNm)")
-                    serverFilePathArray.append(foldrWholePathNm)
+                print("nasfolderList :\(serverList)")
+                for rootFolder in serverList{
+                    let foldrId = rootFolder["foldrId"] as? Int ?? 0
+                    let stringFoldrId = String(foldrId)
+                    let froldrNm = rootFolder["foldrNm"] as? String ?? "nil"
+                    let stringFroldrNm = String(froldrNm)
+                    self.showInsideList(userId: App.defaults.userId, devUuid: self.uuId, foldrId: stringFoldrId, deviceName:"sdf")
                 }
-                
-                print("serverFilePathArray : \(serverFilePathArray)")
-                var localFilePathArray:[String] = []
-                if(self.localFileArray.count > 0){
-                    for localFile in self.localFileArray {
-                        let localFilePath = "\(localFile.foldrWholePathNm)/\(localFile.fileNm).\(localFile.etsionNm)"
-                        localFilePathArray.append(localFilePath)
-                    }
-                }
-                print("localFilePathArray : \(localFilePathArray)")
-                
-                for serverFile in serverList{
-                    let serverFileNm = serverFile["fileNm"] as? String ?? "nil"
-                    let serverFilePath = serverFile["foldrWholePathNm"] as? String ?? "nil"
-                    let serverFileAmdDate = serverFile["amdDate"] as? String ?? "nil"
-                    var foldrWholePathNm = "\(serverFilePath)/\(serverFileNm)"
-                    if !localFilePathArray.contains(foldrWholePathNm) {
-                        let deleteFile = App.Files(data: serverFile)
-                        let deleteFileParameter = App.FilesToEdit(file:deleteFile, cmd:"D").getDeleteParameter
-                        self.fileArrayToDelete.append(deleteFileParameter)
-                    } else {
-                        print("server")
-                    }
-                }
-                for localFile in self.localFileArray {
-                    let localFilePath = "\(localFile.foldrWholePathNm)/\(localFile.fileNm).\(localFile.etsionNm)"
-                    if(!serverFilePathArray.contains(localFilePath)){
-                        self.fileArrayToCreate.append(localFile.getParameter)
-                    }
-                }
-                
-                if(self.fileArrayToDelete.count > 0){
-                    print("fileArrayToDelete : \(self.fileArrayToDelete)" )
-                    self.deleteFileListToServer(parameters: self.fileArrayToDelete)
-                } else {
-                    if(self.fileArrayToCreate.count>0){
-                        print("create filelist : \(self.fileArrayToCreate)")
-                        self.createFileListToServer(parameters: self.fileArrayToCreate)
-                    } else {
-                        let defaults = UserDefaults.standard
-                        defaults.set(false, forKey: "syncOngoing")
-                        defaults.synchronize()
-                        
-                        if(self.requestView == "home"){
-                            //                            NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                            let fileDict = ["foldrId":self.currentFolderId]
-                            NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
-                        }  else if(self.requestView == "NasSendController"){
-                            self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
-                        }
-                    }
-                }
-                
-            } else {
-                if(self.fileArrayToCreate.count>0){
-                    print("create filelist : \(self.fileArrayToCreate)")
-                    self.createFileListToServer(parameters: self.fileArrayToCreate)
-                } else {
-                    let defaults = UserDefaults.standard
-                    defaults.set(false, forKey: "syncOngoing")
-                    defaults.synchronize()
-                    
-                    if(self.requestView == "home"){
-                        //                        NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                        let fileDict = ["foldrId":self.currentFolderId]
-                        NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
-                    } else if(self.requestView == "NasSendController"){
-                        self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
-                    }
-                }
-                
             }
-            
+            return
         }
     }
     
-    func getFileList(){
+    func showInsideList(userId: String, devUuid: String, foldrId: String, deviceName:String){
+        var param = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"sortBy":"kind"]
+        GetListFromServer().showInsideFoldrList(params: param, deviceName:deviceName){ responseObject, error in
+            let json = JSON(responseObject!)
+            if(json["listData"].exists()){
+                let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
+                print("showInsideList :\(serverList)")
+                for list in serverList{
+                    let folder = App.FolderStruct(data: list as AnyObject)
+                }
+                self.getFileListFromServer(userId: userId, devUuid: devUuid, foldrId: foldrId)
+            }
+            return
+        }
         
-        let defaults = UserDefaults.standard
-        defaults.set(true, forKey: "syncOngoing")
-        defaults.synchronize()
+    }
+    func getFileListFromServer(userId: String, devUuid: String, foldrId: String){
+        var param:[String : Any] = ["userId": userId, "devUuid":devUuid, "foldrId":foldrId,"page":1,"sortBy":"kind"]
+        let urlString = App.URL.server+"listFile.json"
+        Alamofire.request(urlString,
+                          method: .post,
+                          parameters: param,
+                          encoding : JSONEncoding.default,
+                          headers: App.Headrs.jsonHeader).responseJSON{ (response) in
+                            switch response.result {
+                            case .success(let value):
+                                let json = JSON(value)
+                                let responseData = value as! NSDictionary
+                                let message = responseData.object(forKey: "message")
+                                print("showFolderInfo json : \(json)")
+                                if(json["listData"].exists()){
+                                    let serverList:[AnyObject] = json["listData"].arrayObject as! [AnyObject]
+                                    print("syncfileLIst : \(serverList)")
+                                    
+                                    var serverFileIdArray:[String] = []
+                                    
+                                    for serverFile in serverList{
+                                        let serverFileId = serverFile["fileId"] as? Int ?? 0
+                                        let stringServerFileId = String(serverFileId)
+                                        serverFileIdArray.append(stringServerFileId)
+                                    }
+                                    var localFileIdArray:[String] = []
+                                    if(self.localFileArray.count > 0){
+                                        for localFile in self.localFileArray {
+                                            let fileSavedPath = "\(localFile.savedPath)"
+                                            print("fileSavedPath :\(fileSavedPath)" )
+                                            let fileId = DbHelper().getLocalFileId(path: fileSavedPath)
+                                            localFileIdArray.append(fileId)
+                                        }
+                                    }
+//                                    print("serverFileIdArray : \(serverFileIdArray)")
+//                                    print("localFileIdArray : \(localFileIdArray)")
+                                    for serverFile in serverList{
+                                        let serverFileId = serverFile["fileId"] as? Int ?? 0
+                                        let stringServerFileId = String(serverFileId)
+                                        if !localFileIdArray.contains(stringServerFileId) {
+                                            let deleteFile = App.Files(data: serverFile)
+                                            let deleteFileParameter = App.FilesToEdit(file:deleteFile, cmd:"D").getDeleteParameter
+                                            self.fileArrayToDelete.append(deleteFileParameter)
+                                        } else {
+                                            
+                                        }
+                                    }
+                                    for localFile in self.localFileArray {
+                                        let fileSavedPath = "\(localFile.savedPath)"
+                                        let fileId = DbHelper().getLocalFileId(path: fileSavedPath)
+                                        if(!serverFileIdArray.contains(fileId)){
+                                            self.fileArrayToCreate.append(localFile.getParameter)
+                                            print("localFile.etsionNm : \(localFile.etsionNm)")
+                                            print("fileArrayToCreate1 : \(self.fileArrayToCreate)")
+                                        } else {
+                                            
+                                        }
+                                    }
+                                } else {
+                                    if(self.localFileArray.count > 0 ){
+                                        for localFile in self.localFileArray {
+                                            self.fileArrayToCreate.append(localFile.getParameter)
+                                            print("fileArrayToCreate2 : \(self.fileArrayToCreate.count)")
+                                        }
+                                    }
+                                }
+                               
+                               
+                                if(self.fileArrayToDelete.count > 0){
+                                    print("delete call")
+                                    print("fileArrayToDelete count : \(self.fileArrayToDelete.count), fileArrayToCreate.count : \(self.fileArrayToCreate.count)" )
+                                    print("fileArrayToDelete : \(self.fileArrayToDelete)" )
+                                    self.deleteFileListToServer(parameters: self.fileArrayToDelete)
+                                } else {
+                                    if(self.fileArrayToCreate.count>0){
+                                        print("fileArrayToDelete count : \(self.fileArrayToDelete.count), fileArrayToCreate.count : \(self.fileArrayToCreate.count)" )
+                                        print("create filelist : \(self.fileArrayToCreate)")
+                                        self.createFileListToServer(parameters: self.fileArrayToCreate)
+                                    }
+                                }
+                                break
+                            case .failure(let error):
+                                NSLog(error.localizedDescription)
+                                break
+                            default:
+                                print(response)
+                                break
+                            }
+                            
+        }
+    }
+    func getFileList(){
         localFileArray.removeAll()
         localFolderArray.removeAll()
         folderPathArray.removeAll()
-        let today = Date()
-        let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "Mobile", foldrWholePathNm: "/Mobile", cretDate : Util.date(text: today), amdDate : Util.date(text: today))
-        localFolderArray.append(folder)
-        localFileArray = FileUtil().getFileLIst()
-        print("localFileArray : \(localFileArray)")
-        let folders:[App.Folders] = FileUtil().getFolderList()
-        for folder in folders {
-            localFolderArray.append(folder)
+        let fileManager = FileManager.default
+        let documentsURL = fileManager.urls(for: .documentDirectory, in: .userDomainMask)[0]
+        localFileArray = FileUtil().getFileList()
+        for localFile in localFileArray{
+            print("localFileetsionNm : \(localFile.etsionNm)")
         }
+        
+        let subDirs = documentsURL.subDirectories
+        let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : "", foldrWholePathNm: "/Mobile", cretDate : "", amdDate : "")
+        localFolderArray.append(folder)
+        
+        getSubDirectories(subDirs: subDirs, foldrWholePath: "/Mobile")
+        
+        
+    }
+    
+    func getSubDirectories(subDirs:[URL], foldrWholePath:String){
+        if(subDirs.count > 0){
+            for subDir in subDirs{
+                do{
+                    let attribute = try FileManager.default.attributesOfItem(atPath: subDir.path)
+                    var folderName:String = (NSURL(fileURLWithPath: subDir.lastPathComponent).deletingPathExtension?.lastPathComponent)!
+                    let folderCreateDate: Date = attribute[FileAttributeKey.creationDate] as! Date
+                    let modifiedDate: Date = attribute[FileAttributeKey.modificationDate] as! Date
+                    let foldrWholePathNm = "\(foldrWholePath)/\(folderName)"
+                    let folder = App.Folders(cmd : "C", userId : userId, devUuid : uuId, foldrNm : folderName, foldrWholePathNm: foldrWholePathNm, cretDate : Util.date(text: folderCreateDate), amdDate : Util.date(text: modifiedDate))
+                    
+                    localFolderArray.append(folder)
+                    
+                    if(subDir.subDirectories.count > 0){
+                        getSubDirectories(subDirs: subDir.subDirectories, foldrWholePath: foldrWholePathNm)
+                        return
+                    }
+                    
+                } catch {
+                    print("Error: \(error)")
+                }
+            }
+        }
+        print("localFolderArray : \(localFolderArray)")
         self.sysncFoldrInfo()
+        
     }
     
     
     func createFolderListToServer(parameters:[[String: Any]]){
-        var request = URLRequest(url: try! (App.URL.hostIpServer+"mobileFoldrMetaInfoList.do").asURL())
-        request.httpMethod = "POST"
-        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
-        request.setValue(self.loginCookie, forHTTPHeaderField: "Cookie")
-        //let values = parameters
-        var encodingParams:[[String:Any]] = parameters
-        for index in 0 ... parameters.count-1 {
-            let foldrNm:String = parameters[index]["foldrNm"] as? String ?? ""
-            let foldrWholePathNm:String = parameters[index]["foldrWholePathNm"] as? String ?? ""
-            
-            encodingParams[index].updateValue(foldrNm.precomposedStringWithCompatibilityMapping, forKey: "foldrNm")
-            encodingParams[index].updateValue(foldrWholePathNm.precomposedStringWithCompatibilityMapping, forKey: "foldrWholePathNm")
-            
-        }
-        let values = encodingParams
-        
-        request.httpBody = try! JSONSerialization.data(withJSONObject: values)
-        Alamofire.request(request).responseJSON { response in
-            //                print("httpBody : \(response.request?.httpBody)")
-            switch response.result {
-            case .success(let value):
-                _ = JSON(value)
-                let responseData = value as! NSDictionary
-                let message = responseData.object(forKey: "message")
-                print("createFolderListToServer : \(message)")
-                self.sysncFileInfo()
-                
-                break
-            case .failure(let error):
-                NSLog(error.localizedDescription)
-                break
-            }
-        }
-    }
-    
-    
-    func deleteFolderListToServer(parameters:[[String: Any]]){
-        var request = URLRequest(url: try! (App.URL.hostIpServer+"mobileFoldrMetaInfoList.do").asURL())
+        var request = URLRequest(url: try! (App.URL.server+"mobileFoldrMetaInfoList.do").asURL())
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
@@ -334,14 +321,7 @@ class SyncLocalFilleToNas {
                 _ = JSON(value)
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
-                //                   print("deleteFolderListToServer : \(message)")
-                if(self.folderArrayToCreate.count > 0){
-                    //                    print("createfolder : \(self.folderArrayToCreate)")
-                    self.createFolderListToServer(parameters: self.folderArrayToCreate)
-                } else {
-                    self.sysncFileInfo()
-                }
-                
+                print("createFolderListToServer : \(message)")
                 break
             case .failure(let error):
                 NSLog(error.localizedDescription)
@@ -351,7 +331,7 @@ class SyncLocalFilleToNas {
     }
     
     func deleteFileListToServer(parameters:[[String:Any]]){
-        var request = URLRequest(url: try! (App.URL.hostIpServer+"mobileFileMetaInfoList.do").asURL())
+        var request = URLRequest(url: try! (App.URL.server+"mobileFileMetaInfoList.do").asURL())
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
@@ -362,20 +342,14 @@ class SyncLocalFilleToNas {
             switch response.result {
             case .success(let value):
                 //                                let json = JSON(value)
-                //                print("deleteFileListToServer : \(response.result)")
+                print("deleteFileListToServer : \(response.result)")
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
-                print(" deleteFileListToServer message : \(message)")
+//                print(" deleteFileListToServer message : \(message)")
                 if(self.fileArrayToCreate.count>0){
-                    //                    print("create filelist : \(self.fileArrayToCreate)")
+//                    print("create filelist : \(self.fileArrayToCreate)")
                     self.createFileListToServer(parameters: self.fileArrayToCreate)
-                } else {
-                    let defaults = UserDefaults.standard
-                    defaults.set(false, forKey: "syncOngoing")
-                    defaults.synchronize()
-                    
                 }
-                
                 break
             case .failure(let error):
                 NSLog(error.localizedDescription)
@@ -387,44 +361,22 @@ class SyncLocalFilleToNas {
     
     
     func createFileListToServer(parameters:[[String:Any]]){
-        var request = URLRequest(url: try! (App.URL.hostIpServer+"mobileFileMetaInfoList.do").asURL())
+        var request = URLRequest(url: try! (App.URL.server+"mobileFileMetaInfoList.do").asURL())
         request.httpMethod = "POST"
         request.setValue("application/json", forHTTPHeaderField: "Content-Type")
         request.setValue(self.loginToken, forHTTPHeaderField: "X-Auth-Token")
         request.setValue(self.loginCookie, forHTTPHeaderField: "Cookie")
-        //let values = parameters
-        
-        var encodingParams:[[String:Any]] = parameters
-        for index in 0 ... parameters.count-1 {
-            let fileNm:String = parameters[index]["fileNm"] as? String ?? ""
-            let foldrWholePathNm:String = parameters[index]["foldrWholePathNm"] as? String ?? ""
-            
-            encodingParams[index].updateValue(fileNm.precomposedStringWithCompatibilityMapping, forKey: "fileNm")
-            encodingParams[index].updateValue(foldrWholePathNm.precomposedStringWithCompatibilityMapping, forKey: "foldrWholePathNm")
-            
-        }
-        let values = encodingParams
-        
+        let values = parameters
         request.httpBody = try! JSONSerialization.data(withJSONObject: values)
         Alamofire.request(request).responseJSON { (response) in
             switch response.result {
             case .success(let value):
                 //                                let json = JSON(value)
-                //                print("createFileServer : \(response.result)")
-                let defaults = UserDefaults.standard
-                defaults.set(false, forKey: "syncOngoing")
-                defaults.synchronize()
-                
+                print("createFileServer : \(response.result)")
                 let responseData = value as! NSDictionary
                 let message = responseData.object(forKey: "message")
                 print(" createFileListToServer message : \(String(describing: message))")
-                if(self.requestView == "home"){
-                    //                    NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
-                    let fileDict = ["foldrId":self.currentFolderId]
-                    NotificationCenter.default.post(name: Notification.Name("refreshInsideList"), object: self, userInfo:fileDict)
-                } else if(self.requestView == "NasSendController"){
-                    self.nasSendController?.notifiedSyncFinish(rootFolder:self.getRootFolder)
-                }
+                
                 break
             case .failure(let error):
                 NSLog(error.localizedDescription)
@@ -434,3 +386,4 @@ class SyncLocalFilleToNas {
         }
     }
 }
+

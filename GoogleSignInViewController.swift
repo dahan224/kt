@@ -17,6 +17,7 @@ import BEMCheckBox
 
 class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignInUIDelegate  {
     private let scopes = [kGTLRAuthScopeDriveFile, kGTLRAuthScopeDrive, kGTLRAuthScopeDriveReadonly ]
+    
     private let service = GTLRDriveService()
     let signInButton = GIDSignInButton()
     var loginCookie = ""
@@ -68,7 +69,7 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
             "Cookie": self.loginCookie
         ]
         
-        Alamofire.request(App.URL.hostIpServer+"selectCloudId.json"
+        Alamofire.request(App.URL.server+"selectCloudId.json"
             , method: .post
             , parameters:["userId":userId,"cloudKind":"D"]
             , encoding : JSONEncoding.default
@@ -262,7 +263,7 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
                 let defaults = UserDefaults.standard
                 defaults.set(self.googleEmail, forKey: "googleEmail")
                 defaults.set("login", forKey: "googleDriveLoginState")
-                
+                NotificationCenter.default.post(name: Notification.Name("loginStateUpdate"), object: self)
             }
             print("logedIn")
 //            self.listFiles()
@@ -278,40 +279,43 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
     
     func getFiles(accessToken:String, root:String){
         self.driveFileArray.removeAll()
-        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false&access_token=\(accessToken)" + App.URL.gDriveFileOption // 0eun
+        var url = "https://www.googleapis.com/drive/v3/files?q='\(root)' in parents and trashed=false&access_token=\(accessToken)"
         url = url.addingPercentEncoding(withAllowedCharacters: NSCharacterSet.urlQueryAllowed)!
+        let headers: HTTPHeaders = [
+            "q": "'root' in parents",
+            "trahsed": "false",
+            "Authorization": "Bearer " + accessToken
+            
+        ]
+        print("'root'in parents")
         Alamofire.request(url,
                           method: .get,
+//                          parameters: parameters,
                           encoding: JSONEncoding.default,
                           headers: nil).responseJSON { response in
                             switch response.result {
                             case .success(let value):
                                 let json = JSON(value)
                                 print("json : \(json)")
-                                if let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject] {
-                                    for file in serverList {
-                                        print("file : \(file)")
-                                        if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 {
-                                            let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
-                                            if fileStruct.fileExtension == "nil" {
-                                                continue
-                                            }
-                                            self.driveFileArray.append(fileStruct)
-                                        }
-                                    }
-                                    DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
-                                    self.syncCloudEmailToServer(cloudId: self.googleEmail)
-                                } else {
-                                    print("error: \(json["errors"])")
+                                let responseData = value as! NSDictionary
+                                let serverList:[AnyObject] = json["files"].arrayObject as! [AnyObject]
+                                for file in serverList {
+                                    print("file : \(file)")
+                                    let fileStruct = App.DriveFileStruct(device: file)
+                                    self.driveFileArray.append(fileStruct)
                                 }
-                                
+                                DbHelper().googleDriveToSqlite(getArray: self.driveFileArray)
+                                self.syncCloudEmailToServer(cloudId: self.googleEmail)
+                            
+                                break
                             case .failure(let error):
                                 NSLog(error.localizedDescription)
+                                
+                                break
                             }
                             
         }
     }
-
     
     // List up to 10 files in Drive
     func listFiles() {
@@ -382,7 +386,7 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
     
     func syncCloudEmailToServer(cloudId: String){
         
-        let urlString = App.URL.hostIpServer+"registCloudId.do"
+        let urlString = App.URL.server+"registCloudId.do"
         let headers = [
             "Content-Type": "application/json",
             "X-Auth-Token": self.loginToken,
@@ -399,14 +403,13 @@ class GoogleSignInViewController: UIViewController, GIDSignInDelegate, GIDSignIn
 //                                let responseData = value as! NSDictionary
 //                                let message = responseData.object(forKey: "message")
 //                                print("mesage : \(message)")
+                                NotificationCenter.default.post(name: Notification.Name("loginStateUpdate"), object: self)
                                 if(self.segueCheck == 1){
                                     
                                 }
-                                // 0eun - start
                                 if (self.googleSignInSegueState == .loginForList){
-                                    let cellStyle = ["cellStyle":3]
-                                    NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self, userInfo: cellStyle)
-                                    // 0eun - end
+                                    NotificationCenter.default.post(name: Notification.Name("setGoogleDriveFileListView"), object: self)
+                                    
                                 } else {
                                     
                                 }

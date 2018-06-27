@@ -10,44 +10,28 @@ import UIKit
 
 class SetupFolderInsideCollectionView {
     
-    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:ContainerViewController.listViewStyleEnum, getDevUuid:String, localRefreshButton:UIButton, multiButtonChecked:Bool, selectAllButton:UIButton, lblSubNav:UILabel, downArrowButton:UIButton) {
+    class func searchView(searchView:UIView, searchButton:UIButton, sortButton:UIButton, customNavBar:UIView, hamburgerButton:UIButton, listButton:UIButton, multiButton:UIButton, navBarTitle:UIButton, getFolerName:String, getDeviceName:String, listStyle:HomeViewController.listViewStyleEnum){
+        
         
         for view in searchView.subviews {
-            if searchView.contains(view){
-                view.removeFromSuperview()
-            }
+            view.removeFromSuperview()
         }
         
-        
-        //let label = UILabel()
-        searchView.addSubview(lblSubNav)
+        let label = UILabel()
+        searchView.addSubview(label)
         searchView.addSubview(sortButton)
         searchView.addSubview(searchButton)
         searchView.addSubview(multiButton)
-        searchView.addSubview(localRefreshButton)
-        searchView.addSubview(selectAllButton)
+        label.textAlignment = .left
+        label.text = ">GiGA NAS"
+        label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
+        label.translatesAutoresizingMaskIntoConstraints = false
+        label.widthAnchor.constraint(equalToConstant: 200.0).isActive = true
+        label.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+        label.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+        label.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
         
-        lblSubNav.translatesAutoresizingMaskIntoConstraints = false
-        lblSubNav.widthAnchor.constraint(equalToConstant: 200.0).isActive = true
-        lblSubNav.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        lblSubNav.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
-        lblSubNav.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
-        lblSubNav.trailingAnchor.constraintEqualToSystemSpacingAfter(selectAllButton.leadingAnchor, multiplier: 2).isActive = true
-        lblSubNav.numberOfLines = 1
         
-        /*
-         label.textAlignment = .left
-         label.text = ">GiGA NAS"
-         label.textColor = HexStringToUIColor().getUIColor(hex: "4f4f4f")
-         label.translatesAutoresizingMaskIntoConstraints = false
-         label.widthAnchor.constraint(equalToConstant: 200.0).isActive = true
-         label.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-         label.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
-         label.leadingAnchor.constraint(equalTo: searchView.leadingAnchor, constant: 10.0).isActive = true
-         let tap = UITapGestureRecognizer(target: self, action: #selector(HomeViewController.subNavClikcked(gestureRecognizer:)))
-         label.isUserInteractionEnabled = true
-         label.addGestureRecognizer(tap)
-         */
         
         searchButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         searchButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
@@ -60,43 +44,15 @@ class SetupFolderInsideCollectionView {
         sortButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
         sortButton.trailingAnchor.constraint(equalTo: searchButton.leadingAnchor, constant: -5.0).isActive = true
         
-        //        if(listStyle == .list) {
-        multiButton.isHidden = false
-        
-        multiButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
-        multiButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        multiButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
-        multiButton.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -5.0).isActive = true
-        
-        //        } else {
-        //            multiButton.isHidden = true
-        //        }
-        
-        
-        localRefreshButton.translatesAutoresizingMaskIntoConstraints = false
-        localRefreshButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
-        localRefreshButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        localRefreshButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
-        localRefreshButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: -5.0).isActive = true
-        
-        selectAllButton.translatesAutoresizingMaskIntoConstraints = false
-        selectAllButton.widthAnchor.constraint(equalToConstant: 80.0).isActive = true
-        selectAllButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        selectAllButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
-        selectAllButton.trailingAnchor.constraint(equalTo: multiButton.leadingAnchor, constant: -5.0).isActive = true
-        
-        if(multiButtonChecked){
-            localRefreshButton.isHidden = true
-            selectAllButton.isHidden = false
+        if(listStyle == .list) {
+            multiButton.isHidden = false
+            multiButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
+            multiButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
+            multiButton.centerYAnchor.constraint(equalTo: searchView.centerYAnchor).isActive = true
+            multiButton.trailingAnchor.constraint(equalTo: sortButton.leadingAnchor, constant: -5.0).isActive = true
         } else {
-            if(getDevUuid == Util.getUuid()){
-                localRefreshButton.isHidden = false
-            } else {
-                localRefreshButton.isHidden = true
-            }
-            selectAllButton.isHidden = true
+            multiButton.isHidden = true
         }
-        print("searchview 1 finished")
         
         for view in customNavBar.subviews {
             view.removeFromSuperview()
@@ -105,12 +61,6 @@ class SetupFolderInsideCollectionView {
         customNavBar.addSubview(hamburgerButton)
         customNavBar.addSubview(navBarTitle)
         customNavBar.addSubview(listButton)
-        customNavBar.addSubview(downArrowButton)
-        
-        downArrowButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
-        downArrowButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
-        downArrowButton.topAnchor.constraint(equalTo: navBarTitle.topAnchor).isActive = true
-        downArrowButton.leadingAnchor.constraint(equalTo: navBarTitle.trailingAnchor).isActive = true
         
         hamburgerButton.widthAnchor.constraint(equalToConstant: 24.0).isActive = true
         hamburgerButton.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
@@ -125,16 +75,9 @@ class SetupFolderInsideCollectionView {
         navBarTitle.widthAnchor.constraint(equalToConstant: 150.0).isActive = true
         navBarTitle.heightAnchor.constraint(equalToConstant: 24.0).isActive = true
         navBarTitle.centerYAnchor.constraint(equalTo: customNavBar.centerYAnchor).isActive = true
-        navBarTitle.centerXAnchor.constraint(equalTo: customNavBar.centerXAnchor).isActive = true
-        
-//        lblSubNav.text = "\(getFolerName)"
-        var navTxt = "> "
-        if getFolerName.contains("..") || getFolerName.contains(">") {
-            navTxt = ""
-        }
-        lblSubNav.text = "\(navTxt)\(getFolerName)"
+        navBarTitle.centerXAnchor.constraint(equalTo: customNavBar.centerXAnchor).isActive = true      
+        label.text = "> \(getFolerName)"
         navBarTitle.setTitle(getDeviceName, for: .normal)
-        print("searchview 2 finished")
-        
+  
     }
 }

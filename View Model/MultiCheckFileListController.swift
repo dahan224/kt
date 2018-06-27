@@ -213,7 +213,7 @@ class MultiCheckFileListController {
     }
    
     
-    func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String){
+    func downloadFolderFromNas(foldrId:String, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String){
         selectedUserId = userId
         selectedDevUuid = devUuid
         selectedDeviceName = deviceName
@@ -228,7 +228,7 @@ class MultiCheckFileListController {
     
     
     
-    func getFolderIdsToDownload(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String) {
+    func getFolderIdsToDownload(foldrId:String, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String) {
         var foldrLevel = 0
         var param = ["userId": userId, "devUuid":devUuid, "foldrId":String(foldrId),"sortBy":""]
         print("param : \(param)")
