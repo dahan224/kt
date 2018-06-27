@@ -468,10 +468,13 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
         }
         return count
     }
+    
     public func collectionView(_ collectionView: UICollectionView, cellForItemAt indexPath: IndexPath) -> UICollectionViewCell{
-        let cell1 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell", for: indexPath) as! HomeDeviceCollectionViewCell
-        let cell2 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell2", for: indexPath) as! HomeDeviceFolerCollectionViewCell
-        let cell3 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell3", for: indexPath) as! DeviceListCell
+        
+        
+        let cell1 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell", for: indexPath) as! HomeDeviceCollectionViewCell // 원뷰(카드뷰)
+        let cell2 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell2", for: indexPath) as! HomeDeviceFolerCollectionViewCell // 사용하지 않음
+        let cell3 = collectionView.dequeueReusableCell(withReuseIdentifier: "HomeDeviceCell3", for: indexPath) as! DeviceListCell // 원뷰(리스트뷰)
         
         var cells = [cell1, cell2, cell3]
         var cell = cells[0]
@@ -527,15 +530,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                 cell.layer.shadowOpacity = 1.0
                 cell.layer.masksToBounds = false;
                 cell.layer.shadowPath = UIBezierPath(roundedRect:cell.bounds, cornerRadius:cell.contentView.layer.cornerRadius).cgPath
-                //                    print("devUuid : \(currentDevUuid), my : \(Util.getUuid())")
             } else {
-//                cell3.lblSub.isHidden = false
-//                if indexPath.row < folderArray.count {
-//
-//                }
-//                cell2.lblMain.text = folderArray[indexPath.row].foldrNm
-//                cell2.lblSub.text = folderArray[indexPath.row].amdDate
-//                cell3.lblSub.text = folderArray[indexPath.row].amdDate
+                
                 if indexPath.row < folderArray.count {
                     if(folderArray[indexPath.row].osCd != "nil"){
                         fromOsCd = folderArray[indexPath.row].osCd
@@ -587,8 +583,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                         cell4.btnMultiChecked = false
                                         cell4.lblDevice.isHidden = false
                                     }
-                                    cell4.lblMain.sizeToFit()
-                                    cell4.lblDevice.sizeToFit()
+                                    //cell4.lblMain.sizeToFit()
+                                    //cell4.lblDevice.sizeToFit()
                                     let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellRemoteFileSwipeToLeft(sender:)))
                                     swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                     cell4.btnOption.addGestureRecognizer(swipeLeft)
@@ -643,8 +639,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                         cell4.btnMultiChecked = false
                                         cell4.lblDevice.isHidden = false
                                     }
-                                    cell4.lblMain.sizeToFit()
-                                    cell4.lblDevice.sizeToFit()
+                                    //cell4.lblMain.sizeToFit()
+                                    //cell4.lblDevice.sizeToFit()
                                     let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellNasFileSwipeToLeft(sender:)))
                                     swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                     cell4.btnOption.addGestureRecognizer(swipeLeft)
@@ -720,7 +716,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                         cell4.btnMultiCheck.isHidden = true
                                         cell4.btnMultiChecked = false
                                     }
-                                    cell4.lblMain.sizeToFit()
+                                    //cell4.lblMain.sizeToFit()
                                 }
                                 if(folderArray[indexPath.row].foldrNm == ".."){
                                     cell4.lblSub.isHidden = true
@@ -777,7 +773,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                         cell4.btnMultiCheck.isHidden = true
                                         cell4.btnMultiChecked = false
                                     }
-                                    cell4.lblMain.sizeToFit()
+                                    //cell4.lblMain.sizeToFit()
                                     let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellFolderSwipeToLeft(sender:)))
                                     swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                     cell4.btnOption.addGestureRecognizer(swipeLeft)
@@ -888,8 +884,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                     cell4.btnMultiChecked = false
                                     cell4.lblDevice.isHidden = false
                                 }
-                                cell4.lblMain.sizeToFit()
-                                cell4.lblDevice.sizeToFit()
+                                //cell4.lblMain.sizeToFit()
+                                //cell4.lblDevice.sizeToFit()
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFileSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
@@ -971,7 +967,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                     cell4.btnMultiCheck.isHidden = true
                                     cell4.btnMultiChecked = false
                                 }
-                                cell4.lblMain.sizeToFit()
+                                //cell4.lblMain.sizeToFit()
                                 let swipeLeft = UISwipeGestureRecognizer(target: self, action: #selector(cellLocalFolderSwipeToLeft(sender:)))
                                 swipeLeft.direction = UISwipeGestureRecognizerDirection.left
                                 cell4.btnOption.addGestureRecognizer(swipeLeft)
@@ -1094,8 +1090,8 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         cell4.btnMultiChecked = false
                         cell4.lblDevice.isHidden = false
                     }
-                    cell4.lblMain.sizeToFit()
-                    cell4.lblDevice.sizeToFit()
+                    //cell4.lblMain.sizeToFit()
+                    //cell4.lblDevice.sizeToFit()
                 }
                 
                 
@@ -1202,7 +1198,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         cell4.btnMultiCheck.isHidden = true
                         cell4.btnMultiChecked = false
                     }
-                    cell4.lblMain.sizeToFit()
+                    //cell4.lblMain.sizeToFit()
                 }
                 
                 
