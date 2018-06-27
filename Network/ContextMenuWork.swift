@@ -14,8 +14,8 @@ class ContextMenuWork {
     private var resumeData: Data?
     
     var upFoldersToDelete = ""
-    var folderIdsToDownLoad:[Int] = []
-    var folderIdsToUp:[Int] = []
+    var folderIdsToDownLoad:[String] = []
+    var folderIdsToUp:[String] = []
     var folderPathToDownLoad:[String] = []
     var fileArrayToDownload:[App.FolderStruct] = []
     var foldersToDownLoad:[App.FolderStruct] = []
@@ -31,7 +31,7 @@ class ContextMenuWork {
     var selectedDevUuid = ""
     var selectedUserId = ""
     var selectedDeviceName = ""
-    var rootFolderId = 0
+    var rootFolderId = ""
     var rootFoldrWholePathNm = ""
     var upUpFolderId = 0
     var request: Alamofire.Request?
@@ -568,7 +568,7 @@ class ContextMenuWork {
     
     
     
-    func downloadFolderFromNas(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String){
+    func downloadFolderFromNas(foldrId:String, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String){
         NotificationCenter.default.post(name: Notification.Name("homeViewToggleIndicator"), object: self, userInfo: nil)
         selectedUserId = userId
         selectedDevUuid = devUuid
@@ -591,7 +591,7 @@ class ContextMenuWork {
     
     
     
-    func getFolderIdsToDownload(foldrId:Int, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String) {
+    func getFolderIdsToDownload(foldrId:String, foldrWholePathNm:String, userId:String, devUuid:String, deviceName:String, dwldFoldrNm:String) {
         var foldrLevel = 0
         var param = ["userId": userId, "devUuid":devUuid, "foldrId":String(foldrId),"sortBy":""]
         print("param : \(param)")
@@ -606,7 +606,7 @@ class ContextMenuWork {
                     for list in serverList {
                         
                         let folderPath = list["foldrWholePathNm"] as? String ?? "nil"
-                        let foldrId = list["foldrId"] as? Int ?? 0
+                        let foldrId = list["foldrId"] as? String ?? "nil"
                         if(folderPath.contains(foldrWholePathNm)){
                                 print("list : \(list)")
                             self.folderIdsToDownLoad.append(foldrId)

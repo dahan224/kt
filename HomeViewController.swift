@@ -860,25 +860,85 @@ class HomeViewController: UIViewController, UITableViewDelegate, UITableViewData
                     
                     let fileStruct = App.FolderStruct(data: file)
                     let fileId = fileStruct.fileId
-                    if(fileId == 0){
+                    print("thumbnail : \(fileStruct.fileThumbYn)")
+                    if(fileId == "nil"){
                     } else {
                         self.SearchedFileArray.append(fileStruct)
                     }
                     //                    print("searchFile : \(file), fileStruct : \(fileStruct)")
                 }
-                print("file count : \(self.SearchedFileArray.count)")
-               
-                SetupSearchView.showFileCountLabel(count: self.SearchedFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView, multiButton: self.multiButtonInSearchView, multiButtonChecked:self.multiButtonChecked, selectAllButton:self.selectAllButtonInSearchView)
-                
-                
-                //                self.setupDeviceListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
-                self.setupSearchListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
-                
-                //                self.setSearchFileCollectionView()
-                self.activityIndicator.stopAnimating()
-                if(self.SearchedFileArray.count == 0){
-                    self.searchListView.backgroundColor = UIColor.white
+                let searchFileConunt = self.SearchedFileArray.count
+                let driveSearchFileCount = self.driveFileArray.count
+                print("searchFileConunt : \(searchFileConunt), driveSearchFileCount : \(driveSearchFileCount)")
+                if GIDSignIn.sharedInstance().hasAuthInKeychain() == true {
+                    //                    GIDSignIn.sharedInstance().signInSilently()
+                    print("add google file list in search")
+                    let accessToken = UserDefaults.standard.string(forKey: "googleAccessToken")!
+                    GoogleWork().getFilesByName(accessToken: accessToken, fileNm: searchedText) { responseObject, error in
+                        self.containerViewController?.finishLoading()
+                        if (error != nil){
+                            SetupSearchView.showFileCountLabel(count: self.SearchedFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView, multiButton: self.multiButtonInSearchView, multiButtonChecked:self.multiButtonChecked, selectAllButton:self.selectAllButtonInSearchView)
+                            
+                            self.setupSearchListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
+                            self.activityIndicator.stopAnimating()
+                            if(self.SearchedFileArray.count == 0){
+                                self.searchListView.backgroundColor = UIColor.white
+                            }
+                        } else {
+                            let json = JSON(responseObject)
+                                            print("json : \(json)")
+                            if let serverList:[AnyObject] = json["files"].arrayObject as? [AnyObject] {
+                                for file in serverList {
+                                    if file["trashed"] as? Int == 0 && file["starred"] as? Int == 0 && file["shared"] as? Int == 0 && file["mimeType"] as? String != Util.getGoogleMimeType(etsionNm: "folder") && file["fileExtension"] as? String != "nil"{
+//                                        let fileStruct = App.DriveFileStruct(device: file, foldrWholePaths: ["Google"])
+//                                        self.driveFileArray.append(fileStruct)
+                                        let fileId = file["id"] as? String ?? "nil"
+                                        let kind = file["kind"] as? String ?? "nil"
+                                        let mimeType = file["mimeType"] as? String ?? "nil"
+                                        let name = file["name"] as? String ?? "nil"
+                                        let createdTime = file["createdTime"] as? String ?? "nil"
+                                        let modifiedTime = file["modifiedTime"] as? String ?? "nil"
+                                        let parentArry:[String] = file["parents"] as? [String] ?? ["nil"]
+                                        let parents = parentArry[0]
+                                        let fileExtension = file["fileExtension"] as? String ?? "nil"
+                                        var foldrWholePath = ""
+                                        for foldr in ["Google"] {
+                                            foldrWholePath += "/" + foldr
+                                        }
+                                        let size = file["size"] as? String ?? "0"
+                                        let thumbnailLink = file["thumbnailLink"] as? String ?? "nil"
+                                        let checked = file["checked"] as? Bool ?? false
+                                        
+                                     
+                                        let googleDriveFile = App.FolderStruct(data: (["foldrNm":name,"foldrId":parents,"fileId":fileId,"userId":self.userId,"childCnt":0,"devUuid":"googleDrive","foldrWholePathNm":foldrWholePath,"cretDate":createdTime, "checked":false, "devNm":"Google Drive", "etsionNm":fileExtension,"osCd":"D","fileSize":size,"fileThumbYn":thumbnailLink] as? [String:Any])!)
+                                        self.SearchedFileArray.append(googleDriveFile)
+                                    }
+                                }
+                                
+                                SetupSearchView.showFileCountLabel(count: self.SearchedFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView, multiButton: self.multiButtonInSearchView, multiButtonChecked:self.multiButtonChecked, selectAllButton:self.selectAllButtonInSearchView)
+                                
+                                self.setupSearchListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
+                                self.activityIndicator.stopAnimating()
+                                if(self.SearchedFileArray.count == 0){
+                                    self.searchListView.backgroundColor = UIColor.white
+                                }
+                            }
+                            
+                        }
+                        
+                    }
+                    
+                } else {
+                    SetupSearchView.showFileCountLabel(count: self.SearchedFileArray.count, view:self.view, searchCountLabel:self.searchCountLabel, searchCategoryView: self.searchCategoryView, multiButton: self.multiButtonInSearchView, multiButtonChecked:self.multiButtonChecked, selectAllButton:self.selectAllButtonInSearchView)
+                    
+                    self.setupSearchListView(sortBy: self.oneViewSortState, multiCheckd: self.multiButtonChecked)
+                    self.activityIndicator.stopAnimating()
+                    if(self.SearchedFileArray.count == 0){
+                        self.searchListView.backgroundColor = UIColor.white
+                    }
                 }
+               
+              
             }
             return
         }

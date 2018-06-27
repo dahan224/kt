@@ -47,7 +47,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
     var fileNm = ""
     var DeviceArray:[App.DeviceStruct] = []
     var deviceName = ""
-    var folderIdArray = [Int]()
+    var folderIdArray = [String]()
     var folderNameArray = [String]()
     var folderPathArray = [String]()
     var folderArray:[App.FolderStruct] = []
@@ -764,7 +764,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                 let stringFoldrId = String(foldrId)
                 //                print("foldrId : \(stringFoldrId)")
                 if(folderArray[indexPath.row].foldrNm == ".."){
-                    if(folderArray[indexPath.row].foldrId == 0){
+                    if(folderArray[indexPath.row].foldrId == "nil"){
                         self.listState = .deviceRoot
                         self.getRootFolder(userId: toUserId, devUuid: currentDevUuId, deviceName: deviceName)
                         return
@@ -1282,7 +1282,7 @@ class NasSendFolderSelectVC: UIViewController, UITableViewDataSource, UITableVie
                     let serverList:[AnyObject] = json["listData"].arrayObject! as [AnyObject]
                     print("serverList : \(serverList)")
                     for rootFolder in serverList{
-                        let foldrId = rootFolder["foldrId"] as? Int ?? 0
+                        let foldrId = rootFolder["foldrId"] as? String ?? "nil"
                         let stringFoldrId = String(foldrId)
                         self.currentFolderId = stringFoldrId
                         let froldrNm = rootFolder["foldrNm"] as? String ?? "nil"

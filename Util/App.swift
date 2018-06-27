@@ -180,8 +180,8 @@ struct App {
     struct FolderStruct {
         
         var foldrNm:String
-        var foldrId:Int
-        var fileId:Int
+        var foldrId:String
+        var fileId:String
         var userId:String
         var devNm: String
         var childCnt: Int
@@ -200,15 +200,15 @@ struct App {
         var nasSynchYn:String
         init(data: AnyObject) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
-            self.foldrId = data["foldrId"] as? Int ?? 0
+            self.foldrId = data["foldrId"] as? String ?? "nil"
             //            if(data.responds(to: "fileId")){
-            var filnalFileId:Int? = 0
+            var filnalFileId:String? = ""
             if let getFileId = data["fileId"] as? Int {
-                filnalFileId = getFileId
+                filnalFileId = String(getFileId)
             } else if let getStringFileId = data["fileId"] as? String {
-                filnalFileId = Int(getStringFileId)
+                filnalFileId = getStringFileId
             }
-            self.fileId = filnalFileId ?? 0
+            self.fileId = filnalFileId ?? "nil"
             //            } else {
             //                self.fileId = 0
             //            }
@@ -233,8 +233,8 @@ struct App {
         }
         init(data: [String:Any]) {
             self.foldrNm = data["foldrNm"] as? String ?? "nil"
-            self.foldrId = data["foldrId"] as? Int ?? 0
-            self.fileId = data["fileId"] as? Int ?? 0
+            self.foldrId = data["foldrId"] as? String ?? "nil"
+            self.fileId = data["fileId"] as? String ?? "nil"
             self.devNm = data["devNm"] as? String ?? "nil"
             self.userId = data["userId"] as? String ?? "nil"
             self.childCnt = data["childCnt"] as? Int ?? 0

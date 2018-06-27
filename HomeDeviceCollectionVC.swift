@@ -70,7 +70,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
     var SearchedFileArray:[App.FolderStruct] = []
     var fileArrayToDownload:[App.FolderStruct] = []
     var localFileArray:[App.LocalFiles] = []
-    var folderIdArray = [Int]()
+    var folderIdArray = [String]()
     var folderNameArray = [String]()
     var folderStep = 0
     
@@ -272,7 +272,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             
             var id = multiCheckedfolderArray[arryIndex].fileId
             var name = multiCheckedfolderArray[arryIndex].fileNm
-            if id == 0 {
+            if id == "nil" {
                 id = multiCheckedfolderArray[arryIndex].foldrId
                 name = multiCheckedfolderArray[arryIndex].foldrNm
             }
@@ -1428,9 +1428,9 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                     Vc.getFolderArrayFromContainer(getFolderArray:folderArray, getFolderArrayIndexPathRow:intIndexPathRow)
                     }
                     
-                    if(fileId == 0){
+                    if(fileId == "nil"){
                         
-                        if(foldrId == "0") {
+                        if(foldrId == "nil") {
                             
                             // 리모트 디아비스 최상위 폴더
                             print("getRootFolder called")
@@ -2514,7 +2514,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                             
                             var id = multiCheckedfolderArray[arryIndex].fileId
                             var name = multiCheckedfolderArray[arryIndex].fileNm
-                            if id == 0 {
+                            if id == "nil" {
                                 id = multiCheckedfolderArray[arryIndex].foldrId
                                 name = multiCheckedfolderArray[arryIndex].foldrNm
                             }
@@ -2798,7 +2798,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
             let foldrId = String(folderArray[indexPath.row].foldrId)
             let nasSynchYn = folderArray[indexPath.row].nasSynchYn
             print("fromOsCd : \(fromOsCd), devUuid : \(devUuid)")
-            if(fileId == 0){
+            if(fileId == "nil"){
             } else {
                 if(devUuid == Util.getUuid()){
                     //로컬 롱 터치
@@ -3186,7 +3186,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                         if serverList.count > 0 {
                             for rootFolder in serverList{
                                 
-                                let foldrId = rootFolder["foldrId"] as? Int ?? 0
+                                let foldrId = rootFolder["foldrId"] as? String ?? "nil"
                                 let stringFoldrId = String(foldrId)
                                 let foldrNm = rootFolder["foldrNm"] as? String ?? "nil"
                                 
@@ -3202,7 +3202,7 @@ class HomeDeviceCollectionVC: UIViewController, UICollectionViewDelegate, UIColl
                                     folder.userId = self.selectedDevUserId
                                     //                                print("deviceName : \(deviceName)")
                                     //                                print("folder : \(folder)")
-                                    self.folderIdArray.append(0)
+                                    self.folderIdArray.append("nil")
                                     self.folderNameArray.append(stringFoldrNm)
                                     self.folderArray.append(folder)
                                     self.cellStyle = 2
